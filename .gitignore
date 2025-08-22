@@ -1,0 +1,9 @@
+.python-version
+pyproject.toml
+__pycache__/
+.env
+.vscode
+.venv
+uv.lock
+test*
+canvas

@@ -1,0 +1,9 @@
+python-dotenv
+langchain-cerebras
+langgraph
+langchain-core
+beautifulsoup4
+requests
+google-api-python-client
+rich
+openai
