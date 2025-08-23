@@ -1,3 +1,4 @@
-from langchain_core.tools import tool
-import textwrap
+from app.src.tools.exec_tools import EXECUTION_TOOLS
+from app.src.tools.file_tools import FILE_TOOLS
 
+ALL_TOOLS = FILE_TOOLS + EXECUTION_TOOLS

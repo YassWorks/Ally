@@ -1,5 +1,5 @@
 from app.src.config.create_base_agent import create_base_agent
-from app.src.config.tools import FILE_TOOLS
+from app.src.tools.file_tools import FILE_TOOLS
 import os
 
 

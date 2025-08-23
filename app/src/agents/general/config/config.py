@@ -1,5 +1,5 @@
 from app.src.config.create_base_agent import create_base_agent
-from app.src.config.tools import FILE_TOOLS
+from app.src.agents.general.config.tools import ALL_TOOLS
 import os
 
 
@@ -24,7 +24,7 @@ def get_agent(
     Returns:
         Agent instance or tuple of (graph, agent) if include_graph is True
     """
-    tools = FILE_TOOLS.copy()
+    tools = ALL_TOOLS.copy()
     if extra_tools:
         tools.extend(extra_tools)
 
