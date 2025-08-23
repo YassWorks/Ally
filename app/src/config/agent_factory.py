@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 from app.src.agents.brainstormer.brainstormer import BrainstormerAgent
 from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
 from app.src.agents.code_gen.code_gen import CodeGenAgent
+from app.src.agents.general.general import GeneralAgent
 
 
 class AgentFactory:
@@ -22,6 +23,7 @@ class AgentFactory:
             ValueError: If agent type is unknown or required config is missing
             RuntimeError: If agent initialization fails
         """
+
         required_fields = ["model_name", "api_key"]
         for field in required_fields:
             if field not in config:
@@ -31,6 +33,7 @@ class AgentFactory:
             "brainstormer": BrainstormerAgent,
             "web_searcher": WebSearcherAgent,
             "code_gen": CodeGenAgent,
+            "general": GeneralAgent
         }
 
         if agent_type not in agent_classes:
@@ -40,7 +43,7 @@ class AgentFactory:
             return agent_classes[agent_type](
                 model_name=config["model_name"],
                 api_key=config["api_key"],
-                system_prompt=config.get("system_prompt"),
+                system_prompt=config.get("system_prompt", None),
                 temperature=config.get("temperature", 0),
             )
         except Exception as e:
@@ -53,7 +56,7 @@ class AgentFactory:
         temperatures: Optional[Dict[str, float]] = None,
         system_prompts: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
-        """Create all agents needed for coding mode.
+        """Create all agents needed for coding.
 
         Args:
             model_names: Dictionary mapping agent names to model names
@@ -64,6 +67,7 @@ class AgentFactory:
         Returns:
             Dictionary of initialized agents
         """
+
         agents = {}
         agent_types = ["brainstormer", "web_searcher", "code_gen"]
 

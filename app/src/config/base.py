@@ -41,11 +41,19 @@ class BaseAgent:
         self.get_agent = get_agent
         self.temperature = temperature
         self.graph = graph
+        self._custom_commands: dict[str, Callable] = {}
 
     def start_chat(
-        self, recursion_limit: int = 100, config: dict = None, show_welcome: bool = True
+        self,
+        starting_msg: str = None,
+        initial_prompt_suffix: str = None,
+        recurring_prompt_suffix: str = None,
+        recursion_limit: int = 100,
+        config: dict = None,
+        show_welcome: bool = True,
     ) -> bool:
         """Start interactive chat session with the agent."""
+        
         if show_welcome:
             self.ui.logo(ASCII_ART)
             self.ui.help(self.model_name)
@@ -56,6 +64,7 @@ class BaseAgent:
         }
 
         continue_flag = False
+        first_msg = True
 
         while True:
             try:
@@ -67,15 +76,28 @@ class BaseAgent:
                     )
                     continue_flag = False
                     
+                if first_msg and starting_msg:
+                    user_input = starting_msg
+                
                 user_input = self._get_user_input(continue_flag)
+                
 
                 if not user_input:
                     continue
-
+                
+                if user_input.strip().lower() in ["/quit", "/exit", "/q"]:      
+                    self.ui.goodbye()
+                    return True
+                
                 if self._handle_command(user_input, configuration):
                     continue
+                
+                if first_msg and initial_prompt_suffix:
+                    user_input += f"\n\n{initial_prompt_suffix}"
+                if recurring_prompt_suffix:
+                    user_input += f"\n\n{recurring_prompt_suffix}"
 
-                self.ui.tmp_msg("Working on the task...", 1)
+                self.ui.tmp_msg("\nWorking on the task...", 1)
 
                 for chunk in self.agent.stream(
                     {"messages": [("human", user_input)]}, configuration
@@ -95,7 +117,9 @@ class BaseAgent:
                 self.ui.warning(
                     "Agent processing took longer than expected (Max recursion limit reached)"
                 )
-                if self.ui.confirm("Continue from where the agent left off?", default=True):
+                if self.ui.confirm(
+                    "Continue from where the agent left off?", default=True
+                ):
                     continue_flag = True
                 else:
                     return False
@@ -107,6 +131,8 @@ class BaseAgent:
             except Exception as e:
                 self.ui.error(f"An unexpected error occurred: {e}")
                 return False
+            finally:
+                first_msg = False
 
     def _get_user_input(self, continue_flag: bool) -> str:
         """Get user input, handling continuation scenarios."""
@@ -114,32 +140,39 @@ class BaseAgent:
             return "Continue where you left. Don't repeat anything already done."
         else:
             return self.ui.get_input(
-                message="Your message",
                 model=self.model_name,
+                cwd=os.getcwd(),
             ).strip()
 
     def _handle_command(self, user_input: str, configuration: dict) -> bool:
         """Handle chat commands. Returns True if command was processed."""
-        if user_input.lower() in ["/quit", "/exit", "/q"]:
-            self.ui.goodbye()
-            return True
 
-        if user_input.lower() == "/clear":
+        if user_input.strip().lower() == "/clear":
             configuration["configurable"]["thread_id"] = str(uuid.uuid4())
             self.ui.history_cleared()
             return True
 
-        if user_input.lower() in ["/cls", "/clearterm", "/clearscreen"]:
+        if user_input.strip().lower() in ["/cls", "/clearterm", "/clearscreen"]:
             os.system("cls" if os.name == "nt" else "clear")
             return True
 
-        if user_input.lower() in ["/help", "/h"]:
+        if user_input.strip().lower() in ["/help", "/h"]:
             self.ui.help(self.model_name)
             return True
 
-        if user_input.lower().startswith("/model"):
+        if user_input.strip().lower().startswith("/model"):
             self._handle_model_command(user_input)
             return True
+        
+        for cmd, handler in self._custom_commands.items():
+            cmd_parts = user_input.split()
+            if cmd_parts[0].lower() == cmd:
+                try:
+                    handler(*(cmd_parts[1:] if len(cmd_parts) > 1 else []))
+                except Exception as e:
+                    self.ui.error(f"Command '{cmd}' failed: {e}")
+                finally:
+                    return True
 
         if user_input.lower().startswith("/"):
             self.ui.error("Unknown command. Type /help for instructions.")
@@ -297,3 +330,9 @@ class BaseAgent:
     def _handle_tool_message(self, message: ToolMessage):
         """Handle tool message display."""
         self.ui.tool_output(message.name, message.content)
+
+    def register_command(self, name: str, handler: Callable) -> None:
+        self._custom_commands[name.lower()] = handler
+
+    def unregister_command(self, name: str) -> None:
+        self._custom_commands.pop(name.lower(), None)

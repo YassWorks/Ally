@@ -141,7 +141,7 @@ class AgentUI:
 
     def get_input(
         self,
-        message: str,
+        message: str = None,
         default: Optional[str] = None,
         password: bool = False,
         choices: Optional[List[str]] = None,
@@ -159,14 +159,14 @@ class AgentUI:
 
             info_line = " • ".join(info_parts) if info_parts else ""
 
-            prompt_content = message
+            prompt_content = message or ""
             if default:
                 prompt_content += f" [dim](default: {default})[/dim]"
             if choices and show_choices:
                 prompt_content += f" [dim]({'/'.join(choices)})[/dim]"
 
             if info_line:
-                prompt_content += f"\n{info_line}"
+                prompt_content += f"\n{info_line}" if prompt_content.strip() else info_line
 
             panel = Panel(
                 prompt_content, border_style=self._style("border"), padding=(0, 1)

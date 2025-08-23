@@ -3,6 +3,8 @@ from app.src.orchestration.orchestrated_codegen import CodeGenUnit
 from app.src.config.ui import AgentUI
 from app.utils.ascii_art import ASCII_ART
 from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
+from app.src.orchestration.integrate_web_search import integrate_web_search
+from app.src.config.base import BaseAgent
 from rich.console import Console
 import sys
 import os
@@ -14,54 +16,67 @@ class CLI:
 
     def __init__(
         self,
-        mode: str = "coding",
         stream: bool = True,
         config: dict = None,
         api_key: str = None,
+        general_model_name: str = None,
         codegen_model_name: str = None,
         brainstormer_model_name: str = None,
         web_searcher_model_name: str = None,
+        general_api_key: str = None,
         codegen_api_key: str = None,
         brainstormer_api_key: str = None,
         web_searcher_api_key: str = None,
+        general_temperature: float = None,
         codegen_temperature: float = None,
         brainstormer_temperature: float = None,
         web_searcher_temperature: float = None,
+        general_system_prompt: str = None,
         codegen_system_prompt: str = None,
         brainstormer_system_prompt: str = None,
         web_searcher_system_prompt: str = None,
     ):
-        self.mode = mode
         self.stream = stream
         self.config = config
         self.console = Console(width=CONSOLE_WIDTH)
         self.ui = AgentUI(self.console)
 
-        if mode == "coding":
-            self._validate_coding_config(
-                api_key=api_key,
-                codegen_model=codegen_model_name,
-                brainstormer_model=brainstormer_model_name,
-                web_searcher_model=web_searcher_model_name,
-                codegen_api_key=codegen_api_key,
-                brainstormer_api_key=brainstormer_api_key,
-                web_searcher_api_key=web_searcher_api_key,
-            )
-            self._setup_coding_config(
-                api_key=api_key,
-                codegen_model=codegen_model_name,
-                brainstormer_model=brainstormer_model_name,
-                web_searcher_model=web_searcher_model_name,
-                codegen_api_key=codegen_api_key,
-                brainstormer_api_key=brainstormer_api_key,
-                web_searcher_api_key=web_searcher_api_key,
-                codegen_temp=codegen_temperature,
-                brainstormer_temp=brainstormer_temperature,
-                web_searcher_temp=web_searcher_temperature,
-                codegen_prompt=codegen_system_prompt,
-                brainstormer_prompt=brainstormer_system_prompt,
-                web_searcher_prompt=web_searcher_system_prompt,
-            )
+        self.general_agent: BaseAgent = AgentFactory.create_agent(
+            agent_type="general",
+            config={
+                "model_name": general_model_name,
+                "api_key": general_api_key or api_key,
+                "temperature": general_temperature,
+                "system_prompt": general_system_prompt,
+            }
+        )
+
+        self._validate_coding_config(
+            api_key=api_key,
+            codegen_model=codegen_model_name,
+            brainstormer_model=brainstormer_model_name,
+            web_searcher_model=web_searcher_model_name,
+            general_model=general_model_name,
+            codegen_api_key=codegen_api_key,
+            brainstormer_api_key=brainstormer_api_key,
+            web_searcher_api_key=web_searcher_api_key,
+            general_api_key=general_api_key,
+        )
+        self._setup_coding_config(
+            api_key=api_key,
+            codegen_model=codegen_model_name,
+            brainstormer_model=brainstormer_model_name,
+            web_searcher_model=web_searcher_model_name,
+            codegen_api_key=codegen_api_key,
+            brainstormer_api_key=brainstormer_api_key,
+            web_searcher_api_key=web_searcher_api_key,
+            codegen_temp=codegen_temperature,
+            brainstormer_temp=brainstormer_temperature,
+            web_searcher_temp=web_searcher_temperature,
+            codegen_prompt=codegen_system_prompt,
+            brainstormer_prompt=brainstormer_system_prompt,
+            web_searcher_prompt=web_searcher_system_prompt,
+        )
 
     def _validate_coding_config(
         self,
@@ -69,22 +84,24 @@ class CLI:
         codegen_model,
         brainstormer_model,
         web_searcher_model,
+        general_model,
         codegen_api_key,
         brainstormer_api_key,
         web_searcher_api_key,
+        general_api_key,
     ):
-        """Validate required configuration for coding mode."""
+        """Validate required configuration for coding."""
         
         if not api_key and not all(
-            [codegen_api_key, brainstormer_api_key, web_searcher_api_key]
+            [codegen_api_key, brainstormer_api_key, web_searcher_api_key, general_api_key]
         ):
             raise ValueError(
                 "API key must be provided either as 'api_key' or individual agent API keys"
             )
 
-        if not all([codegen_model, brainstormer_model, web_searcher_model]):
+        if not all([codegen_model, brainstormer_model, web_searcher_model, general_model]):
             raise ValueError(
-                "Model names must be provided for all agents in coding mode"
+                "Model names must be provided for all agents in coding"
             )
 
     def _setup_coding_config(
@@ -103,7 +120,7 @@ class CLI:
         brainstormer_prompt,
         web_searcher_prompt,
     ):
-        """Setup configuration for coding mode."""
+        """Setup configuration for coding."""
         
         self.model_names = {
             "code_gen": codegen_model,
@@ -131,17 +148,33 @@ class CLI:
 
     def start_chat(self):
         """Start the main chat interface."""
-        
+
         self.ui.logo(ASCII_ART)
         self.ui.help()
+        
+        try:
+            active_dir = self._setup_environment()
+            cwd_note = f"ALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
 
+            self.general_agent.register_command("/project", self.launch_coding_units)
+            self.general_agent.start_chat(initial_prompt_suffix=cwd_note, show_welcome=False)
+
+        except KeyboardInterrupt:
+            self.ui.goodbye()
+        except Exception as e:
+            self.ui.error(f"An unexpected error occurred: {e}")
+
+    def launch_coding_units(self):
+        """Start the agent units that create full projects from scratch."""
+
+        self._display_model_config()
+        if self.ui.confirm(UI_MESSAGES["change_models"], default=False):
+            self._update_models()
+        
         try:
             active_dir = self._setup_environment()
 
-            if self.mode != "coding":
-                return
-
-            self.ui.tmp_msg("Initializing agents...", duration=1)
+            self.ui.tmp_msg("\nInitializing agents...", duration=1)
             codegen_unit_success = self._run_codgen_unit(active_dir)
 
             if not codegen_unit_success:
@@ -159,12 +192,6 @@ class CLI:
         """Setup working environment and configuration."""
         
         active_dir = self._setup_directory()
-
-        if self.mode == "coding":
-            self._display_model_config()
-            if self.ui.confirm(UI_MESSAGES["change_models"], default=False):
-                self._update_models()
-
         return active_dir
 
     def _setup_directory(self) -> str:
