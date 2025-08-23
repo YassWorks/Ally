@@ -50,8 +50,17 @@ class CLI:
                 "system_prompt": general_system_prompt,
             }
         )
+        self.default_web_searcher_agent: BaseAgent = AgentFactory.create_agent(
+            agent_type="web_searcher",
+            config={
+                "model_name": web_searcher_model_name,
+                "api_key": web_searcher_api_key or api_key,
+                "temperature": web_searcher_temperature,
+                "system_prompt": web_searcher_system_prompt,
+            }
+        )
 
-        self._validate_coding_config(
+        self._validate_config(
             api_key=api_key,
             codegen_model=codegen_model_name,
             brainstormer_model=brainstormer_model_name,
@@ -78,7 +87,7 @@ class CLI:
             web_searcher_prompt=web_searcher_system_prompt,
         )
 
-    def _validate_coding_config(
+    def _validate_config(
         self,
         api_key,
         codegen_model,
@@ -156,7 +165,12 @@ class CLI:
             active_dir = self._setup_environment()
             cwd_note = f"ALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
 
+            # making the project generation a command for the general agent
             self.general_agent.register_command("/project", self.launch_coding_units)
+            
+            # giving the general agent access to the web with a separate web searcher agent
+            integrate_web_search(self.general_agent, self.default_web_searcher_agent)
+            
             self.general_agent.start_chat(initial_prompt_suffix=cwd_note, show_welcome=False)
 
         except KeyboardInterrupt:
