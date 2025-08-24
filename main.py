@@ -1,6 +1,7 @@
 from app import CLI
 from dotenv import load_dotenv
 import os
+import sys
 
 load_dotenv()
 api_key = os.getenv("CEREBRAS_API_KEY")
@@ -22,4 +23,7 @@ client = CLI(
     web_searcher_temperature=0,
 )
 
-client.start_chat()
+if __name__ == "__main__":
+    
+    args = sys.argv[1:]
+    client.start_chat(*args)

@@ -153,7 +153,7 @@ class AgentUI:
         try:
             info_parts = []
             if cwd:
-                info_parts.append(f"[dim]📂 {os.path.basename(cwd)}[/dim]")
+                info_parts.append(f"[dim]📂 {cwd}[/dim]")
             if model:
                 info_parts.append(f"[dim]🤖 {model}[/dim]")
 

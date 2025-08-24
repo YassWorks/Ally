@@ -53,7 +53,7 @@ class BaseAgent:
         show_welcome: bool = True,
     ) -> bool:
         """Start interactive chat session with the agent."""
-        
+
         if show_welcome:
             self.ui.logo(ASCII_ART)
             self.ui.help(self.model_name)
@@ -75,29 +75,28 @@ class BaseAgent:
                         style="primary",
                     )
                     continue_flag = False
-                    
+
                 if first_msg and starting_msg:
                     user_input = starting_msg
-                
+
                 user_input = self._get_user_input(continue_flag)
-                
 
                 if not user_input:
                     continue
-                
-                if user_input.strip().lower() in ["/quit", "/exit", "/q"]:      
+
+                if user_input.strip().lower() in ["/quit", "/exit", "/q"]:
                     self.ui.goodbye()
                     return True
-                
+
                 if self._handle_command(user_input, configuration):
                     continue
-                
+
                 if first_msg and initial_prompt_suffix:
                     user_input += f"\n\n{initial_prompt_suffix}"
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
 
-                self.ui.tmp_msg("\nWorking on the task...", 1)
+                self.ui.tmp_msg("Working on the task...", 1)
 
                 for chunk in self.agent.stream(
                     {"messages": [("human", user_input)]}, configuration
@@ -163,7 +162,7 @@ class BaseAgent:
         if user_input.strip().lower().startswith("/model"):
             self._handle_model_command(user_input)
             return True
-        
+
         for cmd, handler in self._custom_commands.items():
             cmd_parts = user_input.split()
             if cmd_parts[0].lower() == cmd:

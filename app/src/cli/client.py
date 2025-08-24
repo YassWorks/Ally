@@ -1,14 +1,17 @@
-from app.src.config.agent_factory import AgentFactory
-from app.src.orchestration.orchestrated_codegen import CodeGenUnit
-from app.src.config.ui import AgentUI
-from app.utils.ascii_art import ASCII_ART
-from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
 from app.src.orchestration.integrate_web_search import integrate_web_search
+from app.src.orchestration.orchestrated_codegen import CodeGenUnit
+from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
+from app.src.config.permissions import permission_manager
+from app.src.config.agent_factory import AgentFactory
+from app.src.helpers.valid_dir import validate_dir_name
+from app.utils.ascii_art import ASCII_ART
 from app.src.config.base import BaseAgent
+from app.src.cli.flags import ArgsParser
+from app.src.config.ui import AgentUI
 from rich.console import Console
+import textwrap
 import sys
 import os
-import textwrap
 
 
 class CLI:
@@ -48,7 +51,7 @@ class CLI:
                 "api_key": general_api_key or api_key,
                 "temperature": general_temperature,
                 "system_prompt": general_system_prompt,
-            }
+            },
         )
         self.default_web_searcher_agent: BaseAgent = AgentFactory.create_agent(
             agent_type="web_searcher",
@@ -57,7 +60,7 @@ class CLI:
                 "api_key": web_searcher_api_key or api_key,
                 "temperature": web_searcher_temperature,
                 "system_prompt": web_searcher_system_prompt,
-            }
+            },
         )
 
         self._validate_config(
@@ -100,18 +103,23 @@ class CLI:
         general_api_key,
     ):
         """Validate required configuration for coding."""
-        
+
         if not api_key and not all(
-            [codegen_api_key, brainstormer_api_key, web_searcher_api_key, general_api_key]
+            [
+                codegen_api_key,
+                brainstormer_api_key,
+                web_searcher_api_key,
+                general_api_key,
+            ]
         ):
             raise ValueError(
                 "API key must be provided either as 'api_key' or individual agent API keys"
             )
 
-        if not all([codegen_model, brainstormer_model, web_searcher_model, general_model]):
-            raise ValueError(
-                "Model names must be provided for all agents in coding"
-            )
+        if not all(
+            [codegen_model, brainstormer_model, web_searcher_model, general_model]
+        ):
+            raise ValueError("Model names must be provided for all agents in coding")
 
     def _setup_coding_config(
         self,
@@ -130,7 +138,7 @@ class CLI:
         web_searcher_prompt,
     ):
         """Setup configuration for coding."""
-        
+
         self.model_names = {
             "code_gen": codegen_model,
             "brainstormer": brainstormer_model,
@@ -155,41 +163,51 @@ class CLI:
             "web_searcher": web_searcher_prompt,
         }
 
-    def start_chat(self):
+    def start_chat(self, *args):
         """Start the main chat interface."""
 
-        self.ui.logo(ASCII_ART)
-        self.ui.help()
-        
         try:
-            active_dir = self._setup_environment()
+            active_dir, initial_prompt = self._setup_environment(args)
+
+            self.ui.logo(ASCII_ART)
+            self.ui.help()
+
             cwd_note = f"ALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
 
             # making the project generation a command for the general agent
-            self.general_agent.register_command("/project", self.launch_coding_units)
-            
+            self.general_agent.register_command(
+                "/project", lambda: self.launch_coding_units()
+            )
+
             # giving the general agent access to the web with a separate web searcher agent
             integrate_web_search(self.general_agent, self.default_web_searcher_agent)
-            
-            self.general_agent.start_chat(initial_prompt_suffix=cwd_note, show_welcome=False)
+
+            self.general_agent.start_chat(
+                starting_msg=initial_prompt,
+                initial_prompt_suffix=cwd_note,
+                show_welcome=False,
+            )
 
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
             self.ui.error(f"An unexpected error occurred: {e}")
 
-    def launch_coding_units(self):
+    def launch_coding_units(self, initial_prompt: str = None, active_dir: str = None):
         """Start the agent units that create full projects from scratch."""
 
         self._display_model_config()
         if self.ui.confirm(UI_MESSAGES["change_models"], default=False):
             self._update_models()
-        
-        try:
-            active_dir = self._setup_environment()
 
-            self.ui.tmp_msg("\nInitializing agents...", duration=1)
-            codegen_unit_success = self._run_codgen_unit(active_dir)
+        try:
+            if active_dir is None:
+                active_dir = self._setup_directory()
+
+            self.ui.tmp_msg("Initializing agents...", duration=1)
+            codegen_unit_success = self._run_codegen_unit(
+                initial_prompt=initial_prompt, working_dir=active_dir
+            )
 
             if not codegen_unit_success:
                 self.ui.error(
@@ -202,15 +220,45 @@ class CLI:
         except Exception as e:
             self.ui.error(f"An unexpected error occurred: {e}")
 
-    def _setup_environment(self) -> str:
+    def _setup_environment(self, user_args: list[str] = None) -> str:
         """Setup working environment and configuration."""
-        
-        active_dir = self._setup_directory()
-        return active_dir
+
+        active_dir = None
+        initial_prompt = None
+
+        if user_args:
+            parsed_args = ArgsParser.get_args(
+                ui=self.ui,
+                user_args=list(user_args),
+            )
+
+            if parsed_args.wd:
+                if not validate_dir_name(parsed_args.wd):
+                    self.ui.error(f"Invalid directory name: {parsed_args.wd}")
+                    sys.exit(1)
+                active_dir = parsed_args.wd
+
+            if parsed_args.allow_all_tools:
+                permission_manager.always_allow = True
+
+            if parsed_args.msg:
+                initial_prompt = parsed_args.msg
+
+            if parsed_args.create_project:
+                self.ui.logo(ASCII_ART)
+                self.launch_coding_units(
+                    initial_prompt=initial_prompt, active_dir=active_dir
+                )
+                sys.exit(0)
+
+        if active_dir is None:
+            active_dir = self._setup_directory()
+
+        return active_dir, initial_prompt
 
     def _setup_directory(self) -> str:
         """Setup working directory with user interaction."""
-        
+
         active_dir = os.getcwd()
         self.ui.status_message(
             title=UI_MESSAGES["titles"]["current_directory"],
@@ -242,7 +290,7 @@ class CLI:
 
     def _display_model_config(self):
         """Display current model configuration."""
-        
+
         models_msg = f"""
             Brainstormer: [{self.ui._style("secondary")}]{self.model_names["brainstormer"]}[/{self.ui._style("secondary")}]
             Web Searcher: [{self.ui._style("secondary")}]{self.model_names["web_searcher"]}[/{self.ui._style("secondary")}]
@@ -258,7 +306,7 @@ class CLI:
 
     def _update_models(self):
         """Update model configuration based on user input."""
-        
+
         agent_types = ["brainstormer", "web_searcher", "code_gen"]
         display_names = ["Brainstormer", "Web Searcher", "Coding"]
 
@@ -269,9 +317,9 @@ class CLI:
             )
             self.model_names[agent_type] = new_model
 
-    def _run_codgen_unit(self, working_dir: str) -> bool:
+    def _run_codegen_unit(self, working_dir: str, initial_prompt: str = None) -> bool:
         """Execute the coding workflow with proper error handling."""
-        
+
         try:
             agents = AgentFactory.create_coding_agents(
                 model_names=self.model_names,
@@ -287,6 +335,7 @@ class CLI:
             )
 
             return codegen_unit.run(
+                prompt=initial_prompt,
                 config=self.config,
                 stream=self.stream,
                 show_welcome=False,

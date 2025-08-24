@@ -30,6 +30,7 @@ class CodeGenUnit(BaseUnit):
 
     def run(
         self,
+        prompt: str = None,
         recursion_limit: int = 100,
         config: dict = None,
         stream: bool = False,
@@ -47,7 +48,7 @@ class CodeGenUnit(BaseUnit):
 
             working_dir = working_dir or self._setup_working_directory()
 
-            user_input = self.ui.get_input(
+            user_input = prompt or self.ui.get_input(
                 message=UI_MESSAGES["project_prompt"],
                 cwd=working_dir,
             ).strip()
