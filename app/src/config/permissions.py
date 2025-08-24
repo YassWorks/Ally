@@ -16,7 +16,7 @@ class PermissionManager:
         if tool_name in self.always_allowed_tools:
             return True
 
-        message = f"\n[{self.ui._style("primary")}]Attempting to call [/{self.ui._style("primary")}]'{tool_name}'"
+        message = f"\n[{self.ui._style('primary')}]Attempting to call [/{self.ui._style('primary')}]'{tool_name}'"
         self.ui.console.print(message)
 
         options = self._get_options(tool_name=tool_name)

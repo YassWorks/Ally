@@ -78,8 +78,8 @@ class BaseAgent:
 
                 if first_msg and starting_msg:
                     user_input = starting_msg
-
-                user_input = self._get_user_input(continue_flag)
+                else:
+                    user_input = self._get_user_input(continue_flag)
 
                 if not user_input:
                     continue
@@ -99,7 +99,7 @@ class BaseAgent:
                 self.ui.tmp_msg("Working on the task...", 1)
 
                 for chunk in self.agent.stream(
-                    {"messages": [("human", user_input)]}, configuration
+                    {"messages": [("human", user_input)]}, config=configuration
                 ):
                     self._display_chunk(chunk)
 
@@ -188,10 +188,12 @@ class BaseAgent:
                 title="Current Model",
                 message=self.model_name,
             )
+            return
 
         if command_parts[1] == "change":
             if len(command_parts) < 3:
                 self.ui.error("Please specify a model to change to.")
+                return
 
             new_model = command_parts[2]
             self.ui.status_message(
@@ -199,11 +201,16 @@ class BaseAgent:
                 message=f"Changing model to {new_model}",
             )
             self.model_name = new_model
-            self.agent = self.get_agent(
+            graph, agent = self.get_agent(
                 model_name=self.model_name,
                 api_key=self.api_key,
                 system_prompt=self.system_prompt,
+                temperature=self.temperature,
+                include_graph=True,
             )
+            self.graph = graph
+            self.agent = agent
+            return
 
         self.ui.error("Unknown model command. Type /help for instructions.")
 

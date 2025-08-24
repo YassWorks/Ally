@@ -108,7 +108,7 @@ class AgentUI:
             rendered_content = markdown_content
 
         self.console.print(
-            f"[{self._style("secondary")}]Tool Complete: {tool_name}[/{self._style("secondary")}]"
+            f"[{self._style('secondary')}]Tool Complete: {tool_name}[/{self._style('secondary')}]"
         )
         self.console.print(rendered_content)
 
