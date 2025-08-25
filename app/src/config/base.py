@@ -51,6 +51,7 @@ class BaseAgent:
         recursion_limit: int = 100,
         config: dict = None,
         show_welcome: bool = True,
+        active_dir: str = None,
     ) -> bool:
         """Start interactive chat session with the agent."""
 
@@ -79,7 +80,10 @@ class BaseAgent:
                 if first_msg and starting_msg:
                     user_input = starting_msg
                 else:
-                    user_input = self._get_user_input(continue_flag)
+                    user_input = self._get_user_input(
+                        continue_flag=continue_flag,
+                        active_dir=active_dir,
+                    )
 
                 if not user_input:
                     continue
@@ -133,14 +137,14 @@ class BaseAgent:
             finally:
                 first_msg = False
 
-    def _get_user_input(self, continue_flag: bool) -> str:
+    def _get_user_input(self, continue_flag: bool, active_dir: str = None) -> str:
         """Get user input, handling continuation scenarios."""
         if continue_flag:
             return "Continue where you left. Don't repeat anything already done."
         else:
             return self.ui.get_input(
                 model=self.model_name,
-                cwd=os.getcwd(),
+                cwd=active_dir or os.getcwd(),
             ).strip()
 
     def _handle_command(self, user_input: str, configuration: dict) -> bool:

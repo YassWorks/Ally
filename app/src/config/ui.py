@@ -162,8 +162,6 @@ class AgentUI:
             prompt_content = message or ""
             if default:
                 prompt_content += f" [dim](default: {default})[/dim]"
-            if choices and show_choices:
-                prompt_content += f" [dim]({'/'.join(choices)})[/dim]"
 
             if info_line:
                 prompt_content += f"\n{info_line}" if prompt_content.strip() else info_line

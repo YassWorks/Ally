@@ -4,6 +4,7 @@ from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.utils.constants import UI_MESSAGES
 from app.utils.ascii_art import ASCII_ART
 from pathlib import Path
+import uuid
 
 
 PROMPTS_DIR = Path(__file__).resolve().parents[2]
@@ -48,10 +49,13 @@ class CodeGenUnit(BaseUnit):
 
             working_dir = working_dir or self._setup_working_directory()
 
-            user_input = prompt or self.ui.get_input(
-                message=UI_MESSAGES["project_prompt"],
-                cwd=working_dir,
-            ).strip()
+            user_input = (
+                prompt
+                or self.ui.get_input(
+                    message=UI_MESSAGES["project_prompt"],
+                    cwd=working_dir,
+                ).strip()
+            )
 
             return self._execute_generation_workflow(
                 working_dir, user_input, recursion_limit, config, stream
@@ -74,33 +78,41 @@ class CodeGenUnit(BaseUnit):
     ) -> bool:
         """Execute the main generation workflow steps."""
 
+        brainstorming_thread_id = str(uuid.uuid4())
+        code_generation_thread_id = str(uuid.uuid4())
+
         # Step 1: Context Engineering
         self._run_brainstorming_phase(
-            working_dir,
-            user_input,
-            recursion_limit,
-            config,
-            stream,
+            working_dir=working_dir,
+            user_input=user_input,
+            recursion_limit=recursion_limit,
+            config=config,
+            stream=stream,
+            thread_id=brainstorming_thread_id,
         )
 
         # Step 2: Optional additional context
         if not self._handle_additional_context(
-            working_dir,
-            recursion_limit,
-            config,
+            working_dir=working_dir,
+            recursion_limit=recursion_limit,
+            config=config,
+            thread_id=brainstorming_thread_id,
         ):
             return False
 
         # Step 3: Code Generation
         self._run_code_generation_phase(
-            working_dir,
-            user_input,
-            recursion_limit,
-            stream,
+            working_dir=working_dir,
+            user_input=user_input,
+            recursion_limit=recursion_limit,
+            stream=stream,
+            thread_id=code_generation_thread_id,
         )
 
         # Step 4: Interactive coding session
-        return self._run_interactive_session(recursion_limit)
+        return self._run_interactive_session(
+            recursion_limit=recursion_limit, thread_id=code_generation_thread_id
+        )
 
     def _run_brainstorming_phase(
         self,
@@ -109,11 +121,12 @@ class CodeGenUnit(BaseUnit):
         recursion_limit: int,
         config: dict,
         stream: bool,
+        thread_id: str,
     ) -> bool:
         """Execute the brainstorming and context engineering phase."""
 
         brainstormer_prompt = self._create_brainstormer_prompt(user_input, working_dir)
-        configuration = config or self._create_agent_config("START", recursion_limit)
+        configuration = config or self._create_agent_config(thread_id, recursion_limit)
 
         AgentExceptionHandler.handle_agent_exceptions(
             operation=lambda: self.agents["brainstormer"].invoke(
@@ -134,6 +147,7 @@ class CodeGenUnit(BaseUnit):
         user_input: str,
         recursion_limit: int,
         stream: bool,
+        thread_id: str,
     ) -> bool:
         """Execute the code generation phase."""
 
@@ -144,7 +158,7 @@ class CodeGenUnit(BaseUnit):
         )
 
         codegen_prompt = self._create_codegen_prompt(user_input, working_dir)
-        configuration = self._create_agent_config("START2", recursion_limit)
+        configuration = self._create_agent_config(thread_id, recursion_limit)
 
         AgentExceptionHandler.handle_agent_exceptions(
             operation=lambda: self.agents["code_gen"].invoke(
@@ -160,7 +174,11 @@ class CodeGenUnit(BaseUnit):
         )
 
     def _handle_additional_context(
-        self, working_dir: str, recursion_limit: int, config: dict
+        self,
+        working_dir: str,
+        recursion_limit: int,
+        config: dict,
+        thread_id: str,
     ) -> bool:
         """Handle optional additional context gathering."""
 
@@ -181,7 +199,7 @@ class CodeGenUnit(BaseUnit):
             )
 
             configuration = config or self._create_agent_config(
-                "START", recursion_limit
+                thread_id, recursion_limit
             )
 
             exited_safely = self.agents["brainstormer"].start_chat(
@@ -200,7 +218,11 @@ class CodeGenUnit(BaseUnit):
 
         return True
 
-    def _run_interactive_session(self, recursion_limit: int) -> bool:
+    def _run_interactive_session(
+        self,
+        recursion_limit: int,
+        thread_id: str,
+    ) -> bool:
         """Run the interactive coding session."""
 
         self.ui.status_message(
@@ -209,7 +231,7 @@ class CodeGenUnit(BaseUnit):
             style="accent",
         )
 
-        configuration = self._create_agent_config("START2", recursion_limit)
+        configuration = self._create_agent_config(thread_id, recursion_limit)
         exited_safely = self.agents["code_gen"].start_chat(
             config=configuration, show_welcome=False
         )

@@ -168,11 +168,11 @@ class CLI:
 
         try:
             active_dir, initial_prompt = self._setup_environment(args)
-
+            
             self.ui.logo(ASCII_ART)
             self.ui.help()
 
-            cwd_note = f"ALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
+            wd_note = f"## IMPORTANT\nALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
 
             # making the project generation a command for the general agent
             self.general_agent.register_command(
@@ -184,8 +184,9 @@ class CLI:
 
             self.general_agent.start_chat(
                 starting_msg=initial_prompt,
-                initial_prompt_suffix=cwd_note,
+                initial_prompt_suffix=wd_note,
                 show_welcome=False,
+                active_dir=active_dir,
             )
 
         except KeyboardInterrupt:

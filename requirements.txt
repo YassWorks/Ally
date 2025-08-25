@@ -7,3 +7,4 @@ requests
 google-api-python-client
 rich
 openai
+langgraph-checkpoint-sqlite

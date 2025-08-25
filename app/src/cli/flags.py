@@ -23,7 +23,7 @@ class ArgsParser(argparse.ArgumentParser):
 
     def error(self, message):
         usage = self.format_help()
-        self.ui.error(f"{message}\n{usage}", file=sys.stderr)
+        self.ui.error(f"{message}\n{usage}")
         sys.exit(2)
 
     @classmethod

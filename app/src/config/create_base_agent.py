@@ -1,17 +1,22 @@
 from langchain_cerebras import ChatCerebras
 from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END, START
 from typing import TypedDict, Annotated
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
+from pathlib import Path
 
 
 class State(TypedDict):
     """Common state structure for all agents."""
-    messages: Annotated[list, add_messages]
+    messages: Annotated[list[BaseMessage], add_messages]
+    
+    
+LAST_N_TURNS = 15
 
 
 def create_base_agent(
@@ -59,27 +64,37 @@ def create_base_agent(
     graph = StateGraph(State)
 
     def llm_node(state: State):
-        return {"messages": [llm_chain.invoke({"messages": state["messages"]})]}
+        context = build_llm_context(state["messages"])
+        return {"messages": [llm_chain.invoke({"messages": context})]}
 
     tool_node = ToolNode(tools=tools, handle_tool_errors=False)
 
     def forward(state: State):
         return {}
+    
+    def toolcall_error(state: State):
+        error_message = HumanMessage(
+            content="Error: Your tool call was malformed or non-JSON. Please fix and retry.",
+        )
+        return {"messages": [error_message]}
 
     graph.add_node("llm", llm_node)
     graph.add_node("tools", tool_node)
     graph.add_node("toolcall_checker", forward)
+    graph.add_node("toolcall_error", toolcall_error)
 
-    graph.add_edge(START, "llm")
-    graph.add_conditional_edges(
-        "llm", tool_call_attempted, {"toolcall_checker": "toolcall_checker", END: END}
-    )
-    graph.add_conditional_edges(
-        "toolcall_checker", valid_toolcall, {"tools": "tools", "llm": "llm"}
-    )
-    graph.add_edge("tools", "llm")
+    if tools:
+        graph.add_edge(START, "llm")
+        graph.add_conditional_edges("llm", tool_call_attempted)
+        graph.add_conditional_edges("toolcall_checker", valid_toolcall)
+        graph.add_edge("toolcall_error", "llm")
+        graph.add_edge("tools", "llm")
+    else:
+        graph.add_edge(START, "llm")
+        graph.add_edge("llm", END)
 
-    mem = MemorySaver()
+    db_path = (Path(__file__).resolve().parents[2] / "database").as_posix()
+    mem = SqliteSaver(f"sqlite:///{db_path}")
     built_graph = graph.compile(checkpointer=mem)
 
     if include_graph:
@@ -94,13 +109,15 @@ def tool_call_attempted(state: State):
     if state["messages"]:
         ai_message = state["messages"][-1]
         content = ai_message.content
-        tool_calls = ai_message.tool_calls
+        tool_calls = getattr(ai_message, "tool_calls", None)
     else:
         raise ValueError("No messages found in input state to check for tool calls.")
 
-    # Check if tool calls were made or if it looks like the agent tried to make one
+    content = flatten_content(content)
+
+    # checking if tool calls were made or if it looks like the agent tried to make one
     if tool_calls or any(
-        substr in content for substr in ("{", "}", "tool_call", "arguments")
+        substr in content for substr in ("tool_call", "arguments", "<tool", "tool>")
     ):
         return "toolcall_checker"
     else:
@@ -113,24 +130,72 @@ def valid_toolcall(state: State):
     if state["messages"]:
         ai_message = state["messages"][-1]
         content = ai_message.content
-        tool_calls = ai_message.tool_calls
+        tool_calls = getattr(ai_message, "tool_calls", None)
     else:
         raise ValueError("No messages found in input state to check for tool calls.")
 
-    # Check for malformed tool calls
+    content = flatten_content(content)
+
+    # checking for malformed tool calls inside the content block
     if not tool_calls and any(
-        substr in content for substr in ("{", "}", "tool_call", "arguments", "<tool")
+        substr in content for substr in ("tool_call", "arguments", "<tool", "tool>")
     ):
-        error_message = ToolMessage(
-            tool_call_id="retry",
-            content="Error: Your tool call was malformed or non-JSON. Please fix and retry.",
-            invalid=True,
-        )
-
-        if "messages" not in state:
-            state["messages"] = []
-        state["messages"].append(error_message)
-
-        return "llm"
+        return "toolcall_error"
     else:
         return "tools"
+
+
+def build_llm_context(messages: list[BaseMessage]):
+    """
+    Build the context for the LLM by including all messages after the last human message.
+    And cleaning off anything before it.
+    """
+    new_context = []
+    last_human_idx = len(messages)-1
+    
+    for i in range(len(messages)-1, -1, -1):
+        if isinstance(messages[i], HumanMessage):
+            last_human_idx = i
+            break
+    
+    new_context.extend(clean_context_window(messages[:last_human_idx]))
+    new_context.extend(messages[last_human_idx:])
+
+    return new_context
+
+
+def clean_context_window(messages: list[BaseMessage]):
+    """
+    Clean the context window by keeping only the last N turns.
+    And truncating the tools arguments for brevity.
+    """
+    new_context = []
+    turn_count = 0
+    
+    for message in reversed(messages):
+        
+        if isinstance(message, HumanMessage):
+            new_context.append(message)
+            turn_count += 1
+            if turn_count > LAST_N_TURNS:
+                break
+            
+        elif isinstance(message, AIMessage):
+            if not hasattr(message, "tool_calls") \
+               and "tool_calls" not in getattr(message, "additional_kwargs", {}):
+                new_context.append(message)
+
+    new_context.reverse()
+    return new_context
+
+
+def flatten_content(content: list[str | dict]) -> str:
+    """
+    Flatten the content by joining strings or formatting dictionaries.
+    """
+    if isinstance(content, list):
+        if isinstance(content[0], dict):
+            content = "\n".join([f"{k}: {v}" for item in content for k, v in item.items()])
+        if isinstance(content[0], str):
+            content = "\n".join(content)
+    return content
