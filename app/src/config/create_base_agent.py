@@ -5,10 +5,10 @@ from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END, START
 from typing import TypedDict, Annotated
 from langgraph.prebuilt import ToolNode
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
 from pathlib import Path
+import sqlite3
 
 
 class State(TypedDict):
@@ -93,8 +93,11 @@ def create_base_agent(
         graph.add_edge(START, "llm")
         graph.add_edge("llm", END)
 
-    db_path = (Path(__file__).resolve().parents[2] / "database").as_posix()
-    mem = SqliteSaver(f"sqlite:///{db_path}")
+    db_path = (Path(__file__).resolve().parents[2] / "database")
+    db_file = db_path / "memory.sqlite"
+    conn = sqlite3.connect(db_file.as_posix(), check_same_thread=False)
+
+    mem = SqliteSaver(conn)
     built_graph = graph.compile(checkpointer=mem)
 
     if include_graph:
