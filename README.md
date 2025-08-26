@@ -1,7 +1,7 @@
 # Ally 🗿
 
 Ally is an AI-powered CLI tool that can assist you with everyday tasks or coding projects or any wild ideas you have.
-Currently running on Cerebras models with an API but local models (Ollama support) are coming soon.
+Currently running on Cerebras models through an API, but local model support (Ollama) is coming soon.
 
 ## Key Features
 
