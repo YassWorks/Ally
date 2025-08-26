@@ -16,7 +16,7 @@ class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     
     
-LAST_N_TURNS = 15
+LAST_N_TURNS = 20
 
 
 def create_base_agent(
@@ -184,9 +184,12 @@ def clean_context_window(messages: list[BaseMessage]):
                 break
             
         elif isinstance(message, AIMessage):
-            if not hasattr(message, "tool_calls") \
-               and "tool_calls" not in getattr(message, "additional_kwargs", {}):
-                new_context.append(message)
+            # strip all the tool_call related content for token efficiency
+            if hasattr(message, "content") and flatten_content(message.content).strip() != "":
+                new_assistant_message = AIMessage(
+                    content=message.content,
+                )
+                new_context.append(new_assistant_message)
 
     new_context.reverse()
     return new_context
