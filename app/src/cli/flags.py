@@ -9,12 +9,12 @@ class ArgsParser(argparse.ArgumentParser):
         super().__init__(prog="ally", description="Ally CLI flags")
         self.ui = ui
         self.add_argument(
-            "-create-project",
+            "--create-project",
             action="store_true",
             help="Initialize new project workspace",
         )
         self.add_argument(
-            "-allow-all-tools",
+            "--allow-all-tools",
             action="store_true",
             help="Enable unrestricted tool execution for the session (WARNING: bypasses security)",
         )

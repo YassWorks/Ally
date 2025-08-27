@@ -8,6 +8,7 @@ from langgraph.graph import StateGraph
 from app.src.config.ui import AgentUI
 from rich.console import Console
 import langgraph.errors as lg_errors
+from app.utils.constants import CONTINUE_MESSAGE
 import uuid
 import os
 import openai
@@ -240,7 +241,7 @@ class BaseAgent:
         if extra_context:
             message = self._add_extra_context(message, extra_context)
 
-        def execute_agent():
+        def execute_agent(message):
             if stream:
                 last = None
                 for chunk in self.agent.stream(
@@ -258,10 +259,11 @@ class BaseAgent:
                 )
 
         raw_response = AgentExceptionHandler.handle_agent_exceptions(
-            operation=execute_agent,
+            operation=lambda: execute_agent(message),
             ui=self.ui,
             propagate=propagate_exceptions,
             continue_on_limit=False,
+            retry_operation=lambda: execute_agent(CONTINUE_MESSAGE),
         )
 
         if raw_response is None:

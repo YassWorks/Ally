@@ -1,5 +1,7 @@
 CONSOLE_WIDTH = 100
 
+CONTINUE_MESSAGE = "Continue where you left off. Don't repeat anything already done."
+
 THEME = {
     "primary": "#6366f1",
     "secondary": "#8b5cf6", 

@@ -1,7 +1,7 @@
 from app.src.orchestration.base_unit import BaseUnit
 from app.src.config.exception_handler import AgentExceptionHandler
 from app.src.orchestration.integrate_web_search import integrate_web_search
-from app.utils.constants import UI_MESSAGES
+from app.utils.constants import UI_MESSAGES, CONTINUE_MESSAGE
 from app.utils.ascii_art import ASCII_ART
 from pathlib import Path
 import uuid
@@ -139,6 +139,13 @@ class CodeGenUnit(BaseUnit):
             ui=self.ui,
             propagate=False,
             continue_on_limit=True,
+            retry_operation=lambda: self.agents["brainstormer"].invoke(
+                message=CONTINUE_MESSAGE,
+                config=configuration,
+                stream=stream,
+                quiet=not stream,
+                propagate_exceptions=True,
+            ),
         )
 
     def _run_code_generation_phase(
@@ -171,6 +178,13 @@ class CodeGenUnit(BaseUnit):
             ui=self.ui,
             propagate=False,
             continue_on_limit=True,
+            retry_operation=lambda: self.agents["code_gen"].invoke(
+                message=CONTINUE_MESSAGE,
+                config=configuration,
+                stream=stream,
+                quiet=not stream,
+                propagate_exceptions=True,
+            ),
         )
 
     def _handle_additional_context(

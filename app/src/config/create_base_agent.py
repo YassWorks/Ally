@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END, START
 from typing import TypedDict, Annotated
-from langgraph.prebuilt import ToolNode
+from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
 from pathlib import Path
@@ -69,25 +69,12 @@ def create_base_agent(
 
     tool_node = ToolNode(tools=tools, handle_tool_errors=False)
 
-    def forward(state: State):
-        return {}
-    
-    def toolcall_error(state: State):
-        error_message = HumanMessage(
-            content="Error: Your tool call was malformed or non-JSON. Please fix and retry.",
-        )
-        return {"messages": [error_message]}
-
     graph.add_node("llm", llm_node)
-    graph.add_node("tools", tool_node)
-    graph.add_node("toolcall_checker", forward)
-    graph.add_node("toolcall_error", toolcall_error)
 
     if tools:
+        graph.add_node("tools", tool_node)
         graph.add_edge(START, "llm")
-        graph.add_conditional_edges("llm", tool_call_attempted)
-        graph.add_conditional_edges("toolcall_checker", valid_toolcall)
-        graph.add_edge("toolcall_error", "llm")
+        graph.add_conditional_edges("llm", tools_condition)
         graph.add_edge("tools", "llm")
     else:
         graph.add_edge(START, "llm")
@@ -104,48 +91,6 @@ def create_base_agent(
         return graph, built_graph
     else:
         return built_graph
-
-
-def tool_call_attempted(state: State):
-    """Check if the agent attempted to make a tool call."""
-
-    if state["messages"]:
-        ai_message = state["messages"][-1]
-        content = ai_message.content
-        tool_calls = getattr(ai_message, "tool_calls", None)
-    else:
-        raise ValueError("No messages found in input state to check for tool calls.")
-
-    content = flatten_content(content)
-
-    # checking if tool calls were made or if it looks like the agent tried to make one
-    if tool_calls or any(
-        substr in content for substr in ("tool_call", "arguments", "<tool", "tool>")
-    ):
-        return "toolcall_checker"
-    else:
-        return END
-
-
-def valid_toolcall(state: State):
-    """Validate tool calls and handle malformed ones."""
-
-    if state["messages"]:
-        ai_message = state["messages"][-1]
-        content = ai_message.content
-        tool_calls = getattr(ai_message, "tool_calls", None)
-    else:
-        raise ValueError("No messages found in input state to check for tool calls.")
-
-    content = flatten_content(content)
-
-    # checking for malformed tool calls inside the content block
-    if not tool_calls and any(
-        substr in content for substr in ("tool_call", "arguments", "<tool", "tool>")
-    ):
-        return "toolcall_error"
-    else:
-        return "tools"
 
 
 def build_llm_context(messages: list[BaseMessage]):
@@ -199,9 +144,12 @@ def flatten_content(content: list[str | dict]) -> str:
     """
     Flatten the content by joining strings or formatting dictionaries.
     """
-    if isinstance(content, list):
-        if isinstance(content[0], dict):
-            content = "\n".join([f"{k}: {v}" for item in content for k, v in item.items()])
-        if isinstance(content[0], str):
-            content = "\n".join(content)
-    return content
+    try:
+        if isinstance(content, list):
+            if isinstance(content[0], dict):
+                content = "\n".join([f"{k}: {v}" for item in content for k, v in item.items()])
+            if isinstance(content[0], str):
+                content = "\n".join(content)
+        return content
+    except Exception:
+        return str(content)

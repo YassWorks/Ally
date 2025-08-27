@@ -11,7 +11,7 @@ Currently running on Cerebras models through an API, but local model support (Ol
 - Can execute commannds and code. (All with your permission)
 
 #### Full coding project generation:
-- use the `-create-project` flag or use the `/project` command in the chat interface.
+- use the `--create-project` flag or use the `/project` command in the chat interface.
 
 - Complete workflow:
     - Asks for your project idea. This can be as simple or complex as you want.

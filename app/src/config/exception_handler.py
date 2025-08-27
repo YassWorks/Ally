@@ -1,6 +1,6 @@
 from app.src.config.permissions import PermissionDeniedException
 from app.src.config.ui import AgentUI
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 import langgraph.errors as lg_errors
 import openai
 
@@ -17,6 +17,7 @@ class AgentExceptionHandler:
         propagate: bool = False,
         continue_on_limit: bool = False,
         retries: int = 0,
+        retry_operation: Optional[Callable] = None,
     ) -> Any:
 
         try:
@@ -45,13 +46,14 @@ class AgentExceptionHandler:
             if continue_on_limit and ui.confirm(
                 "Continue from where the agent left off?", default=True
             ):
-                retries += 1
+                next_operation = retry_operation or operation
                 return AgentExceptionHandler.handle_agent_exceptions(
-                    operation=operation,
+                    operation=next_operation,
                     ui=ui,
                     propagate=propagate,
                     continue_on_limit=continue_on_limit,
-                    retries=retries,
+                    retries=retries + 1,
+                    retry_operation=retry_operation,
                 )
             return None
 
