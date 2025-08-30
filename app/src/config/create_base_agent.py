@@ -14,6 +14,7 @@ import sqlite3
 
 class State(TypedDict):
     """Common state structure for all agents."""
+
     messages: Annotated[list[BaseMessage], add_messages]
 
 
