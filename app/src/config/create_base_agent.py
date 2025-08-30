@@ -59,6 +59,7 @@ def create_base_agent(
                     model=model_name,
                     temperature=temperature,
                     validate_model_on_init=True,
+                    reasoning=False,
                 )
             case _:
                 raise ValueError(f"Unsupported inference provider: {provider}")
