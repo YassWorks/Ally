@@ -12,7 +12,7 @@ RUN apk add --no-cache \
     build-base \
     && rm -rf /var/cache/apk/*
 
-# Copy requirements first for better caching
+# copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
