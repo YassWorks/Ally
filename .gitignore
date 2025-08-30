@@ -9,3 +9,4 @@ test*
 canvas
 .github
 *.sqlite
+database/
