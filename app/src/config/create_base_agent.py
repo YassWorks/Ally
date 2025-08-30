@@ -104,9 +104,15 @@ def create_base_agent(
 
     db_path = Path(__file__).resolve().parents[2] / "database"
     db_file = db_path / "memory.sqlite"
-    conn = sqlite3.connect(db_file.as_posix(), check_same_thread=False)
+    if not db_path.exists():
+        db_path.mkdir(parents=True, exist_ok=True)
 
+    if not db_file.exists():
+        db_file.touch()
+        
+    conn = sqlite3.connect(db_file.as_posix(), check_same_thread=False)
     mem = SqliteSaver(conn)
+
     built_graph = graph.compile(checkpointer=mem)
 
     if include_graph:
