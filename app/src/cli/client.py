@@ -38,6 +38,11 @@ class CLI:
         codegen_system_prompt: str = None,
         brainstormer_system_prompt: str = None,
         web_searcher_system_prompt: str = None,
+        provider: str = "cerebras",
+        general_provider: str = None,
+        codegen_provider: str = None,
+        brainstormer_provider: str = None,
+        web_searcher_provider: str = None,
     ):
         self.stream = stream
         self.config = config
@@ -51,6 +56,7 @@ class CLI:
                 "api_key": general_api_key or api_key,
                 "temperature": general_temperature,
                 "system_prompt": general_system_prompt,
+                "provider": general_provider or provider,
             },
         )
         self.default_web_searcher_agent: BaseAgent = AgentFactory.create_agent(
@@ -60,6 +66,7 @@ class CLI:
                 "api_key": web_searcher_api_key or api_key,
                 "temperature": web_searcher_temperature,
                 "system_prompt": web_searcher_system_prompt,
+                "provider": web_searcher_provider or provider,
             },
         )
 
@@ -88,6 +95,10 @@ class CLI:
             codegen_prompt=codegen_system_prompt,
             brainstormer_prompt=brainstormer_system_prompt,
             web_searcher_prompt=web_searcher_system_prompt,
+            provider=provider,
+            codegen_provider=codegen_provider,
+            brainstormer_provider=brainstormer_provider,
+            web_searcher_provider=web_searcher_provider,
         )
 
     def _validate_config(
@@ -136,6 +147,10 @@ class CLI:
         codegen_prompt,
         brainstormer_prompt,
         web_searcher_prompt,
+        provider,
+        codegen_provider,
+        brainstormer_provider,
+        web_searcher_provider,
     ):
         """Setup configuration for coding."""
 
@@ -161,6 +176,12 @@ class CLI:
             "code_gen": codegen_prompt,
             "brainstormer": brainstormer_prompt,
             "web_searcher": web_searcher_prompt,
+        }
+
+        self.providers = {
+            "code_gen": codegen_provider or provider,
+            "brainstormer": brainstormer_provider or provider,
+            "web_searcher": web_searcher_provider or provider,
         }
 
     def start_chat(self, *args):
@@ -327,6 +348,7 @@ class CLI:
                 api_keys=self.api_keys,
                 temperatures=self.temperatures,
                 system_prompts=self.system_prompts,
+                providers=self.providers,
             )
 
             codegen_unit = CodeGenUnit(

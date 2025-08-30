@@ -10,6 +10,7 @@ def get_agent(
     extra_tools: list = None,
     temperature: float = 0,
     include_graph: bool = True,
+    provider: str = "cerebras",
 ):
     """Create a brainstormer agent with file manipulation tools.
     
@@ -40,4 +41,5 @@ def get_agent(
         system_prompt=system_prompt,
         temperature=temperature,
         include_graph=include_graph,
+        provider=provider,
     )

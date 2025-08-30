@@ -45,6 +45,7 @@ class AgentFactory:
                 api_key=config["api_key"],
                 system_prompt=config.get("system_prompt", None),
                 temperature=config.get("temperature", 0),
+                provider=config.get("provider", "cerebras"),
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize {agent_type} agent: {e}")
@@ -55,6 +56,7 @@ class AgentFactory:
         api_keys: Dict[str, str],
         temperatures: Optional[Dict[str, float]] = None,
         system_prompts: Optional[Dict[str, str]] = None,
+        providers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """Create all agents needed for coding.
 
@@ -63,6 +65,7 @@ class AgentFactory:
             api_keys: Dictionary mapping agent names to API keys
             temperatures: Optional temperature settings for each agent
             system_prompts: Optional system prompts for each agent
+            providers: Optional provider settings for each agent
 
         Returns:
             Dictionary of initialized agents
@@ -77,6 +80,7 @@ class AgentFactory:
                 "api_key": api_keys[agent_type],
                 "temperature": (temperatures or {}).get(agent_type, 0),
                 "system_prompt": (system_prompts or {}).get(agent_type),
+                "provider": (providers or {}).get(agent_type, "cerebras"),
             }
             agents[agent_type] = AgentFactory.create_agent(agent_type, config)
 

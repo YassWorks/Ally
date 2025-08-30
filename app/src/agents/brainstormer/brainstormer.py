@@ -25,6 +25,7 @@ class BrainstormerAgent(BaseAgent):
         api_key: str,
         system_prompt: str = None,
         temperature: float = 0,
+        provider: str = "cerebras",
     ):
 
         task_directory = os.path.dirname(os.path.abspath(__file__))
@@ -38,6 +39,7 @@ class BrainstormerAgent(BaseAgent):
             system_prompt=system_prompt,
             temperature=temperature,
             include_graph=True,
+            provider=provider,
         )
 
         console = Console(width=CONSOLE_WIDTH)

@@ -24,6 +24,7 @@ class CodeGenAgent(BaseAgent):
         api_key: str,
         system_prompt: str = None,
         temperature: float = 0,
+        provider: str = "cerebras",
     ):
 
         graph, agent = get_agent(
@@ -32,6 +33,7 @@ class CodeGenAgent(BaseAgent):
             system_prompt=system_prompt,
             temperature=temperature,
             include_graph=True,
+            provider=provider,
         )
 
         console = Console(width=CONSOLE_WIDTH)

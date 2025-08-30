@@ -10,9 +10,10 @@ def get_agent(
     extra_tools: list = None,
     temperature: float = 0,
     include_graph: bool = True,
+    provider: str = "cerebras",
 ):
     """Create a web searcher agent with search and scraping tools.
-    
+
     Args:
         model_name: LLM model identifier
         api_key: API key for model provider
@@ -20,7 +21,7 @@ def get_agent(
         extra_tools: Additional tools to include
         temperature: Model temperature for search diversity
         include_graph: Whether to return the graph along with agent
-        
+
     Returns:
         Agent instance or tuple of (graph, agent) if include_graph is True
     """
@@ -42,4 +43,5 @@ def get_agent(
         system_prompt=system_prompt,
         temperature=temperature,
         include_graph=include_graph,
+        provider=provider,
     )
