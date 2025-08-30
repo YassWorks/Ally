@@ -13,14 +13,18 @@ if not api_key:
 client = CLI(
     stream=True,
     api_key=api_key,
-    general_model_name="gpt-oss:20b",
-    codegen_model_name="qwen-3-coder-480b",
-    brainstormer_model_name="qwen-3-235b-a22b-thinking-2507",
-    web_searcher_model_name="qwen-3-235b-a22b-thinking-2507",
-    general_temperature=0.7,
-    codegen_temperature=0,
-    brainstormer_temperature=0.7,
-    web_searcher_temperature=0,
+    models={
+        "general": "qwen3:0.6b",
+        "code_gen": "qwen3:0.6b",
+        "brainstormer": "qwen3:0.6b",
+        "web_searcher": "qwen3:0.6b",
+    },
+    temperatures={
+        "general": 0.7,
+        "code_gen": 0,
+        "brainstormer": 0.7,
+        "web_searcher": 0,
+    },
     provider="ollama",
 )
 

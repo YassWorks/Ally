@@ -19,108 +19,80 @@ class CLI:
 
     def __init__(
         self,
+        provider: str = "cerebras",
         stream: bool = True,
         config: dict = None,
         api_key: str = None,
-        general_model_name: str = None,
-        codegen_model_name: str = None,
-        brainstormer_model_name: str = None,
-        web_searcher_model_name: str = None,
-        general_api_key: str = None,
-        codegen_api_key: str = None,
-        brainstormer_api_key: str = None,
-        web_searcher_api_key: str = None,
-        general_temperature: float = None,
-        codegen_temperature: float = None,
-        brainstormer_temperature: float = None,
-        web_searcher_temperature: float = None,
-        general_system_prompt: str = None,
-        codegen_system_prompt: str = None,
-        brainstormer_system_prompt: str = None,
-        web_searcher_system_prompt: str = None,
-        provider: str = "cerebras",
-        general_provider: str = None,
-        codegen_provider: str = None,
-        brainstormer_provider: str = None,
-        web_searcher_provider: str = None,
+        models: dict[str, str] = None,
+        api_key_per_model: dict[str, str] = None,
+        temperatures: dict[str, float] = None,
+        system_prompts: dict[str, str] = None,
+        provider_per_model: dict[str, str] = None,
     ):
         self.stream = stream
         self.config = config
         self.console = Console(width=CONSOLE_WIDTH)
         self.ui = AgentUI(self.console)
 
-        self.general_agent: BaseAgent = AgentFactory.create_agent(
-            agent_type="general",
-            config={
-                "model_name": general_model_name,
-                "api_key": general_api_key or api_key,
-                "temperature": general_temperature,
-                "system_prompt": general_system_prompt,
-                "provider": general_provider or provider,
-            },
-        )
-        self.default_web_searcher_agent: BaseAgent = AgentFactory.create_agent(
-            agent_type="web_searcher",
-            config={
-                "model_name": web_searcher_model_name,
-                "api_key": web_searcher_api_key or api_key,
-                "temperature": web_searcher_temperature,
-                "system_prompt": web_searcher_system_prompt,
-                "provider": web_searcher_provider or provider,
-            },
-        )
+        models = models or {}
+        api_key_per_model = api_key_per_model or {}
+        temperatures = temperatures or {}
+        system_prompts = system_prompts or {}
+        provider_per_model = provider_per_model or {}
+
+        try:
+            self.general_agent: BaseAgent = AgentFactory.create_agent(
+                agent_type="general",
+                config={
+                    "model_name": models.get("general"),
+                    "api_key": api_key_per_model.get("general") or api_key,
+                    "temperature": temperatures.get("general"),
+                    "system_prompt": system_prompts.get("general"),
+                    "provider": provider_per_model.get("general") or provider,
+                },
+            )
+            self.default_web_searcher_agent: BaseAgent = AgentFactory.create_agent(
+                agent_type="web_searcher",
+                config={
+                    "model_name": models.get("web_searcher"),
+                    "api_key": api_key_per_model.get("web_searcher") or api_key,
+                    "temperature": temperatures.get("web_searcher"),
+                    "system_prompt": system_prompts.get("web_searcher"),
+                    "provider": provider_per_model.get("web_searcher") or provider,
+                },
+            )
+        except Exception as e:
+            self.ui.error(f"Failed to initialize default agents: {e}")
 
         self._validate_config(
             api_key=api_key,
-            codegen_model=codegen_model_name,
-            brainstormer_model=brainstormer_model_name,
-            web_searcher_model=web_searcher_model_name,
-            general_model=general_model_name,
-            codegen_api_key=codegen_api_key,
-            brainstormer_api_key=brainstormer_api_key,
-            web_searcher_api_key=web_searcher_api_key,
-            general_api_key=general_api_key,
+            models=models,
+            api_key_per_model=api_key_per_model,
         )
         self._setup_coding_config(
             api_key=api_key,
-            codegen_model=codegen_model_name,
-            brainstormer_model=brainstormer_model_name,
-            web_searcher_model=web_searcher_model_name,
-            codegen_api_key=codegen_api_key,
-            brainstormer_api_key=brainstormer_api_key,
-            web_searcher_api_key=web_searcher_api_key,
-            codegen_temp=codegen_temperature,
-            brainstormer_temp=brainstormer_temperature,
-            web_searcher_temp=web_searcher_temperature,
-            codegen_prompt=codegen_system_prompt,
-            brainstormer_prompt=brainstormer_system_prompt,
-            web_searcher_prompt=web_searcher_system_prompt,
+            models=models,
+            api_key_per_model=api_key_per_model,
+            temperatures=temperatures,
+            system_prompts=system_prompts,
             provider=provider,
-            codegen_provider=codegen_provider,
-            brainstormer_provider=brainstormer_provider,
-            web_searcher_provider=web_searcher_provider,
+            provider_per_model=provider_per_model,
         )
 
     def _validate_config(
         self,
         api_key,
-        codegen_model,
-        brainstormer_model,
-        web_searcher_model,
-        general_model,
-        codegen_api_key,
-        brainstormer_api_key,
-        web_searcher_api_key,
-        general_api_key,
+        models,
+        api_key_per_model,
     ):
         """Validate required configuration for coding."""
 
         if not api_key and not all(
             [
-                codegen_api_key,
-                brainstormer_api_key,
-                web_searcher_api_key,
-                general_api_key,
+                api_key_per_model.get("code_gen"),
+                api_key_per_model.get("brainstormer"),
+                api_key_per_model.get("web_searcher"),
+                api_key_per_model.get("general"),
             ]
         ):
             raise ValueError(
@@ -128,60 +100,55 @@ class CLI:
             )
 
         if not all(
-            [codegen_model, brainstormer_model, web_searcher_model, general_model]
+            [
+                models.get("code_gen"),
+                models.get("brainstormer"),
+                models.get("web_searcher"),
+                models.get("general"),
+            ]
         ):
             raise ValueError("Model names must be provided for all agents in coding")
 
     def _setup_coding_config(
         self,
         api_key,
-        codegen_model,
-        brainstormer_model,
-        web_searcher_model,
-        codegen_api_key,
-        brainstormer_api_key,
-        web_searcher_api_key,
-        codegen_temp,
-        brainstormer_temp,
-        web_searcher_temp,
-        codegen_prompt,
-        brainstormer_prompt,
-        web_searcher_prompt,
+        models,
+        api_key_per_model,
+        temperatures,
+        system_prompts,
         provider,
-        codegen_provider,
-        brainstormer_provider,
-        web_searcher_provider,
+        provider_per_model,
     ):
         """Setup configuration for coding."""
 
         self.model_names = {
-            "code_gen": codegen_model,
-            "brainstormer": brainstormer_model,
-            "web_searcher": web_searcher_model,
+            "code_gen": models.get("code_gen"),
+            "brainstormer": models.get("brainstormer"),
+            "web_searcher": models.get("web_searcher"),
         }
 
         self.api_keys = {
-            "code_gen": codegen_api_key or api_key,
-            "brainstormer": brainstormer_api_key or api_key,
-            "web_searcher": web_searcher_api_key or api_key,
+            "code_gen": api_key_per_model.get("code_gen") or api_key,
+            "brainstormer": api_key_per_model.get("brainstormer") or api_key,
+            "web_searcher": api_key_per_model.get("web_searcher") or api_key,
         }
 
         self.temperatures = {
-            "code_gen": codegen_temp or 0,
-            "brainstormer": brainstormer_temp or 0.7,
-            "web_searcher": web_searcher_temp or 0,
+            "code_gen": temperatures.get("code_gen") or 0,
+            "brainstormer": temperatures.get("brainstormer") or 0.7,
+            "web_searcher": temperatures.get("web_searcher") or 0,
         }
 
         self.system_prompts = {
-            "code_gen": codegen_prompt,
-            "brainstormer": brainstormer_prompt,
-            "web_searcher": web_searcher_prompt,
+            "code_gen": system_prompts.get("code_gen"),
+            "brainstormer": system_prompts.get("brainstormer"),
+            "web_searcher": system_prompts.get("web_searcher"),
         }
 
         self.providers = {
-            "code_gen": codegen_provider or provider,
-            "brainstormer": brainstormer_provider or provider,
-            "web_searcher": web_searcher_provider or provider,
+            "code_gen": provider_per_model.get("code_gen") or provider,
+            "brainstormer": provider_per_model.get("brainstormer") or provider,
+            "web_searcher": provider_per_model.get("web_searcher") or provider,
         }
 
     def start_chat(self, *args):
@@ -208,6 +175,7 @@ class CLI:
                 initial_prompt_suffix=wd_note,
                 show_welcome=False,
                 active_dir=active_dir,
+                stream=self.stream,
             )
 
         except KeyboardInterrupt:
