@@ -55,6 +55,7 @@ class BaseAgent:
         config: dict = None,
         show_welcome: bool = True,
         active_dir: str = None,
+        stream: bool = True,
     ) -> bool:
         """Start interactive chat session with the agent."""
 
@@ -105,10 +106,16 @@ class BaseAgent:
 
                 self.ui.tmp_msg("Working on the task...", 1)
 
+                last = None
                 for chunk in self.agent.stream(
-                    {"messages": [("human", user_input)]}, config=configuration
+                    {"messages": [("human", user_input)]},
+                    config=configuration,
                 ):
-                    self._display_chunk(chunk)
+                    if stream:
+                        self._display_chunk(chunk)
+                    last = chunk
+                if not stream:
+                    self._display_chunk(last)
 
             except KeyboardInterrupt:
                 self.ui.session_interrupted()
