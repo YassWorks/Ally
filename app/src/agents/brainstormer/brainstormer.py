@@ -55,5 +55,6 @@ class BrainstormerAgent(BaseAgent):
             get_agent=get_agent,
             temperature=temperature,
             graph=graph,
+            provider=provider,
         )
         self.minimal_task = minimal_task  # minimal default prompt for brainstorming

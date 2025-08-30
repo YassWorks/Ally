@@ -32,6 +32,7 @@ class BaseAgent:
         get_agent: Callable,
         temperature: float = 0,
         graph: StateGraph = None,
+        provider: str = None,
     ):
         self.model_name = model_name
         self.api_key = api_key
@@ -42,6 +43,7 @@ class BaseAgent:
         self.get_agent = get_agent
         self.temperature = temperature
         self.graph = graph
+        self.provider = provider
         self._custom_commands: dict[str, Callable] = {}
 
     def start_chat(

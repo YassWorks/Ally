@@ -37,6 +37,7 @@ def integrate_web_search(agent: BaseAgent, web_searcher: WebSearcherAgent) -> No
         extra_tools=[call_searcher],
         temperature=agent.temperature,
         include_graph=True,
+        provider=agent.provider,
     )
 
     agent.agent = enhanced_agent

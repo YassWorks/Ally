@@ -45,4 +45,5 @@ class GeneralAgent(BaseAgent):
             get_agent=get_agent,
             temperature=temperature,
             graph=graph,
+            provider=provider,
         )
