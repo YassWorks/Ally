@@ -8,13 +8,13 @@ import os
 
 class BrainstormerAgent(BaseAgent):
     """Agent specialized in analyzing project descriptions and extracting ideas.
-    
-    Processes user input to identify core concepts, technical requirements, 
+
+    Processes user input to identify core concepts, technical requirements,
     and feature suggestions for project development.
-    
+
     Args:
         model_name: LLM model identifier
-        api_key: API key for model provider  
+        api_key: API key for model provider
         system_prompt: Optional custom system prompt
         temperature: Model temperature for creativity control
     """

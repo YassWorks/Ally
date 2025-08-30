@@ -5,10 +5,10 @@ from langchain_core.tools import tool
 
 def integrate_web_search(agent: BaseAgent, web_searcher: WebSearcherAgent) -> None:
     """Enhance an agent with web search capabilities.
-    
+
     Adds a search tool to the agent that delegates web research queries
     to the web searcher agent.
-    
+
     Args:
         agent: Agent to enhance with search capabilities
         web_searcher: Web searcher agent to handle search queries

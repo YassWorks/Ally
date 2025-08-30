@@ -7,10 +7,10 @@ from app.utils.constants import CONSOLE_WIDTH
 
 class CodeGenAgent(BaseAgent):
     """Agent specialized in generating complete project structures and code.
-    
+
     Creates functional codebases with proper file organization, dependencies,
     and documentation based on project requirements.
-    
+
     Args:
         model_name: LLM model identifier
         api_key: API key for model provider

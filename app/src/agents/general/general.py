@@ -10,7 +10,7 @@ class GeneralAgent(BaseAgent):
 
     Args:
         model_name: LLM model identifier
-        api_key: API key for model provider  
+        api_key: API key for model provider
         system_prompt: Optional custom system prompt
         temperature: Model temperature for creativity control
     """
