@@ -1,5 +1,6 @@
 from langchain_cerebras import ChatCerebras
 from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages
@@ -61,6 +62,14 @@ def create_base_agent(
                     temperature=temperature,
                     validate_model_on_init=True,
                     reasoning=False,
+                )
+            case "google":
+                llm = ChatGoogleGenerativeAI(
+                    model=model_name,
+                    temperature=temperature,
+                    timeout=None,
+                    max_retries=5,
+                    google_api_key=api_key,
                 )
             case _:
                 raise ValueError(f"Unsupported inference provider: {provider}")
