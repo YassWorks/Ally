@@ -7,17 +7,17 @@ from app.src.config.base import BaseAgent
 
 class WebSearcherAgent(BaseAgent):
     """Agent specialized in web research and information gathering.
-    
-    Searches for relevant information and best practices to enhance 
+
+    Searches for relevant information and best practices to enhance
     project generation with up-to-date knowledge.
-    
+
     Args:
         model_name: LLM model identifier
         api_key: API key for model provider
-        system_prompt: Optional custom system prompt  
+        system_prompt: Optional custom system prompt
         temperature: Model temperature for search query diversity
     """
-    
+
     def __init__(
         self,
         model_name: str,
