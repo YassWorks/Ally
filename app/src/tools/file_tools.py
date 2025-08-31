@@ -7,29 +7,24 @@ import shutil
 @tool
 def create_wd(path: str) -> str:
     """
-    **PRIMARY PURPOSE**: Creates a new directory/folder at the specified path.
+    ## PRIMARY PURPOSE: Creates a new directory/folder at the specified path.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - When you need to organize files into structured folders
     - Before placing files in a location that doesn't exist yet
     - Setting up workspace directories for different types of content
     - Creating nested folder structures in one operation
 
-    **BEHAVIOR**:
-    - Creates the directory and ALL parent directories if they don't exist
-    - Will NOT fail if the directory already exists (safe to use repeatedly)
-    - Similar to running "mkdir -p" in terminal
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         path (str): The directory path to create. Can be:
                    - Relative: "documents", "media/images", "archive/2024"
                    - Absolute: "/home/user/workspace", "/opt/data/projects"
                    - Nested: "deep/nested/folder/structure"
 
-    **RETURNS**:
+    ## RETURNS:
         str: Success message with created path, or error message if failed
 
-    **EXAMPLES**:
+    ## EXAMPLES:
         create_wd("new_folder")               # Creates folder in current directory
         create_wd("documents/reports")        # Creates nested structure
         create_wd("/home/user/workspace")     # Creates with absolute path
@@ -47,21 +42,16 @@ def create_wd(path: str) -> str:
 @tool
 def create_file(file_path: str, content: str) -> str:
     """
-    **PRIMARY PURPOSE**: Creates a brand new file with specified content.
+    ## PRIMARY PURPOSE: Creates a brand new file with specified content.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Creating new text files (.txt, .md, .csv, etc.)
     - Generating configuration files (.json, .yaml, .ini, etc.)
     - Writing documentation or notes
     - Creating data files or templates
     - Establishing any type of text-based file
 
-    **BEHAVIOR**:
-    - Creates ALL necessary parent directories automatically
-    - OVERWRITES existing files without warning
-    - Writes content exactly as provided (preserves formatting)
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         file_path (str): Where to create the file. Examples:
                         - "notes.txt" (current directory)
                         - "documents/report.md" (creates documents/ if needed)
@@ -71,12 +61,10 @@ def create_file(file_path: str, content: str) -> str:
                       - Line breaks (\n)
                       - Any formatting needed
 
-    **RETURNS**:
+    ## RETURNS:
         str: Success message with file path, or error message if failed
 
-    **WARNING**: This OVERWRITES existing files! Use modify_file() for edits.
-
-    **EXAMPLES**:
+    ## EXAMPLES:
         create_file("notes.txt", "Meeting notes from today")
         create_file("config/settings.json", '{"theme": "dark"}')
         create_file("README.md", "# My Project\n\nDescription here")
@@ -101,22 +89,16 @@ def create_file(file_path: str, content: str) -> str:
 @tool
 def modify_file(file_path: str, old_content: str, new_content: str) -> str:
     """
-    **PRIMARY PURPOSE**: Updates existing files by replacing specific content.
+    ## PRIMARY PURPOSE: Updates existing files by replacing specific content.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Correcting information in existing files
     - Updating configuration values or settings
     - Changing specific text sections
     - Making targeted edits without rewriting entire files
     - Updating data or content in documents
 
-    **BEHAVIOR**:
-    - Finds EXACT match of old_content and replaces with new_content
-    - Only replaces the FIRST occurrence found
-    - File must already exist (use create_file() for new files)
-    - Preserves all other file content unchanged
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         file_path (str): Path to existing file to modify
         old_content (str): EXACT text to replace (must match perfectly including:
                           - All whitespace and indentation
@@ -124,12 +106,10 @@ def modify_file(file_path: str, old_content: str, new_content: str) -> str:
                           - Capitalization and punctuation)
         new_content (str): Replacement text (can be longer/shorter than original)
 
-    **RETURNS**:
+    ## RETURNS:
         str: Success message, "Content not found" error, or other error message
 
-    **CRITICAL**: old_content must match EXACTLY or replacement will fail!
-
-    **EXAMPLES**:
+    ## EXAMPLES:
         modify_file("notes.txt", "Meeting at 2pm", "Meeting at 3pm")
         modify_file("config.json", '"theme": "light"', '"theme": "dark"')
     """
@@ -160,20 +140,15 @@ def modify_file(file_path: str, old_content: str, new_content: str) -> str:
 @tool
 def append_file(file_path: str, content: str) -> str:
     """
-    **PRIMARY PURPOSE**: Appends new content to the end of an existing file.
+    ## PRIMARY PURPOSE: Appends new content to the end of an existing file.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Adding new data to logs or reports
     - Appending notes or comments to documents
     - Extending configuration files with additional settings
     - Adding new entries to data files
 
-    **BEHAVIOR**:
-    - Appends content exactly as provided (preserves formatting)
-    - Creates the file if it doesn't exist (like "touch" command)
-    - Does NOT modify existing content, only adds to the end
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         file_path (str): Path to file to append. Examples:
                         - "log.txt" (current directory)
                         - "data/records.csv" (creates data/ if needed)
@@ -183,10 +158,10 @@ def append_file(file_path: str, content: str) -> str:
                       - Line breaks (\n)
                       - Any formatting needed
 
-    **RETURNS**:
+    ## RETURNS:
         str: Success message with file path, or error message if failed
 
-    **EXAMPLES**:
+    ## EXAMPLES:
         append_file("log.txt", "New log entry at 3pm")
         append_file("data/records.csv", "id,name\n1,John Doe")
         append_file("notes.txt", "\n# Additional Notes\nContent here")
@@ -213,37 +188,25 @@ def append_file(file_path: str, content: str) -> str:
 @tool
 def delete_file(file_path: str) -> str:
     """
-    **PRIMARY PURPOSE**: Permanently removes a file from the filesystem.
+    ## PRIMARY PURPOSE: Permanently removes a file from the filesystem.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Cleaning up temporary or unnecessary files
     - Removing outdated documents
     - Deleting log files or cached data
     - Removing files created by mistake
     - Cleaning up before reorganizing files
 
-    **BEHAVIOR**:
-    - PERMANENTLY deletes the file (cannot be undone)
-    - Only works on files, not directories
-    - Will fail if file doesn't exist
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         file_path (str): Path to file to delete. Examples:
                         - "temp.txt"
                         - "documents/old_report.pdf"
                         - "/var/log/debug.log"
 
-    **RETURNS**:
+    ## RETURNS:
         str: Success message with deleted path, or error message if failed
 
-    **DANGER**: This operation is PERMANENT and IRREVERSIBLE!
-
-    **SAFETY TIPS**:
-    - Double-check file path before deletion
-    - Consider backing up important files first
-    - This tool only deletes FILES, not directories
-
-    **EXAMPLES**:
+    ## EXAMPLES:
         delete_file("temp.log")              # Remove temporary file
         delete_file("old_document.txt")      # Remove outdated file
         delete_file("/tmp/session.tmp")      # Clean cache file
@@ -263,36 +226,24 @@ def delete_file(file_path: str) -> str:
 @tool
 def delete_directory(path: str) -> str:
     """
-    **PRIMARY PURPOSE**: Permanently removes a directory and all its contents.
+    ## PRIMARY PURPOSE: Permanently removes a directory and all its contents.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Cleaning up entire folders that are no longer needed
     - Removing temporary directories created during processing
     - Deleting old project directories
     - Clearing out cache or log directories
 
-    **BEHAVIOR**:
-    - Deletes the directory and ALL files/subdirectories inside it
-    - PERMANENTLY removes everything (cannot be undone)
-    - Will fail if directory doesn't exist or is not empty
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         path (str): Path to directory to delete. Examples:
                    - "temp_folder"
                    - "projects/old_project"
                    - "/var/logs/old_logs"
 
-    **RETURNS**:
+    ## RETURNS:
         str: Success message with deleted path, or error message if failed
 
-    **DANGER**: This operation is PERMANENT and IRREVERSIBLE!
-
-    **SAFETY TIPS**:
-    - Double-check directory path before deletion
-    - Consider backing up important data first
-    - This tool only deletes DIRECTORIES, not individual files
-
-    **EXAMPLES**:
+    ## EXAMPLES:
         delete_directory("temp_folder")              # Remove temporary folder
         delete_directory("projects/old_project")     # Remove old project folder
         delete_directory("/var/logs/old_logs")       # Clean up log directory
@@ -312,34 +263,26 @@ def delete_directory(path: str) -> str:
 @tool
 def read_file(file_path: str) -> str:
     """
-    **PRIMARY PURPOSE**: Reads and returns the complete content of any text file.
+    ## PRIMARY PURPOSE: Reads and returns the complete content of any text file.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Examining existing files before making changes
     - Reading configuration files to understand settings
     - Reviewing documents or notes
     - Checking file contents to determine what modifications are needed
     - Understanding file structure and existing content
 
-    **BEHAVIOR**:
-    - Returns the ENTIRE file content as a single string
-    - Preserves all formatting, indentation, and line breaks
-    - Works with any text-based file format
-    - Will fail if file doesn't exist or isn't readable
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         file_path (str): Path to file to read. Examples:
                         - "notes.txt" (current directory)
                         - "config/settings.json"
                         - "documents/README.md"
                         - "/etc/config/file.txt"
 
-    **RETURNS**:
+    ## RETURNS:
         str: Complete file contents, or error message if file cannot be read
 
-    **USE BEFORE**: Making changes to understand current file state
-
-    **EXAMPLES**:
+    ## EXAMPLES:
         read_file("settings.json")           # Check configuration
         read_file("documents/notes.txt")     # Review document content
         read_file("/var/data/report.csv")    # Read data file
@@ -360,42 +303,23 @@ def read_file(file_path: str) -> str:
 @tool
 def list_directory(path: str = ".") -> str:
     """
-    **PRIMARY PURPOSE**: Shows all files and folders in a professional ASCII tree structure.
+    ## PRIMARY PURPOSE: Shows all files and folders in a professional ASCII tree structure.
 
-    **WHEN TO USE**:
+    ## WHEN TO USE:
     - Exploring an unknown directory structure
     - Understanding how files are organized before making changes
     - Finding where specific types of files are located
     - Getting an overview of a directory's contents
     - Discovering what files exist in nested folders
 
-    **BEHAVIOR**:
-    - Recursively explores all subdirectories
-    - Shows hierarchical structure with ASCII tree characters (├── └── │)
-    - Directories are marked with trailing "/"
-    - Files and directories are sorted alphabetically within each level
-    - Displays absolute path as header
-
-    **OUTPUT FORMAT**:
-        /absolute/path/to/directory/
-        │
-        ├── file1.txt
-        ├── file2.py
-        ├── subdirectory/
-        │   ├── nested_file.md
-        │   └── another_file.json
-        └── last_file.txt
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         path (str): Directory to explore. Defaults to current directory (".")
                    Examples: ".", "documents", "/home/user/projects"
 
-    **RETURNS**:
+    ## RETURNS:
         str: Professional ASCII tree view of all files and directories
 
-    **USEFUL FOR**: Getting bearings in unfamiliar directory structures
-
-    **EXAMPLES**:
+    ## EXAMPLES:
         list_directory(".")                      # Show current directory structure
         list_directory("documents")              # Explore documents/
         list_directory("/var/log")               # Show system log directory contents
