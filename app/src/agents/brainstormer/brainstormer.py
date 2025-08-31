@@ -3,7 +3,6 @@ from app.src.config.ui import AgentUI
 from rich.console import Console
 from app.src.config.base import BaseAgent
 from app.utils.constants import CONSOLE_WIDTH
-import os
 
 
 class BrainstormerAgent(BaseAgent):
@@ -27,12 +26,6 @@ class BrainstormerAgent(BaseAgent):
         temperature: float = 0,
         provider: str = "cerebras",
     ):
-
-        task_directory = os.path.dirname(os.path.abspath(__file__))
-        task_directory = os.path.join(task_directory, "config", "task.txt")
-        with open(task_directory, "r") as file:
-            minimal_task = file.read().strip()
-
         graph, agent = get_agent(
             model_name=model_name,
             api_key=api_key,
@@ -57,4 +50,3 @@ class BrainstormerAgent(BaseAgent):
             graph=graph,
             provider=provider,
         )
-        self.minimal_task = minimal_task  # minimal default prompt for brainstorming
