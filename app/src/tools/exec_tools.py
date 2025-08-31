@@ -1,5 +1,6 @@
 from app.src.config.permissions import permission_manager, PermissionDeniedException
 from langchain_core.tools import tool
+from app.utils.constants import EXEC_TIMEOUT
 import subprocess
 import tempfile
 import shlex
@@ -7,35 +8,48 @@ import re
 import os
 
 
+EXTREMEMLY_DANGEROUS_PATTERNS = [
+    r"^rm\s+-rf\s+/$",  # Wipe root
+    r"^dd\s+.*of=/dev/sd[a-z]$",  # Overwrite disk
+    r"^mkfs\s+/dev/sd[a-z]$",  # Format disk
+    r"^fdisk\s+/dev/sd[a-z]$",  # Partition disk
+    r":\(\)\{.*\}",  # Fork bomb
+    r"^\s*shutdown\s+-h\s+now$",  # Immediate shutdown
+    r"^\s*reboot\s*$",  # Reboot system
+    r"^\s*init\s+0$",  # Power off system
+    r"^\s*init\s+6$",  # Reboot via init
+    r"^\s*:\s*>/dev/sd[a-z]$",  # Overwrite disk with shell
+    r"^\s*dd\s+if=/dev/zero\s+of=/dev/sd[a-z]",  # Zero out disk
+    r"^\s*mkfs\.\w+\s+/dev/sd[a-z]",  # Filesystem creation variants
+    r"^\s*chmod\s+777\s+/(?:\s|$)",  # Make root world-writable
+    r"^\s*chown\s+[^ ]+\s+/ -R",  # Recursive root ownership change
+    r"^\s*iptables\s+-F$",  # Flush firewall rules
+    r"^\s*ufw\s+disable$",  # Disable firewall
+    r"^\s*curl\s+.*\|sh$",  # Remote script execution
+    r"^\s*wget\s+.*\|sh$",  # Remote script execution
+    r"^\s*nc\s+-l\s+-p\s+\d+\s+-e\s+/bin/sh$",  # Netcat backdoor
+]
+
+
 @tool
 def execute_code(code: str) -> str:
     """
-    **PRIMARY PURPOSE**: Safely executes python code snippets in a controlled environment.
+    ## PRIMARY PURPOSE: Executes given Python code scripts.
 
-    **WHEN TO USE**:
-    - Testing small code snippets or calculations
+    ## WHEN TO USE:
+    - Scripting and automation
     - Validating logic before implementing in files
     - Running data analysis or processing scripts
-    - Executing safe computational tasks
+    - Executing computational tasks
+    - Plotting or visualizing data
 
-    **SECURITY RESTRICTIONS**:
-    - TIMEOUT: Execution limited to 300 seconds maximum
-    - MEMORY: Basic memory usage monitoring
-    - EXTREME CAUTION: Only blocks truly destructive operations
-
-    **BEHAVIOR**:
-    - Executes code in isolated environment
-    - Captures both stdout and stderr
-    - Automatically times out long-running code
-    - Prevents access to sensitive system resources
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         code (str): The code to execute. Must be valid python code that is safe and non-malicious
 
-    **RETURNS**:
+    ## RETURNS:
         str: Code output, error messages, or security violation warnings
 
-    **EXAMPLES**:
+    ## EXAMPLES:
         execute_code("print('Hello World')")
         execute_code("result = 2 + 2; print(f'Result: {result}')")
         execute_code("for i in range(3): print(i)")
@@ -43,13 +57,7 @@ def execute_code(code: str) -> str:
     if not permission_manager.get_permission(tool_name="execute_code", code=code):
         raise PermissionDeniedException()
 
-    dangerous_patterns = [
-        r"rm\s+-rf\s+/",
-        r"format\s+c:",
-        r"mkfs\s+/dev/",
-    ]
-
-    for pattern in dangerous_patterns:
+    for pattern in EXTREMEMLY_DANGEROUS_PATTERNS:
         if re.search(pattern, code, re.IGNORECASE):
             return f"🚫 BLOCKED: Extremely destructive operation: {pattern}"
 
@@ -64,7 +72,7 @@ def execute_code(code: str) -> str:
             ["python", tmp_file_path],
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=EXEC_TIMEOUT,
             cwd=os.getcwd(),
         )
 
@@ -89,19 +97,15 @@ def execute_code(code: str) -> str:
 @tool
 def execute_command(command: str) -> str:
     """
-    **PRIMARY PURPOSE**: Safely executes linux command-line commands in a controlled environment.
+    ## PRIMARY PURPOSE: Executes given shell commands.
 
-    **WHEN TO USE**:
-    - Running safe system utilities (ls, cat, grep, find)
+    ## WHEN TO USE:
+    - Running system utilities (ls, cat, grep, find)
     - Checking file permissions or disk usage
-    - Basic text processing commands
-    - Safe read-only operations
+    - Text processing commands
+    - Installing dependencies
 
-    **SECURITY RESTRICTIONS**:
-    - TIMEOUT: Commands limited to 300 seconds maximum
-    - EXTREME ONLY: Only blocks filesystem destruction and hardware access
-
-    **ALLOWED COMMANDS**:
+    ## ALLOWED COMMANDS:
     - Most system operations: rm, mv, cp, chmod, chown (use with caution)
     - Network operations: curl, wget, ssh, scp, nc
     - Package management: apt, yum, pip, npm
@@ -111,19 +115,13 @@ def execute_command(command: str) -> str:
     - Text processing: grep, awk, sed, sort, uniq
     - Development tools: git, make, gcc, python, node
 
-    **BEHAVIOR**:
-    - Executes in isolated environment
-    - Captures both stdout and stderr
-    - Automatically times out long-running commands
-    - Prevents dangerous system modifications
-
-    **PARAMETERS**:
+    ## PARAMETERS:
         command (str): Shell command to execute (must be safe)
 
-    **RETURNS**:
+    ## RETURNS:
         str: Command output, error messages, or security violation warnings
 
-    **EXAMPLES**:
+    ## EXAMPLES:
         execute_command("ls -la")
         execute_command("cat config.txt")
         execute_command("sudo apt update")
@@ -136,15 +134,7 @@ def execute_command(command: str) -> str:
     ):
         raise PermissionDeniedException()
 
-    extremely_dangerous_commands = [
-        r"^rm\s+-rf\s+/$",
-        r"^dd\s+.*of=/dev/sd[a-z]$",
-        r"^mkfs\s+/dev/sd[a-z]$",
-        r"^fdisk\s+/dev/sd[a-z]$",
-        r":\(\)\{.*\}",
-    ]
-
-    for pattern in extremely_dangerous_commands:
+    for pattern in EXTREMEMLY_DANGEROUS_PATTERNS:
         if re.search(pattern, command, re.IGNORECASE):
             return f"🚫 BLOCKED: Extremely destructive operation: {pattern}"
 
@@ -161,7 +151,7 @@ def execute_command(command: str) -> str:
             command,
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=EXEC_TIMEOUT,
             shell=True,
             cwd=os.getcwd(),
         )
