@@ -167,6 +167,79 @@ def _search_fuzzy(files: List[str], query: str) -> List[Tuple[str, int, str]]:
     return results
 
 
+def _search_declarations(files: List[str], name: str) -> List[Tuple[str, int, str]]:
+    nq = re.escape(name)
+    patterns = [
+        rf"\bdef\s+{nq}\b",  # Python function
+        rf"\bclass\s+{nq}\b",  # Python/JS/TS class
+        rf"\b{nq}\s*=\s*",  # variable/const assignment
+        rf"\bfrom\s+[^\n]+\bimport\b[^\n]*\b{nq}\b",  # from x import name
+        rf"\bimport\s+[^\n]*\b{nq}\b",  # import name
+        rf"\bfunction\s+{nq}\b",  # JS function
+        rf"\b(?:const|let|var)\s+{nq}\b",  # JS variable
+        rf"\bexport\s+(?:function|class|const|let|var|type|interface|enum)\s+{nq}\b",  # TS export decls
+        rf"\btype\s+{nq}\b",  # TS/Flow type
+        rf"\binterface\s+{nq}\b",  # TS interface
+        rf"\benum\s+{nq}\b",  # TS/others enum
+        rf"\bstruct\s+{nq}\b",  # C/Go/Rust struct
+        rf"\bfn\s+{nq}\b",  # Rust function
+    ]
+    regex = re.compile("|".join(patterns), re.IGNORECASE)
+
+    results: List[Tuple[str, int, str]] = []
+    for fp in files:
+        try:
+            with open(fp, "r", encoding="utf-8", errors="ignore") as f:
+                for i, line in enumerate(f, start=1):
+                    m = regex.search(line)
+                    if m:
+                        snippet = _trim_snippet(line, m.start(), len(m.group(0)))
+                        results.append((fp, i, snippet))
+                        if len(results) >= MAX_RESULTS:
+                            return results
+        except Exception:
+            continue
+    return results
+
+
+@tool
+def find_declaration(dir_path: str, symbol: str) -> str:
+    """
+    ## PRIMARY PURPOSE:
+    Locate probable declarations/definitions of a symbol in a directory tree.
+
+    ## WHEN TO USE:
+    - You need where a function, class, variable, or type is defined
+
+    ## PARAMETERS:
+        dir_path (str): Root directory to search
+        symbol (str): Identifier to find declarations for
+
+    ## RETURNS:
+        str: path:line: snippet
+    """
+    try:
+        if not os.path.isdir(dir_path):
+            return f"Not a directory: {dir_path}"
+
+        files = _collect_files(dir_path)
+        if not files:
+            return "No readable text files found"
+
+        decls = _search_declarations(files, symbol)
+        if not decls:
+            return f"No declarations for: {symbol}"
+
+        out_lines = []
+        for fp, ln, snip in decls:
+            out_lines.append(f"{fp}:{ln}: {snip}")
+
+        return "\n".join(out_lines)
+    except Exception as e:
+        return f"Search error: {str(e)}"
+
+
 FIND_TOOLS = [
     find_references,
+    find_declaration,
 ]
