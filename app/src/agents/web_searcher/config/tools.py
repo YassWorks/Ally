@@ -82,35 +82,32 @@ def google_search(query: str, n: int = 5) -> List[Dict[str, str]]:
 @tool
 def fetch(url: str) -> str:
     """
-    ## PRIMARY PURPOSE: Extracts and returns clean text content from any web page.
+    ## PRIMARY PURPOSE:
+    Extract clean text content from web pages with automatic script/style removal.
 
     ## WHEN TO USE:
-    - Analyzing content of specific web pages found through search
-    - Extracting documentation or technical information from websites
-    - Reading blog posts, articles, or tutorials
-    - Gathering detailed information from known URLs
-    - Scraping content for research or analysis
+    - Analyze content from specific URLs found through search
+    - Extract documentation, tutorials, or technical information
+    - Scrape articles, blog posts, or research content
+    - Gather detailed information from known web sources
 
     ## PARAMETERS:
-        url (str): The web page URL to scrape and extract text from
+        url (str): Web page URL to scrape and extract text content from
 
     ## RETURNS:
-        str: Cleaned text content (up to 10,000 characters) with scripts/styles removed, or error message if scraping fails
-
-    ## EXAMPLES:
-        fetch("https://docs.python.org/3/tutorial/")
-        fetch("https://stackoverflow.com/questions/12345")
-        fetch("https://github.com/user/repo/README.md")
+        str: Cleaned text content (max 10,000 chars) or error message if scraping fails
     """
 
     session = requests.Session()
-    retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504])
+    retries = Retry(
+        total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504]
+    )
     session.mount("http://", HTTPAdapter(max_retries=retries))
     session.mount("https://", HTTPAdapter(max_retries=retries))
 
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+        "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
     }
 
     try:
@@ -118,7 +115,19 @@ def fetch(url: str) -> str:
         resp.raise_for_status()
         soup = BeautifulSoup(resp.content, "lxml")  # faster parser than html.parser
 
-        for tag in soup(["script", "style", "noscript", "header", "footer", "svg", "img", "meta", "link"]):
+        for tag in soup(
+            [
+                "script",
+                "style",
+                "noscript",
+                "header",
+                "footer",
+                "svg",
+                "img",
+                "meta",
+                "link",
+            ]
+        ):
             tag.decompose()
 
         text = soup.get_text(separator=" ", strip=True)
@@ -134,25 +143,20 @@ def fetch(url: str) -> str:
 @tool
 def search_and_scrape(query: str) -> str:
     """
-    ## PRIMARY PURPOSE: Performs Google search and extracts full text content from top results.
+    ## PRIMARY PURPOSE:
+    Perform Google search and extract full text content from top 5 results.
 
     ## WHEN TO USE:
-    - Researching technical topics, best practices, or implementation details
-    - Finding current information about programming languages, frameworks, or tools
-    - Gathering multiple perspectives on development approaches
-    - Looking for tutorials, documentation, or guides
-    - Collecting up-to-date information for project planning
+    - Research technical topics, best practices, or implementation approaches
+    - Find current information about programming languages, frameworks, tools
+    - Gather multiple perspectives and comprehensive information
+    - Collect up-to-date tutorials, documentation, or guides
 
     ## PARAMETERS:
         query (str): Search query string to find relevant web pages
 
     ## RETURNS:
-        str: Formatted results with title and full text content from top 5 search results, or error message if search fails
-
-    ## EXAMPLES:
-        search_and_scrape("Python Flask authentication best practices")
-        search_and_scrape("React hooks tutorial 2024")
-        search_and_scrape("Docker deployment strategies Node.js")
+        str: Formatted results with titles and full text content from top search results
     """
     try:
         search_results = google_search(query, 5)
@@ -168,4 +172,3 @@ def search_and_scrape(query: str) -> str:
         return formatted_results
     except Exception as e:
         return f"[ERROR] Failed to perform web search: {str(e)}"
-
