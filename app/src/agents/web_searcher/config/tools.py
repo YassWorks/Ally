@@ -17,9 +17,13 @@ GGL_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
 CX_ID = os.getenv("SEARCH_ENGINE_ID")
 
 if not GGL_API_KEY:
-    print("WARNING: GOOGLE_SEARCH_API_KEY not set in .env file. Web search functionality will be limited.")
+    print(
+        "WARNING: GOOGLE_SEARCH_API_KEY not set in .env file. Web search functionality will be limited."
+    )
 if not CX_ID:
-    print("WARNING: SEARCH_ENGINE_ID not set in .env file. Web search functionality will be limited.")
+    print(
+        "WARNING: SEARCH_ENGINE_ID not set in .env file. Web search functionality will be limited."
+    )
 
 
 ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
