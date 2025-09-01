@@ -17,13 +17,19 @@ def integrate_web_search(agent: BaseAgent, web_searcher: WebSearcherAgent) -> No
     @tool
     def call_searcher(query: str) -> str:
         """
-        Ask the assistant to get reliable info from the web.
-        The assistant can choose the best queries for your issue to search for.
-        You just need to provide a description of the problem you are facing.
-        You can also provide a direct query for the assistant to use if you know it.
-        Feel free to prompt it as you wish, but keep it concise.
-        Args:
-            query (str): The query or description of the problem to search for.
+        ## PRIMARY PURPOSE:
+        Delegate web research queries to specialized web search agent for reliable information.
+
+        ## WHEN TO USE:
+        - Research technical topics, implementation details, or best practices
+        - Find current information about tools, frameworks, or approaches
+        - Gather multiple perspectives on development solutions
+
+        ## PARAMETERS:
+            query (str): Query description or specific search terms for web research
+
+        ## RETURNS:
+            str: Comprehensive research results from web search agent
         """
         return web_searcher.invoke(
             message=query,
