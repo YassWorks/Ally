@@ -4,21 +4,21 @@ import os
 import sys
 
 load_dotenv()
-api_key = os.getenv("CEREBRAS_API_KEY")
+cerebras_api_key = os.getenv("CEREBRAS_API_KEY")
 google_api_key = os.getenv("GOOGLE_API_KEY")
 
-if not api_key:
+if not cerebras_api_key:
     print("Error: CEREBRAS_API_KEY environment variable not found")
     exit(1)
 
 client = CLI(
     stream=True,
-    api_key=api_key,
+    api_key=cerebras_api_key,
     models={
-        "general": "gemini-2.5-flash",
-        "code_gen": "qwen3:0.6b",
-        "brainstormer": "qwen3:0.6b",
-        "web_searcher": "qwen3:0.6b",
+        "general": "qwen-3-32b",
+        "code_gen": "qwen-3-32b",
+        "brainstormer": "qwen-3-32b",
+        "web_searcher": "qwen-3-32b",
     },
     temperatures={
         "general": 0.7,
@@ -26,13 +26,7 @@ client = CLI(
         "brainstormer": 0.7,
         "web_searcher": 0,
     },
-    provider="ollama",
-    provider_per_model={
-        "general": "google"
-    },
-    api_key_per_model={
-        "general": google_api_key
-    }
+    provider="cerebras",
 )
 
 if __name__ == "__main__":
