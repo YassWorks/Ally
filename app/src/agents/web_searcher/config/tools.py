@@ -32,14 +32,14 @@ TIMEOUT = 10  # seconds
 
 def google_search(query: str, n: int = 5) -> List[Dict[str, str]]:
     """Search Google and return structured results.
-    
+
     Args:
         query: Search query string
         n: Maximum number of results to return
-        
+
     Returns:
         List of dictionaries with 'title' and 'link' keys
-        
+
     Raises:
         ValueError: If API key or search engine ID not configured
         requests.HTTPError: If search request fails
