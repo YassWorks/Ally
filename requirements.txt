@@ -8,3 +8,6 @@ google-api-python-client
 rich
 openai
 langgraph-checkpoint-sqlite
+langchain-google-genai
+langchain-ollama
+lxml
