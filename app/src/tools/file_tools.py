@@ -7,27 +7,19 @@ import shutil
 @tool
 def create_wd(path: str) -> str:
     """
-    ## PRIMARY PURPOSE: Creates a new directory/folder at the specified path.
+    ## PRIMARY PURPOSE: 
+    Create a new directory at the specified path, including nested structures.
 
     ## WHEN TO USE:
-    - When you need to organize files into structured folders
-    - Before placing files in a location that doesn't exist yet
-    - Setting up workspace directories for different types of content
-    - Creating nested folder structures in one operation
+    - Organize files into folders before file creation
+    - Set up workspace directory structures
+    - Create nested folder hierarchies
 
     ## PARAMETERS:
-        path (str): The directory path to create. Can be:
-                   - Relative: "documents", "media/images", "archive/2024"
-                   - Absolute: "/home/user/workspace", "/opt/data/projects"
-                   - Nested: "deep/nested/folder/structure"
+        path (str): Directory path to create (relative or absolute, supports nested paths)
 
     ## RETURNS:
-        str: Success message with created path, or error message if failed
-
-    ## EXAMPLES:
-        create_wd("new_folder")               # Creates folder in current directory
-        create_wd("documents/reports")        # Creates nested structure
-        create_wd("/home/user/workspace")     # Creates with absolute path
+        str: Success message with created path or error message
     """
     if not permission_manager.get_permission(tool_name="create_wd", path=path):
         raise PermissionDeniedException()
@@ -42,32 +34,20 @@ def create_wd(path: str) -> str:
 @tool
 def create_file(file_path: str, content: str) -> str:
     """
-    ## PRIMARY PURPOSE: Creates a brand new file with specified content.
+    ## PRIMARY PURPOSE: 
+    Create a new file with specified text content, creating directories as needed.
 
     ## WHEN TO USE:
-    - Creating new text files (.txt, .md, .csv, etc.)
-    - Generating configuration files (.json, .yaml, .ini, etc.)
-    - Writing documentation or notes
-    - Creating data files or templates
-    - Establishing any type of text-based file
+    - Generate new text files (.txt, .md, .csv, .json, .yaml, etc.)
+    - Write documentation, configuration files, or data files
+    - Create templates or initial file structures
 
     ## PARAMETERS:
-        file_path (str): Where to create the file. Examples:
-                        - "notes.txt" (current directory)
-                        - "documents/report.md" (creates documents/ if needed)
-                        - "/home/user/config.json"
-        content (str): Exact text content for the file. Include proper:
-                      - Indentation and whitespace
-                      - Line breaks (\n)
-                      - Any formatting needed
+        file_path (str): File path for creation (creates parent directories if needed)
+        content (str): Exact text content including proper formatting, indentation, line breaks
 
     ## RETURNS:
-        str: Success message with file path, or error message if failed
-
-    ## EXAMPLES:
-        create_file("notes.txt", "Meeting notes from today")
-        create_file("config/settings.json", '{"theme": "dark"}')
-        create_file("README.md", "# My Project\n\nDescription here")
+        str: Success message with file path or error message
     """
     if not permission_manager.get_permission(
         tool_name="create_file", file_path=file_path, content=content
@@ -89,29 +69,21 @@ def create_file(file_path: str, content: str) -> str:
 @tool
 def modify_file(file_path: str, old_content: str, new_content: str) -> str:
     """
-    ## PRIMARY PURPOSE: Updates existing files by replacing specific content.
+    ## PRIMARY PURPOSE: 
+    Replace specific text content in existing files with new content.
 
     ## WHEN TO USE:
-    - Correcting information in existing files
-    - Updating configuration values or settings
-    - Changing specific text sections
-    - Making targeted edits without rewriting entire files
-    - Updating data or content in documents
+    - Update configuration values or settings
+    - Correct information in existing documents
+    - Make targeted edits without rewriting entire files
 
     ## PARAMETERS:
         file_path (str): Path to existing file to modify
-        old_content (str): EXACT text to replace (must match perfectly including:
-                          - All whitespace and indentation
-                          - Line breaks and spacing
-                          - Capitalization and punctuation)
-        new_content (str): Replacement text (can be longer/shorter than original)
+        old_content (str): EXACT text to replace (must match perfectly including whitespace, indentation, line breaks)
+        new_content (str): Replacement text (can be different length than original)
 
     ## RETURNS:
         str: Success message, "Content not found" error, or other error message
-
-    ## EXAMPLES:
-        modify_file("notes.txt", "Meeting at 2pm", "Meeting at 3pm")
-        modify_file("config.json", '"theme": "light"', '"theme": "dark"')
     """
     if not permission_manager.get_permission(
         tool_name="modify_file",
@@ -140,31 +112,20 @@ def modify_file(file_path: str, old_content: str, new_content: str) -> str:
 @tool
 def append_file(file_path: str, content: str) -> str:
     """
-    ## PRIMARY PURPOSE: Appends new content to the end of an existing file.
+    ## PRIMARY PURPOSE: 
+    Add new content to the end of an existing file, creating parent directories if needed.
 
     ## WHEN TO USE:
-    - Adding new data to logs or reports
-    - Appending notes or comments to documents
-    - Extending configuration files with additional settings
-    - Adding new entries to data files
+    - Add new entries to logs, reports, or data files
+    - Extend documents with additional notes or comments
+    - Append configuration settings
 
     ## PARAMETERS:
-        file_path (str): Path to file to append. Examples:
-                        - "log.txt" (current directory)
-                        - "data/records.csv" (creates data/ if needed)
-                        - "/home/user/notes.txt"
-        content (str): Text to append. Include proper:
-                      - Indentation and whitespace
-                      - Line breaks (\n)
-                      - Any formatting needed
+        file_path (str): Path to file for appending (creates parent directories if needed)
+        content (str): Text to append including proper formatting, indentation, line breaks
 
     ## RETURNS:
-        str: Success message with file path, or error message if failed
-
-    ## EXAMPLES:
-        append_file("log.txt", "New log entry at 3pm")
-        append_file("data/records.csv", "id,name\n1,John Doe")
-        append_file("notes.txt", "\n# Additional Notes\nContent here")
+        str: Success message with file path or error message
     """
     if not permission_manager.get_permission(
         tool_name="append_file",
@@ -188,28 +149,19 @@ def append_file(file_path: str, content: str) -> str:
 @tool
 def delete_file(file_path: str) -> str:
     """
-    ## PRIMARY PURPOSE: Permanently removes a file from the filesystem.
+    ## PRIMARY PURPOSE: 
+    Permanently remove a file from the filesystem.
 
     ## WHEN TO USE:
-    - Cleaning up temporary or unnecessary files
-    - Removing outdated documents
-    - Deleting log files or cached data
-    - Removing files created by mistake
-    - Cleaning up before reorganizing files
+    - Clean up temporary or unnecessary files
+    - Remove outdated documents or cached data
+    - Delete files created by mistake
 
     ## PARAMETERS:
-        file_path (str): Path to file to delete. Examples:
-                        - "temp.txt"
-                        - "documents/old_report.pdf"
-                        - "/var/log/debug.log"
+        file_path (str): Path to file to delete
 
     ## RETURNS:
-        str: Success message with deleted path, or error message if failed
-
-    ## EXAMPLES:
-        delete_file("temp.log")              # Remove temporary file
-        delete_file("old_document.txt")      # Remove outdated file
-        delete_file("/tmp/session.tmp")      # Clean cache file
+        str: Success message with deleted path or error message
     """
     if not permission_manager.get_permission(
         tool_name="delete_file", file_path=file_path
@@ -226,27 +178,19 @@ def delete_file(file_path: str) -> str:
 @tool
 def delete_directory(path: str) -> str:
     """
-    ## PRIMARY PURPOSE: Permanently removes a directory and all its contents.
+    ## PRIMARY PURPOSE: 
+    Permanently remove a directory and all its contents recursively.
 
     ## WHEN TO USE:
-    - Cleaning up entire folders that are no longer needed
-    - Removing temporary directories created during processing
-    - Deleting old project directories
-    - Clearing out cache or log directories
+    - Clean up entire folders no longer needed
+    - Remove temporary directories after processing
+    - Delete old project or cache directories
 
     ## PARAMETERS:
-        path (str): Path to directory to delete. Examples:
-                   - "temp_folder"
-                   - "projects/old_project"
-                   - "/var/logs/old_logs"
+        path (str): Path to directory to delete (all contents will be removed)
 
     ## RETURNS:
-        str: Success message with deleted path, or error message if failed
-
-    ## EXAMPLES:
-        delete_directory("temp_folder")              # Remove temporary folder
-        delete_directory("projects/old_project")     # Remove old project folder
-        delete_directory("/var/logs/old_logs")       # Clean up log directory
+        str: Success message with deleted path or error message
     """
     if not permission_manager.get_permission(tool_name="delete_directory", path=path):
         raise PermissionDeniedException()
@@ -263,29 +207,19 @@ def delete_directory(path: str) -> str:
 @tool
 def read_file(file_path: str) -> str:
     """
-    ## PRIMARY PURPOSE: Reads and returns the complete content of any text file.
+    ## PRIMARY PURPOSE: 
+    Read and return the complete text content of any file.
 
     ## WHEN TO USE:
-    - Examining existing files before making changes
-    - Reading configuration files to understand settings
-    - Reviewing documents or notes
-    - Checking file contents to determine what modifications are needed
-    - Understanding file structure and existing content
+    - Examine existing files before making changes
+    - Review configuration files, documents, or code
+    - Understand file structure and content for modifications
 
     ## PARAMETERS:
-        file_path (str): Path to file to read. Examples:
-                        - "notes.txt" (current directory)
-                        - "config/settings.json"
-                        - "documents/README.md"
-                        - "/etc/config/file.txt"
+        file_path (str): Path to file to read
 
     ## RETURNS:
-        str: Complete file contents, or error message if file cannot be read
-
-    ## EXAMPLES:
-        read_file("settings.json")           # Check configuration
-        read_file("documents/notes.txt")     # Review document content
-        read_file("/var/data/report.csv")    # Read data file
+        str: Complete file contents or error message if read fails
     """
     if not permission_manager.get_permission(
         tool_name="read_file", file_path=file_path
@@ -303,26 +237,20 @@ def read_file(file_path: str) -> str:
 @tool
 def list_directory(path: str = ".") -> str:
     """
-    ## PRIMARY PURPOSE: Shows all files and folders in a professional ASCII tree structure.
+    ## PRIMARY PURPOSE: 
+    Display complete directory structure in professional ASCII tree format.
 
     ## WHEN TO USE:
-    - Exploring an unknown directory structure
-    - Understanding how files are organized before making changes
-    - Finding where specific types of files are located
-    - Getting an overview of a directory's contents
-    - Discovering what files exist in nested folders
+    - Explore unknown directory structures  
+    - Understand file organization before making changes
+    - Find specific file types or locations
+    - Get overview of nested folder contents
 
     ## PARAMETERS:
-        path (str): Directory to explore. Defaults to current directory (".")
-                   Examples: ".", "documents", "/home/user/projects"
+        path (str): Directory to explore (defaults to current directory)
 
     ## RETURNS:
-        str: Professional ASCII tree view of all files and directories
-
-    ## EXAMPLES:
-        list_directory(".")                      # Show current directory structure
-        list_directory("documents")              # Explore documents/
-        list_directory("/var/log")               # Show system log directory contents
+        str: Professional ASCII tree showing all files and directories with full hierarchy
     """
     if not permission_manager.get_permission(tool_name="list_directory", path=path):
         raise PermissionDeniedException()
