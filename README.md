@@ -94,7 +94,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_GEN_AI_API_KEY=your_google_gen_ai_api_key_here
 CEREBRAS_API_KEY=your_api_key_here
 
-# Google Search API (optional but recommended)
+# Google Search API (if omitted, search tools will be limited)
 GOOGLE_SEARCH_API_KEY=your_google_api_key_here
 SEARCH_ENGINE_ID=your_search_engine_id_here
 ```
