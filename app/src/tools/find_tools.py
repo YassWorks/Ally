@@ -1,13 +1,21 @@
 from langchain_core.tools import tool
 import os
 import re
-from difflib import get_close_matches
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from typing import List, Tuple
+from rapidfuzz import fuzz
 
 
-IGNORED_DIRS = {".git", "node_modules", ".venv", "__pycache__", ".idea", ".vscode"}
+IGNORED_DIRS = {
+    ".git", "node_modules", ".venv", "__pycache__", ".idea", ".vscode",
+    "build", "dist", "target", ".gradle", ".maven", "bin", "obj",
+    ".next", ".nuxt", "coverage", ".nyc_output", ".pytest_cache",
+    ".tox", ".mypy_cache", ".cache", "tmp", "temp", ".tmp", ".temp",
+    "logs", "log", ".DS_Store", "Thumbs.db", ".env", ".env.local"
+}
 MAX_FILE_SIZE_BYTES = 1_000_000  # 1 mb
-MAX_RESULTS = 50
+MAX_RESULTS = 30
 
 
 @tool
@@ -36,12 +44,10 @@ def find_references(dir_path: str, query: str) -> str:
         if not files:
             return "No readable text files found"
 
-        exact = _search_exact(files, query)
-        results = exact
+        results = _search_exact(files, query)
 
         if not results:
-            fuzzy = _search_fuzzy(files, query)
-            results = fuzzy
+            results = _search_fuzzy(files, query)
 
         if not results:
             return f"No matches for: {query}"
@@ -117,91 +123,104 @@ def _trim_snippet(
     return snippet
 
 
-def _collect_files(root: str) -> List[str]:
-    files: List[str] = []
+def _collect_files(root: str) -> list[str]:
+    files: list[str] = []
+
     for dirpath, dirnames, filenames in os.walk(root):
-        # prune ignored dirs in-place for performance
+        # prune ignored dirs immediately
         dirnames[:] = [d for d in dirnames if d not in IGNORED_DIRS]
-        for name in filenames:
-            fp = os.path.join(dirpath, name)
+
+        for entry in filenames:
+            fp = os.path.join(dirpath, entry)
             try:
-                if os.path.getsize(fp) > MAX_FILE_SIZE_BYTES:
+                stat = os.stat(fp)
+                if stat.st_size > MAX_FILE_SIZE_BYTES:
                     continue
             except OSError:
                 continue
+
             if _is_text_file(fp):
                 files.append(fp)
+
     return files
 
 
 def _search_exact(files: List[str], query: str) -> List[Tuple[str, int, str]]:
     ql = query.lower()
     results: List[Tuple[str, int, str]] = []
-    for fp in files:
+    res_lock = threading.Lock()
+    stop_event = threading.Event()
+    file_order = {fp: idx for idx, fp in enumerate(files)}
+
+    def scan_file(fp: str) -> None:
+        if stop_event.is_set():
+            return
         try:
             with open(fp, "r", encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
+                    if stop_event.is_set():
+                        break
                     ll = line.lower()
                     pos = ll.find(ql)
                     if pos != -1:
                         snippet = _trim_snippet(line, pos, len(query))
-                        results.append((fp, i, snippet))
-                        if len(results) >= MAX_RESULTS:
-                            return results
+                        with res_lock:
+                            if not stop_event.is_set():
+                                results.append((fp, i, snippet))
+                                if len(results) >= MAX_RESULTS:
+                                    stop_event.set()
+                                    break
         except Exception:
             # skip unreadable file
-            continue
-    return results
+            return
+
+    with ThreadPoolExecutor() as ex:
+        for fp in files:
+            ex.submit(scan_file, fp)
+
+    # deterministic-ish ordering by original file order then line number
+    results.sort(key=lambda t: (file_order.get(t[0], 0), t[1]))
+    return results[:MAX_RESULTS]
 
 
 def _search_fuzzy(files: List[str], query: str) -> List[Tuple[str, int, str]]:
-    # Build a small vocabulary of tokens to compare against the query
-    vocab: List[str] = []
-    token_re = re.compile(r"[A-Za-z0-9_./-]{3,}")
-    seen = set()
-    for fp in files:
-        try:
-            with open(fp, "r", encoding="utf-8", errors="ignore") as f:
-                for _ in range(200):  # sample first ~200 lines per file to keep it fast
-                    line = f.readline()
-                    if not line:
-                        break
-                    for t in token_re.findall(line):
-                        tl = t.lower()
-                        if tl not in seen:
-                            seen.add(tl)
-                            vocab.append(tl)
-                            if len(vocab) >= 5000:
-                                break
-                    if len(vocab) >= 5000:
-                        break
-        except Exception:
-            continue
-        if len(vocab) >= 5000:
-            break
-
-    close = set(get_close_matches(query.lower(), vocab, n=12, cutoff=0.78))
-    if not close:
-        return []
-
-    # Find lines that contain any of the close tokens
+    query_l = query.lower()
+    token_re = re.compile(r"[A-Za-z0-9_./-]{2,}")
     results: List[Tuple[str, int, str]] = []
-    pattern = re.compile(
-        "|".join(map(re.escape, sorted(close, key=len, reverse=True))), re.IGNORECASE
-    )
-    for fp in files:
+    res_lock = threading.Lock()
+    stop_event = threading.Event()
+    file_order = {fp: idx for idx, fp in enumerate(files)}
+
+    def scan_file(fp: str) -> None:
+        if stop_event.is_set():
+            return
         try:
             with open(fp, "r", encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
-                    m = pattern.search(line)
-                    if m:
-                        snippet = _trim_snippet(line, m.start(), len(m.group(0)))
-                        results.append((fp, i, snippet))
-                        if len(results) >= MAX_RESULTS:
-                            return results
-        except Exception:
-            continue
-    return results
+                    if stop_event.is_set():
+                        break
+                    ll = line.lower()
+                    for token in token_re.findall(line):
+                        if stop_event.is_set():
+                            break
+                        token_l = token.lower()
+                        if fuzz.partial_ratio(query_l, token_l) >= 75:
+                            snippet = _trim_snippet(line, ll.find(token_l), len(token))
+                            with res_lock:
+                                if not stop_event.is_set():
+                                    results.append((fp, i, snippet))
+                                    if len(results) >= MAX_RESULTS:
+                                        stop_event.set()
+                                        break
+        except OSError:
+            return
+
+    with ThreadPoolExecutor() as ex:
+        for fp in files:
+            ex.submit(scan_file, fp)
+
+    results.sort(key=lambda t: (file_order.get(t[0], 0), t[1]))
+    return results[:MAX_RESULTS]
 
 
 def _search_declarations(files: List[str], name: str) -> List[Tuple[str, int, str]]:
@@ -224,19 +243,36 @@ def _search_declarations(files: List[str], name: str) -> List[Tuple[str, int, st
     regex = re.compile("|".join(patterns), re.IGNORECASE)
 
     results: List[Tuple[str, int, str]] = []
-    for fp in files:
+    res_lock = threading.Lock()
+    stop_event = threading.Event()
+    file_order = {fp: idx for idx, fp in enumerate(files)}
+
+    def scan_file(fp: str) -> None:
+        if stop_event.is_set():
+            return
         try:
             with open(fp, "r", encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
+                    if stop_event.is_set():
+                        break
                     m = regex.search(line)
                     if m:
                         snippet = _trim_snippet(line, m.start(), len(m.group(0)))
-                        results.append((fp, i, snippet))
-                        if len(results) >= MAX_RESULTS:
-                            return results
+                        with res_lock:
+                            if not stop_event.is_set():
+                                results.append((fp, i, snippet))
+                                if len(results) >= MAX_RESULTS:
+                                    stop_event.set()
+                                    break
         except Exception:
-            continue
-    return results
+            return
+
+    with ThreadPoolExecutor() as ex:
+        for fp in files:
+            ex.submit(scan_file, fp)
+
+    results.sort(key=lambda t: (file_order.get(t[0], 0), t[1]))
+    return results[:MAX_RESULTS]
 
 
 FIND_TOOLS = [
