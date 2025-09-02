@@ -9,20 +9,16 @@ import os
 
 ROOT_DIR = Path(__file__).resolve().parents[5]
 ENV_PATH = ROOT_DIR / ".env"
+SEARCH_AVAILABLE = True
 load_dotenv(dotenv_path=ENV_PATH)
 
 
-GGL_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
-CX_ID = os.getenv("SEARCH_ENGINE_ID")
+GGL_API_KEY = os.environ["GOOGLE_SEARCH_API_KEY"] or os.getenv("GOOGLE_SEARCH_API_KEY")
+CX_ID = os.environ["SEARCH_ENGINE_ID"] or os.getenv("SEARCH_ENGINE_ID")
 
-if not GGL_API_KEY:
-    print(
-        "WARNING: GOOGLE_SEARCH_API_KEY not set in .env file. Web search functionality will be limited."
-    )
-if not CX_ID:
-    print(
-        "WARNING: SEARCH_ENGINE_ID not set in .env file. Web search functionality will be limited."
-    )
+
+if not GGL_API_KEY or not CX_ID:
+    SEARCH_AVAILABLE = False
 
 
 ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
@@ -161,6 +157,9 @@ def search_and_scrape(query: str) -> str:
     ## RETURNS:
         str: Formatted results with titles and full text content from top search results
     """
+    if not SEARCH_AVAILABLE:
+        return "[ERROR] Web search functionality is not available."
+
     try:
         search_results = google_search(query, 5)
         for r in search_results:
