@@ -96,7 +96,6 @@ def fetch(url: str) -> str:
     ## RETURNS:
         str: Cleaned text content (max 10,000 chars) or error message if scraping fails
     """
-
     session = requests.Session()
     retries = Retry(
         total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504]
