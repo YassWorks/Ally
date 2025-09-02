@@ -1,4 +1,4 @@
-from app.src.cli.client import CLI
+from app.src.cli.cli import CLI
 
 __all__ = [
     "CLI",

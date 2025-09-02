@@ -1,5 +1,5 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
-from app.src.orchestration.orchestrated_codegen import CodeGenUnit
+from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
 from app.src.config.permissions import permission_manager
 from app.src.config.agent_factory import AgentFactory
@@ -19,18 +19,16 @@ class CLI:
 
     def __init__(
         self,
-        provider: str = "cerebras",
-        stream: bool = True,
-        config: dict = None,
-        api_key: str = None,
+        provider: str = None,
+        provider_per_model: dict[str, str] = None,
         models: dict[str, str] = None,
+        api_key: str = None,
         api_key_per_model: dict[str, str] = None,
         temperatures: dict[str, float] = None,
         system_prompts: dict[str, str] = None,
-        provider_per_model: dict[str, str] = None,
+        stream: bool = True,
     ):
         self.stream = stream
-        self.config = config
         self.console = Console(width=CONSOLE_WIDTH)
         self.ui = AgentUI(self.console)
 
