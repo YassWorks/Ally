@@ -12,3 +12,4 @@ canvas
 database/
 Dockerfile
 compose.yml
+.dockerignore
