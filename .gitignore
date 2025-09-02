@@ -10,3 +10,5 @@ canvas
 .github
 *.sqlite
 database/
+Dockerfile
+compose.yml
