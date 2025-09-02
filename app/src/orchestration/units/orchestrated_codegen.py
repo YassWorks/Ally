@@ -1,4 +1,4 @@
-from app.src.orchestration.base_unit import BaseUnit
+from app.src.orchestration.units.base_unit import BaseUnit
 from app.src.config.exception_handler import AgentExceptionHandler
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.utils.constants import UI_MESSAGES, CONTINUE_MESSAGE
