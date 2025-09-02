@@ -3,16 +3,41 @@ import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Tuple
 from rapidfuzz import fuzz
 
 
 IGNORED_DIRS = {
-    ".git", "node_modules", ".venv", "__pycache__", ".idea", ".vscode",
-    "build", "dist", "target", ".gradle", ".maven", "bin", "obj",
-    ".next", ".nuxt", "coverage", ".nyc_output", ".pytest_cache",
-    ".tox", ".mypy_cache", ".cache", "tmp", "temp", ".tmp", ".temp",
-    "logs", "log", ".DS_Store", "Thumbs.db", ".env", ".env.local"
+    ".git",
+    "node_modules",
+    ".venv",
+    "__pycache__",
+    ".idea",
+    ".vscode",
+    "build",
+    "dist",
+    "target",
+    ".gradle",
+    ".maven",
+    "bin",
+    "obj",
+    ".next",
+    ".nuxt",
+    "coverage",
+    ".nyc_output",
+    ".pytest_cache",
+    ".tox",
+    ".mypy_cache",
+    ".cache",
+    "tmp",
+    "temp",
+    ".tmp",
+    ".temp",
+    "logs",
+    "log",
+    ".DS_Store",
+    "Thumbs.db",
+    ".env",
+    ".env.local",
 }
 MAX_FILE_SIZE_BYTES = 1_000_000  # 1 mb
 MAX_RESULTS = 30
