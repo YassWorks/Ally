@@ -222,16 +222,18 @@ class CLI:
                 user_args=list(user_args),
             )
 
-            if parsed_args.wd:
-                if not validate_dir_name(parsed_args.wd):
-                    self.ui.error(f"Invalid directory name: {parsed_args.wd}")
+            if parsed_args.d:
+                if parsed_args.d == '.':
+                    parsed_args.d = os.getcwd()
+                elif not validate_dir_name(parsed_args.d):
+                    self.ui.error(f"Invalid directory name: {parsed_args.d}")
                     sys.exit(1)
-                active_dir = parsed_args.wd
+                active_dir = parsed_args.d
 
             if parsed_args.allow_all_tools:
                 permission_manager.always_allow = True
 
-            if parsed_args.msg:
+            if parsed_args.p:
                 initial_prompt = parsed_args.msg
 
             if parsed_args.create_project:

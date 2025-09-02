@@ -18,8 +18,8 @@ class ArgsParser(argparse.ArgumentParser):
             action="store_true",
             help="Enable unrestricted tool execution for the session (WARNING: bypasses security)",
         )
-        self.add_argument("-wd", help="Specify working directory path")
-        self.add_argument("-msg", help="Initial message/prompt for Ally")
+        self.add_argument("-d", help="Specify working directory path")
+        self.add_argument("-p", help="Initial message/prompt for Ally")
 
     def error(self, message):
         usage = self.format_help()
