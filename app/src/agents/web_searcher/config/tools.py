@@ -1,5 +1,4 @@
 from langchain_core.tools import tool
-from typing import List, Dict
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter, Retry
 import requests

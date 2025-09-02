@@ -4,7 +4,7 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
 from rich.text import Text
-from typing import Dict, Any, Optional, List
+from typing import Any
 from app.utils.constants import THEME
 import time
 import sys

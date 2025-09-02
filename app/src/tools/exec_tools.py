@@ -1,7 +1,6 @@
 from app.src.config.permissions import permission_manager, PermissionDeniedException
 from langchain_core.tools import tool
 from app.utils.constants import EXEC_TIMEOUT
-from typing import Optional
 import subprocess
 import tempfile
 import shlex

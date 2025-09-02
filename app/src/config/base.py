@@ -3,7 +3,7 @@ from app.src.config.exception_handler import AgentExceptionHandler
 from app.src.config.permissions import PermissionDeniedException
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
 from langgraph.graph.state import CompiledStateGraph
-from typing import Union, Callable
+from typing import Callable
 from langgraph.graph import StateGraph
 from app.src.config.ui import AgentUI
 from rich.console import Console

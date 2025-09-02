@@ -1,6 +1,6 @@
 from app.src.config.permissions import PermissionDeniedException
 from app.src.config.ui import AgentUI
-from typing import Callable, Any, Optional
+from typing import Callable, Any
 import langgraph.errors as lg_errors
 import openai
 
