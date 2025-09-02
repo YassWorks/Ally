@@ -13,8 +13,8 @@ SEARCH_AVAILABLE = True
 load_dotenv(dotenv_path=ENV_PATH)
 
 
-GGL_API_KEY = os.environ["GOOGLE_SEARCH_API_KEY"] or os.getenv("GOOGLE_SEARCH_API_KEY")
-CX_ID = os.environ["SEARCH_ENGINE_ID"] or os.getenv("SEARCH_ENGINE_ID")
+GGL_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
+CX_ID = os.getenv("SEARCH_ENGINE_ID")
 
 
 if not GGL_API_KEY or not CX_ID:
