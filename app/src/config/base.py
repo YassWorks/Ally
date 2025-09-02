@@ -118,7 +118,6 @@ class BaseAgent:
                     self._display_chunk(last)
 
             except KeyboardInterrupt:
-                self.ui.session_interrupted()
                 self.ui.goodbye()
                 return True
 
