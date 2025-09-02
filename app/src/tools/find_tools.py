@@ -145,9 +145,9 @@ def _collect_files(root: str) -> list[str]:
     return files
 
 
-def _search_exact(files: List[str], query: str) -> List[Tuple[str, int, str]]:
+def _search_exact(files: list[str], query: str) -> list[tuple[str, int, str]]:
     ql = query.lower()
-    results: List[Tuple[str, int, str]] = []
+    results: list[tuple[str, int, str]] = []
     res_lock = threading.Lock()
     stop_event = threading.Event()
     file_order = {fp: idx for idx, fp in enumerate(files)}
@@ -183,10 +183,10 @@ def _search_exact(files: List[str], query: str) -> List[Tuple[str, int, str]]:
     return results[:MAX_RESULTS]
 
 
-def _search_fuzzy(files: List[str], query: str) -> List[Tuple[str, int, str]]:
+def _search_fuzzy(files: list[str], query: str) -> list[tuple[str, int, str]]:
     query_l = query.lower()
     token_re = re.compile(r"[A-Za-z0-9_./-]{2,}")
-    results: List[Tuple[str, int, str]] = []
+    results: list[tuple[str, int, str]] = []
     res_lock = threading.Lock()
     stop_event = threading.Event()
     file_order = {fp: idx for idx, fp in enumerate(files)}
@@ -223,7 +223,7 @@ def _search_fuzzy(files: List[str], query: str) -> List[Tuple[str, int, str]]:
     return results[:MAX_RESULTS]
 
 
-def _search_declarations(files: List[str], name: str) -> List[Tuple[str, int, str]]:
+def _search_declarations(files: list[str], name: str) -> list[tuple[str, int, str]]:
     nq = re.escape(name)
     patterns = [
         rf"\bdef\s+{nq}\b",  # Python function
@@ -242,7 +242,7 @@ def _search_declarations(files: List[str], name: str) -> List[Tuple[str, int, st
     ]
     regex = re.compile("|".join(patterns), re.IGNORECASE)
 
-    results: List[Tuple[str, int, str]] = []
+    results: list[tuple[str, int, str]] = []
     res_lock = threading.Lock()
     stop_event = threading.Event()
     file_order = {fp: idx for idx, fp in enumerate(files)}

@@ -317,7 +317,7 @@ class BaseAgent:
             return content[think_end + len("</think>") :].strip()
         return content
 
-    def _display_chunk(self, chunk: Union[BaseMessage, dict]):
+    def _display_chunk(self, chunk: BaseMessage | dict):
         """Display chunk content in the UI."""
         if isinstance(chunk, BaseMessage):
             if isinstance(chunk, AIMessage):

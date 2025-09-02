@@ -9,7 +9,7 @@ from app.src.config.base import BaseAgent
 class BaseUnit(ABC):
     """Base class for orchestration units that coordinate multiple agents."""
     
-    def __init__(self, agents: Dict[str, BaseAgent]):
+    def __init__(self, agents: dict[str, BaseAgent]):
         """Initialize the unit with required agents.
         
         Args:
@@ -60,7 +60,7 @@ class BaseUnit(ABC):
                 self.ui.error("Failed to create project directory")
                 working_dir = None
     
-    def _create_agent_config(self, thread_id: str, recursion_limit: int = 100) -> Dict[str, Any]:
+    def _create_agent_config(self, thread_id: str, recursion_limit: int = 100) -> dict[str, Any]:
         """Create standardized configuration for agent operations.
         
         Args:

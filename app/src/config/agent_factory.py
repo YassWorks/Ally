@@ -9,7 +9,7 @@ class AgentFactory:
     """Factory for creating and managing agent instances."""
 
     @staticmethod
-    def create_agent(agent_type: str, config: Dict[str, Any]) -> Any:
+    def create_agent(agent_type: str, config: dict[str, Any]) -> Any:
         """Create an agent instance based on type and configuration.
 
         Args:
@@ -52,12 +52,12 @@ class AgentFactory:
 
     @staticmethod
     def create_coding_agents(
-        model_names: Dict[str, str],
-        api_keys: Dict[str, str],
-        temperatures: Optional[Dict[str, float]] = None,
-        system_prompts: Optional[Dict[str, str]] = None,
-        providers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        model_names: dict[str, str],
+        api_keys: dict[str, str],
+        temperatures: dict[str, float] | None = None,
+        system_prompts: dict[str, str] | None = None,
+        providers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """Create all agents needed for coding.
 
         Args:

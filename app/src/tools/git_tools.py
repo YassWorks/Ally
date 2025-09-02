@@ -1,11 +1,10 @@
 from langchain_core.tools import tool
-from typing import Optional
 import subprocess
 import os
 
 
 @tool
-def diff(commit1: Optional[str], commit2: Optional[str], cwd: Optional[str]) -> str:
+def diff(commit1: str | None, commit2: str | None, cwd: str | None) -> str:
     """
     ## PRIMARY PURPOSE:
     Compare file changes between git commits or working directory using git diff.
@@ -58,7 +57,7 @@ def diff(commit1: Optional[str], commit2: Optional[str], cwd: Optional[str]) -> 
 
 
 @tool
-def blame(file_path: str, cwd: Optional[str] = None) -> str:
+def blame(file_path: str, cwd: str | None = None) -> str:
     """
     ## PRIMARY PURPOSE:
     Show line-by-line authorship and commit information for a file using git blame.

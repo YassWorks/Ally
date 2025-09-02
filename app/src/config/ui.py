@@ -61,7 +61,7 @@ class AgentUI:
         )
         self.console.print(panel)
 
-    def tool_call(self, tool_name: str, args: Dict[str, Any]):
+    def tool_call(self, tool_name: str, args: dict[str, Any]):
         self.console.print()
 
         tool_name = f"## {tool_name}"
@@ -142,12 +142,12 @@ class AgentUI:
     def get_input(
         self,
         message: str = None,
-        default: Optional[str] = None,
+        default: str | None = None,
         password: bool = False,
-        choices: Optional[List[str]] = None,
+        choices: list[str] | None = None,
         show_choices: bool = False,
-        cwd: Optional[str] = None,
-        model: Optional[str] = None,
+        cwd: str | None = None,
+        model: str | None = None,
     ) -> str:
         self.console.print()
         try:
@@ -231,7 +231,7 @@ class AgentUI:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return None
 
-    def select_option(self, message: str, options: List[str]) -> str:
+    def select_option(self, message: str, options: list[str]) -> int:
         idx = 0
         self.console.print(f"\n{message}")
         for i, opt in enumerate(options):

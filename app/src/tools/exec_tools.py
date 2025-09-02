@@ -32,7 +32,7 @@ EXTREMEMLY_DANGEROUS_PATTERNS = [
 
 
 @tool
-def execute_code(code: str, cwd: Optional[str]) -> str:
+def execute_code(code: str, cwd: str | None) -> str:
     """
     ## PRIMARY PURPOSE: 
     Execute Python code scripts in isolated temporary files.
@@ -91,7 +91,7 @@ def execute_code(code: str, cwd: Optional[str]) -> str:
 
 
 @tool
-def execute_command(command: str, cwd: Optional[str]) -> str:
+def execute_command(command: str, cwd: str | None) -> str:
     """
     ## PRIMARY PURPOSE: 
     Execute shell commands with comprehensive system access and security filtering.

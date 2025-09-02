@@ -29,7 +29,7 @@ ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
 TIMEOUT = 10  # seconds
 
 
-def google_search(query: str, n: int = 5) -> List[Dict[str, str]]:
+def google_search(query: str, n: int = 5) -> list[dict[str, str]]:
     """Search Google and return structured results.
 
     Args:

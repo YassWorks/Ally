@@ -17,7 +17,7 @@ class AgentExceptionHandler:
         propagate: bool = False,
         continue_on_limit: bool = False,
         retries: int = 0,
-        retry_operation: Optional[Callable] = None,
+    retry_operation: Callable | None = None,
     ) -> Any:
 
         try:
