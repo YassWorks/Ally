@@ -1,45 +1,118 @@
 # Ally 🗿
 
-Ally is an AI-powered CLI tool that can assist you with everyday tasks or coding projects or any wild ideas you have.
-Currently running on Cerebras models through an API, but local model support (Ollama) is coming soon.
+Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects.
+
+I built Ally to be a fully local, agentic system using **Ollama**, but it also works seamlessly with:
+
+* OpenAI
+* Anthropic
+* Google GenAI
+* Cerebras
+* *(with more integrations on the way!)*
+
+This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow, such as in scientific research or law firms.
 
 ## Key Features
 
-#### The default chat interface exposes a general-purpose agent that can:
-- Read/write/modify/delete files and directories.
-- Has access to the internet.
-- Can execute commannds and code. (All with your permission)
+#### Default Chat Interface
 
-#### Full coding project generation:
-- use the `--create-project` flag or use the `/project` command in the chat interface.
+A general-purpose agent that can:
 
-- Complete workflow:
-    - Asks for your project idea. This can be as simple or complex as you want.
+* Read, write, modify, and delete files and directories.
+* Access the internet.
+* Execute commands and code.
 
-    - Runs the ***Brainstormer Agent***, a capable AI assistant that will create the context space and the full project spec for the ***Codegen Agent***. (in the form of `.md` files)
+  ***Note:*** Tools always ask for your permission before executing.
 
-    - Asks if you want to include further context (will open an interactive chatting interface with the ***Brainstormer Agent*** with the same context carried over from last step.)
+#### Full Coding Project Generation Workflow
 
-    - Runs the ***Codegen Agent*** powered with the newly generated `.md` files.
+* Use the `--create-project` flag or the `/project` command in the default chat interface.
 
-    - Once the initial generation is over, an interactive chatting interface with the ***Codegen Agent*** will open (with the same context carried over from last step.)
+**Complete workflow:**
+
+* Asks for your project idea.
+* Runs the ***Brainstormer Agent*** to create the context space and full project specification for the ***Codegen Agent*** (in `.md` format).
+* Optionally lets you provide more context by chatting interactively with the ***Brainstormer Agent***.
+* Runs the ***Codegen Agent*** using the generated `.md` files.
+* Opens an interactive chat with the ***Codegen Agent*** to refine or extend the project.
 
 ## Tutorial
 
-Currently, the best way to test this project in a sandboxed environment is by launching a Docker container and then entering it via the terminal to experiment with the agent without any risks.
+### 1. Clone the Repo
 
-First, start the container:
+In your chosen installation folder, open a terminal window and run:
+
 ```bash
-docker compose up --build
+git clone https://github.com/YassWorks/Ally.git
 ```
 
-Then enter the container:
-```bash
-docker exec -it ally-ally-1 /bin/sh
+### 2. Configure `ally_config.json`
+
+This file (located at `Ally/`) controls Ally's main settings and integrations. Example configuration:
+
+```json
+{
+    "provider": "openai",
+    "provider_per_model": {
+        "general": "ollama",
+        "code_gen": "anthropic",
+        "brainstormer": null,  // autofilled with 'openai'
+        "web_searcher": null   // autofilled with 'openai'
+    },
+
+    "model": "gpt-4o",
+    "models": {
+        "general": "gpt-oss:20b",
+        "code_gen": "claude-sonnet-3.5",
+        "brainstormer": null,  // autofilled with 'gpt-4o'
+        "web_searcher": null   // autofilled with 'gpt-4o'
+    },
+    
+    "temperatures": {
+        "general": 0.7,
+        "code_gen": 0,
+        "brainstormer": 1,
+        "web_searcher": 0
+    },
+    "system_prompts": {  // leave as-is to use Ally's defaults
+        "general": null,
+        "code_gen": null,
+        "brainstormer": null,
+        "web_searcher": null
+    }
+}
 ```
 
-Start the CLI (use `-h` for help):
-```bash
-python main.py
+### 3. Configure `.env`
+
+This file stores your API keys.
+
+```
+# Inference providers (only include those you need)
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GOOGLE_GEN_AI_API_KEY=your_google_gen_ai_api_key_here
+CEREBRAS_API_KEY=your_api_key_here
+
+# Google Search API (optional but recommended)
+GOOGLE_SEARCH_API_KEY=your_google_api_key_here
+SEARCH_ENGINE_ID=your_search_engine_id_here
 ```
 
+Steps:
+
+1. Copy the contents above (or from `.env.example`) into `.env`.
+2. Fill in your API keys and IDs.
+
+Now you’re ready to run Ally with your chosen provider and settings!
+
+## Tools Used
+
+```md
+Python
+LangChain
+LangGraph
+Rich                   # For a gorgeous CLI interface
+Google Search API      # For web search tools
+SQLite                 # For agent memory
+```
