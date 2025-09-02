@@ -101,10 +101,13 @@ SEARCH_ENGINE_ID=your_search_engine_id_here
 
 Steps:
 
-1. Copy the contents above (or from `.env.example`) into `.env`.
-2. Fill in your API keys and IDs.
+1. Set up a Google [Programmable Search Engine](https://developers.google.com/custom-search/v1/overview)
+2. Copy the contents above (or from `.env.example`) into `.env`.
+3. Fill in your API keys and IDs.
 
-Now you’re ready to run Ally with your chosen provider and settings!
+Now you’re ready to run Ally from anywhere in the terminal using `ally`.
+
+Use `ally -h` for more help.
 
 ## Tools Used
 
