@@ -5,7 +5,7 @@ import sys
 
 load_dotenv()
 cerebras_api_key = os.getenv("CEREBRAS_API_KEY")
-google_api_key = os.getenv("GOOGLE_API_KEY")
+google_gen_ai_api_key = os.getenv("GOOGLE_GEN_AI_API_KEY")
 
 if not cerebras_api_key:
     print("Error: CEREBRAS_API_KEY environment variable not found")
