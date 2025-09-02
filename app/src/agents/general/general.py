@@ -21,7 +21,7 @@ class GeneralAgent(BaseAgent):
         api_key: str,
         system_prompt: str = None,
         temperature: float = 0,
-        provider: str = "cerebras",
+        provider: str = None,
     ):
         graph, agent = get_agent(
             model_name=model_name,

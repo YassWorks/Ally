@@ -45,7 +45,7 @@ class AgentFactory:
                 api_key=config["api_key"],
                 system_prompt=config.get("system_prompt", None),
                 temperature=config.get("temperature", 0),
-                provider=config.get("provider", "cerebras"),
+                provider=config.get("provider"),
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize {agent_type} agent: {e}")
@@ -80,7 +80,7 @@ class AgentFactory:
                 "api_key": api_keys[agent_type],
                 "temperature": (temperatures or {}).get(agent_type, 0),
                 "system_prompt": (system_prompts or {}).get(agent_type),
-                "provider": (providers or {}).get(agent_type, "cerebras"),
+                "provider": (providers or {}).get(agent_type),
             }
             agents[agent_type] = AgentFactory.create_agent(agent_type, config)
 

@@ -29,7 +29,7 @@ def create_base_agent(
     system_prompt: str,
     temperature: float = 0,
     include_graph: bool = False,
-    provider: str = "cerebras",
+    provider: str = None,
 ) -> CompiledStateGraph | tuple[StateGraph, CompiledStateGraph]:
     """Create a base agent with common configuration and error handling.
 
@@ -49,6 +49,7 @@ def create_base_agent(
     try:
         match provider:
             case "cerebras":
+                from langchain_cerebras import ChatCerebras
                 llm = ChatCerebras(
                     model=model_name,
                     temperature=temperature,
@@ -57,6 +58,7 @@ def create_base_agent(
                     api_key=api_key,
                 )
             case "ollama":
+                from langchain_ollama import ChatOllama
                 llm = ChatOllama(
                     model=model_name,
                     temperature=temperature,
@@ -64,12 +66,31 @@ def create_base_agent(
                     reasoning=False,
                 )
             case "google":
+                from langchain_google_genai import ChatGoogleGenerativeAI
                 llm = ChatGoogleGenerativeAI(
                     model=model_name,
                     temperature=temperature,
                     timeout=None,
                     max_retries=5,
                     google_api_key=api_key,
+                )
+            case "openai":
+                from langchain_openai import ChatOpenAI
+                llm = ChatOpenAI(
+                    model=model_name,
+                    temperature=temperature,
+                    timeout=None,
+                    max_retries=5,
+                    api_key=api_key,
+                )
+            case "anthropic":
+                from langchain_anthropic import ChatAnthropic
+                llm = ChatAnthropic(
+                    model=model_name,
+                    temperature=temperature,
+                    timeout=None,
+                    max_retries=5,
+                    api_key=api_key,
                 )
             case _:
                 raise ValueError(f"Unsupported inference provider: {provider}")

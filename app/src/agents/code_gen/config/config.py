@@ -10,7 +10,7 @@ def get_agent(
     extra_tools: list = None,
     temperature: float = 0,
     include_graph: bool = True,
-    provider: str = "cerebras",
+    provider: str = None,
 ):
     """Create a code generation agent with file and execution tools.
     

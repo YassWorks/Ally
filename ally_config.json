@@ -1,0 +1,30 @@
+{
+    "provider": "cerebras",
+    "provider_per_model": {
+        "general": null,
+        "code_gen": null,
+        "brainstormer": null,
+        "web_searcher": null
+    },
+
+    "model": "qwen-3-32b",
+    "models": {
+        "general": null,
+        "code_gen": null,
+        "brainstormer": null,
+        "web_searcher": null
+    },
+    
+    "temperatures": {
+        "general": 0,
+        "code_gen": 0,
+        "brainstormer": 0,
+        "web_searcher": 0
+    },
+    "system_prompts": {
+        "general": null,
+        "code_gen": null,
+        "brainstormer": null,
+        "web_searcher": null
+    }
+}
