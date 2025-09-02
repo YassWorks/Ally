@@ -13,29 +13,20 @@ IGNORED_DIRS = {
     "__pycache__",
     ".idea",
     ".vscode",
-    "build",
-    "dist",
-    "target",
     ".gradle",
     ".maven",
-    "bin",
-    "obj",
     ".next",
     ".nuxt",
-    "coverage",
     ".nyc_output",
     ".pytest_cache",
     ".tox",
     ".mypy_cache",
     ".cache",
-    "tmp",
-    "temp",
     ".tmp",
     ".temp",
     "logs",
     "log",
     ".DS_Store",
-    "Thumbs.db",
     ".env",
     ".env.local",
 }
@@ -153,7 +144,10 @@ def _collect_files(root: str) -> list[str]:
 
     for dirpath, dirnames, filenames in os.walk(root):
         # prune ignored dirs immediately
-        dirnames[:] = [d for d in dirnames if d not in IGNORED_DIRS]
+        dirnames[:] = [
+            d for d in dirnames 
+            if not any(re.search(rf'^{re.escape(pattern)}', d) for pattern in IGNORED_DIRS)
+        ]
 
         for entry in filenames:
             fp = os.path.join(dirpath, entry)
