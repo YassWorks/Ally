@@ -18,7 +18,7 @@ api_keys = {
 ########### load the configuration ###########
 
 try:
-    with open("D:\\Database\\Documents\\Programming\\PROJECTS\\Ally\\ally_config.json") as f:
+    with open("ally_config.json") as f:
         config = json.load(f)
 except FileNotFoundError:
     print("Configuration file 'ally_config.json' not found.")
