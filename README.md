@@ -38,6 +38,8 @@ A general-purpose agent that can:
 
 ## Tutorial
 
+#### Prerequesites: simply [Python](https://www.python.org/)
+
 ### 1. Clone the Repo
 
 In your chosen installation folder, open a terminal window and run:
@@ -119,3 +121,8 @@ Rich                   # For a gorgeous CLI interface
 Google Search API      # For web search tools
 SQLite                 # For agent memory
 ```
+
+## TODO
+
+- RAG support. Users will be able to drop files and query them.
+- History management. Users will be able to come back to past conversations.
