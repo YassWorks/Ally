@@ -13,3 +13,4 @@ database/
 Dockerfile
 compose.yml
 .dockerignore
+bin/
