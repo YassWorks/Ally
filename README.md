@@ -107,6 +107,12 @@ Steps:
 2. Copy the contents above (or from `.env.example`) into `.env`.
 3. Fill in your API keys and IDs.
 
+### 4. Run setup
+
+Depending on your OS choose either `setup.cmd` (Windows) or `setup.sh` (Linux/Mac)
+
+***Note:*** Ally creates its own virtual environment to keep dependencies isolated and automatically adds itself to your PATH.
+
 Now you’re ready to run Ally from anywhere in the terminal using `ally`.
 
 Use `ally -h` for more help.
