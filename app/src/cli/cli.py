@@ -67,15 +67,22 @@ class CLI:
             models=models,
             api_key_per_model=api_key_per_model,
         )
-        self._setup_coding_config(
-            api_key=api_key,
-            models=models,
-            api_key_per_model=api_key_per_model,
-            temperatures=temperatures,
-            system_prompts=system_prompts,
-            provider=provider,
-            provider_per_model=provider_per_model,
-        )
+        try:
+            self._setup_coding_config(
+                api_key=api_key,
+                models=models,
+                api_key_per_model=api_key_per_model,
+                temperatures=temperatures,
+                system_prompts=system_prompts,
+                provider=provider,
+                provider_per_model=provider_per_model,
+            )
+        except ValueError as ve:
+            self.ui.error(f"Configuration error: {ve}")
+            sys.exit(1)
+        except Exception as e:
+            self.ui.error(f"Failed to setup coding configuration: {e}")
+            sys.exit(1)
 
     def _validate_config(
         self,
