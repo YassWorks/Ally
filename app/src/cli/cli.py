@@ -334,7 +334,6 @@ class CLI:
 
             return codegen_unit.run(
                 prompt=initial_prompt,
-                config=self.config,
                 stream=self.stream,
                 show_welcome=False,
                 working_dir=working_dir,

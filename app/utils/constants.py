@@ -1,4 +1,4 @@
-CONSOLE_WIDTH = 120
+CONSOLE_WIDTH = 90
 EXEC_TIMEOUT = 3600
 
 CONTINUE_MESSAGE = "Continue where you left off. Don't repeat anything already done."
