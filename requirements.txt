@@ -5,6 +5,7 @@ langchain-cerebras>=0.5.0
 langchain-core>=0.3.75
 langchain-google-genai>=2.1.10
 langchain-ollama>=0.3.7
+langchain-anthropic>=0.3.19
 langgraph>=0.6.6
 langgraph-checkpoint-sqlite>=2.0.11
 lxml>=6.0.1
