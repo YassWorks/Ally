@@ -62,11 +62,19 @@ class CLI:
         except Exception as e:
             self.ui.error(f"Failed to initialize default agents: {e}")
 
-        self._validate_config(
-            api_key=api_key,
-            models=models,
-            api_key_per_model=api_key_per_model,
-        )
+        try:
+            self._validate_config(
+                api_key=api_key,
+                models=models,
+                api_key_per_model=api_key_per_model,
+            )
+        except ValueError as ve:
+            self.ui.error(f"Configuration error: {ve}")
+            sys.exit(1)
+        except Exception as e:
+            self.ui.error(f"Failed to validate configuration: {e}")
+            sys.exit(1)
+        
         try:
             self._setup_coding_config(
                 api_key=api_key,
@@ -239,7 +247,7 @@ class CLI:
                 permission_manager.always_allow = True
 
             if parsed_args.p:
-                initial_prompt = parsed_args.msg
+                initial_prompt = parsed_args.p
 
             if parsed_args.create_project:
                 self.ui.logo(ASCII_ART)

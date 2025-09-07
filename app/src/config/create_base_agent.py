@@ -12,7 +12,6 @@ import sqlite3
 
 class State(TypedDict):
     """Common state structure for all agents."""
-
     messages: Annotated[list[BaseMessage], add_messages]
 
 
@@ -138,7 +137,7 @@ def create_base_agent(
 
     if not db_file.exists():
         db_file.touch()
-        
+    
     conn = sqlite3.connect(db_file.as_posix(), check_same_thread=False)
     mem = SqliteSaver(conn)
 
