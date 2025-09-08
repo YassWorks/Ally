@@ -52,6 +52,7 @@ def create_base_agent(
         match provider:
             case "cerebras":
                 from langchain_cerebras import ChatCerebras
+
                 llm = ChatCerebras(
                     model=model_name,
                     temperature=temperature,
@@ -61,6 +62,7 @@ def create_base_agent(
                 )
             case "ollama":
                 from langchain_ollama import ChatOllama
+
                 llm = ChatOllama(
                     model=model_name,
                     temperature=temperature,
@@ -69,6 +71,7 @@ def create_base_agent(
                 )
             case "google":
                 from langchain_google_genai import ChatGoogleGenerativeAI
+
                 llm = ChatGoogleGenerativeAI(
                     model=model_name,
                     temperature=temperature,
@@ -78,6 +81,7 @@ def create_base_agent(
                 )
             case "openai":
                 from langchain_openai import ChatOpenAI
+
                 llm = ChatOpenAI(
                     model=model_name,
                     temperature=temperature,
@@ -87,6 +91,7 @@ def create_base_agent(
                 )
             case "anthropic":
                 from langchain_anthropic import ChatAnthropic
+
                 llm = ChatAnthropic(
                     model=model_name,
                     temperature=temperature,
