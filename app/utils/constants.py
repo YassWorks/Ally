@@ -40,13 +40,13 @@ UI_MESSAGES = {
 
 DEFAULT_PATHS = {
     "history": (
-        "%LOCALAPPDATA%\\ally\\history\\"
+        "%LOCALAPPDATA%\\Ally\\history\\"
         if os.name == "nt"
-        else "~/.local/share/ally/history/"
+        else "~/.local/share/Ally/history/"
     ),
     "database": (
-        "%LOCALAPPDATA%\\ally\\database\\"
+        "%LOCALAPPDATA%\\Ally\\database\\"
         if os.name == "nt"
-        else "~/.local/share/ally/database/"
+        else "~/.local/share/Ally/database/"
     ),
 }
