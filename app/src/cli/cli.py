@@ -207,7 +207,7 @@ class CLI:
             if active_dir is None:
                 active_dir = self._setup_directory()
 
-            self.ui.tmp_msg("Initializing agents...", duration=1)
+            self.ui.tmp_msg("Initializing agents...", duration=0.5)
             codegen_unit_success = self._run_codegen_unit(
                 initial_prompt=initial_prompt, working_dir=active_dir
             )

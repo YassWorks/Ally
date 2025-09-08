@@ -104,7 +104,7 @@ class BaseAgent:
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
 
-                self.ui.tmp_msg("Working on the task...", 1)
+                self.ui.tmp_msg("Working on the task...", 0.5)
 
                 last = None
                 for chunk in self.agent.stream(
