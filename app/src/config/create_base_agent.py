@@ -1,5 +1,6 @@
 from app.utils.constants import DEFAULT_PATHS
 from app.src.helpers.valid_dir import validate_dir_name
+from app.src.config.ui import default_ui
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages
@@ -15,10 +16,12 @@ import os
 
 class State(TypedDict):
     """Common state structure for all agents."""
+
     messages: Annotated[list[BaseMessage], add_messages]
 
 
 LAST_N_TURNS = 10
+_PATH_ERROR_PRINTED = False
 
 
 def create_base_agent(
@@ -134,20 +137,25 @@ def create_base_agent(
         graph.add_edge("llm", END)
 
     db_path = os.getenv("ALLY_HISTORY_DIR", DEFAULT_PATHS["history"])
-    db_path = Path(os.path.expandvars(db_path)).resolve()
-    
+    db_path = Path(os.path.expandvars(db_path))
+
     if not validate_dir_name(str(db_path)):
-        print(f"Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path.")
-        db_path = Path(os.path.expandvars(DEFAULT_PATHS["history"])).resolve()
-    
+        global _PATH_ERROR_PRINTED
+        if not _PATH_ERROR_PRINTED:
+            default_ui.warning(
+                "Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path."
+            )
+            _PATH_ERROR_PRINTED = True
+        db_path = Path(os.path.expandvars(DEFAULT_PATHS["history"]))
+
     db_file = db_path / "history.sqlite"
-    
+
     if not db_path.exists():
         db_path.mkdir(parents=True, exist_ok=True)
 
     if not db_file.exists():
         db_file.touch()
-    
+
     conn = sqlite3.connect(db_file.as_posix(), check_same_thread=False)
     mem = SqliteSaver(conn)
 
