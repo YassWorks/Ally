@@ -1,5 +1,6 @@
 import os
 from rich.console import Console
+from app.utils.constants import CONSOLE_WIDTH
 from rich.markdown import Markdown
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
@@ -50,9 +51,11 @@ class AgentUI:
         if model_name:
             help_content.append("")
             help_content.append(f"Model: [bold]{model_name}[/bold]")
-        
-        help_content.append("\n[italic][dim](*Not recommended during long running tasks. Use at your own risk.)[/dim][/italic]")
-        
+
+        help_content.append(
+            "\n[italic][dim](*Not recommended during long running tasks. Use at your own risk.)[/dim][/italic]"
+        )
+
         panel = Panel(
             "\n".join(help_content),
             title="[bold]Help[/bold]",
@@ -127,9 +130,7 @@ class AgentUI:
         )
         self.console.print(panel)
 
-    def status_message(
-        self, title: str, message: str, style: str = "primary"
-    ):
+    def status_message(self, title: str, message: str, style: str = "primary"):
         self.console.print()
         panel = Panel(
             message,
@@ -164,7 +165,9 @@ class AgentUI:
                 prompt_content += f" [dim](default: {default})[/dim]"
 
             if info_line:
-                prompt_content += f"\n{info_line}" if prompt_content.strip() else info_line
+                prompt_content += (
+                    f"\n{info_line}" if prompt_content.strip() else info_line
+                )
 
             panel = Panel(
                 prompt_content, border_style=self._style("border"), padding=(0, 1)
@@ -196,9 +199,11 @@ class AgentUI:
             self.session_interrupted()
             sys.exit(0)
         except Exception:
-            self.warning(f"Failed to confirm action. Continuing with default value ({'y' if default else 'n'})")
+            self.warning(
+                f"Failed to confirm action. Continuing with default value ({'y' if default else 'n'})"
+            )
             return default
-            
+
     def get_key(self):
         """Read a single key press and return a string identifier."""
         if os.name == "nt":
@@ -308,5 +313,9 @@ class AgentUI:
         )
 
     def tmp_msg(self, message: str, duration: int = 2):
+        self.console.print()
         with self.console.status(message):
             time.sleep(duration)
+
+
+default_ui = AgentUI(Console(width=CONSOLE_WIDTH))

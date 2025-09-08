@@ -6,8 +6,8 @@ EXEC_TIMEOUT = 3600
 CONTINUE_MESSAGE = "Continue where you left off. Don't repeat anything already done."
 
 THEME = {
-    "primary": "#c2639c",
-    "secondary": "#896bd0",
+    "primary": "#4566db",
+    "secondary": "#9c79ee",
     "accent": "#88c5d0",
     "success": "#10b981",
     "warning": "#ebac40",

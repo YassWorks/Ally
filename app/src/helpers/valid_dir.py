@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 
-WINDOWS_INVALID_CHARS = '<>"/|?*'
+WINDOWS_INVALID_CHARS = '<>:"/\\|?*'
 WINDOWS_RESERVED_NAMES = {
     "CON",
     "PRN",
