@@ -1,3 +1,5 @@
+from app.utils.constants import DEFAULT_PATHS
+from app.src.helpers.valid_dir import validate_dir_name
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages
@@ -8,6 +10,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
 from pathlib import Path
 import sqlite3
+import os
 
 
 class State(TypedDict):
@@ -15,7 +18,7 @@ class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
-LAST_N_TURNS = 20
+LAST_N_TURNS = 10
 
 
 def create_base_agent(
@@ -130,8 +133,15 @@ def create_base_agent(
         graph.add_edge(START, "llm")
         graph.add_edge("llm", END)
 
-    db_path = Path(__file__).resolve().parents[2] / "database"
-    db_file = db_path / "memory.sqlite"
+    db_path = os.getenv("ALLY_HISTORY_DIR", DEFAULT_PATHS["history"])
+    db_path = Path(os.path.expandvars(db_path)).resolve()
+    
+    if not validate_dir_name(str(db_path)):
+        print(f"Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path.")
+        db_path = Path(os.path.expandvars(DEFAULT_PATHS["history"])).resolve()
+    
+    db_file = db_path / "history.sqlite"
+    
     if not db_path.exists():
         db_path.mkdir(parents=True, exist_ok=True)
 

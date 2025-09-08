@@ -1,3 +1,5 @@
+import os
+
 CONSOLE_WIDTH = 90
 EXEC_TIMEOUT = 3600
 
@@ -5,14 +7,14 @@ CONTINUE_MESSAGE = "Continue where you left off. Don't repeat anything already d
 
 THEME = {
     "primary": "#c2639c",
-    "secondary": "#896bd0", 
+    "secondary": "#896bd0",
     "accent": "#88c5d0",
     "success": "#10b981",
     "warning": "#ebac40",
     "error": "#ef4444",
     "muted": "#6b7280",
     "text": "#f8fafc",
-    "border": "#374151"
+    "border": "#374151",
 }
 
 UI_MESSAGES = {
@@ -24,15 +26,27 @@ UI_MESSAGES = {
     "add_context": "Add more context before code generation?",
     "continue_generation": "Continue to code generation anyway?",
     "change_models": "Change any of the current models?",
-    
     "titles": {
         "current_directory": "Current Directory",
-        "directory_updated": "Directory Updated", 
+        "directory_updated": "Directory Updated",
         "current_models": "Current Models",
         "context_complete": "Context Engineering Complete",
         "generation_complete": "Project Generation Complete",
         "brainstormer_ready": "Brainstormer Ready",
         "codegen_ready": "CodeGen Ready",
         "generation_starting": "Starting Code Generation",
-    }
+    },
+}
+
+DEFAULT_PATHS = {
+    "history": (
+        "%LOCALAPPDATA%\\ally\\history\\"
+        if os.name == "nt"
+        else "~/.local/share/ally/history/"
+    ),
+    "database": (
+        "%LOCALAPPDATA%\\ally\\database\\"
+        if os.name == "nt"
+        else "~/.local/share/ally/database/"
+    ),
 }
