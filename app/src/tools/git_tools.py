@@ -103,7 +103,7 @@ def blame(file_path: str, cwd: str | None = None) -> str:
                 parts = line.split(" ", 3)
                 if len(parts) >= 3:
                     commit_hash = parts[0][:8]
-                    if commit_hash not in [c.get("hash", "") for c in [current_commit]]:
+                    if current_commit is None or current_commit.get("hash", "") != commit_hash:
                         current_commit = {"hash": commit_hash}
 
                     j = i + 1
