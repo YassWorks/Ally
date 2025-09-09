@@ -117,18 +117,6 @@ Now you’re ready to run Ally from anywhere in the terminal using `ally`.
 
 Use `ally -h` for more help.
 
-## Tools Used
+## Technical notes
 
-```md
-Python
-LangChain
-LangGraph
-Rich                   # For a gorgeous CLI interface
-Google Search API      # For web search tools
-SQLite                 # For agent memory
-```
-
-## TODO
-
-- RAG support. Users will be able to drop files and query them.
-- History management. Users will be able to come back to past conversations.
+You can set the environment variable `ALLY_HISTORY_DIR` to control where Ally stores its history.
