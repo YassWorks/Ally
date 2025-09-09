@@ -32,14 +32,14 @@ if not exist bin mkdir bin
 set "BIN_DIR=%CURR_DIR%\bin"
 for /f "tokens=2*" %%A in ('reg query "HKCU\Environment" /v PATH 2^>nul') do set "USER_PATH=%%B"
 
-echo %PATH% | find /i "%BIN_DIR%" >nul
+echo ;%PATH%; | find /i ";%BIN_DIR%;" >nul
 if errorlevel 1 (
     if not defined USER_PATH (
         reg add "HKCU\Environment" /v PATH /t REG_EXPAND_SZ /d "%BIN_DIR%" /f >nul
     ) else (
         reg add "HKCU\Environment" /v PATH /t REG_EXPAND_SZ /d "%USER_PATH%;%BIN_DIR%" /f >nul
     )
-    echo Added %BIN_DIR% to PATH. Restart your terminal to use "ally".
+    echo Added %BIN_DIR% to PATH. Restart your terminal or log off/on.
 ) else (
     echo %BIN_DIR% is already in PATH.
 )

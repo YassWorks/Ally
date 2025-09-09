@@ -141,17 +141,24 @@ def create_base_agent(
         graph.add_edge(START, "llm")
         graph.add_edge("llm", END)
 
-    db_path = os.getenv("ALLY_HISTORY_DIR", DEFAULT_PATHS["history"])
-    db_path = Path(os.path.expandvars(db_path))
+    db_path = ""
+    if "ALLY_HISTORY_DIR" in os.environ:
+        db_path = Path(os.getenv("ALLY_HISTORY_DIR"))
+        if not validate_dir_name(str(db_path)):
+            db_path = ""
+            global _PATH_ERROR_PRINTED
+            if not _PATH_ERROR_PRINTED:
+                default_ui.warning(
+                    "Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path."
+                )
+                _PATH_ERROR_PRINTED = True
 
-    if not validate_dir_name(str(db_path)):
-        global _PATH_ERROR_PRINTED
-        if not _PATH_ERROR_PRINTED:
-            default_ui.warning(
-                "Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path."
-            )
-            _PATH_ERROR_PRINTED = True
-        db_path = Path(os.path.expandvars(DEFAULT_PATHS["history"]))
+    if not db_path:
+        db_path = DEFAULT_PATHS["history"]
+        if os.name == "nt":
+            db_path = Path(os.path.expandvars(db_path))
+        else:
+            db_path = Path(os.path.expanduser(db_path))
 
     db_file = db_path / "history.sqlite"
 
