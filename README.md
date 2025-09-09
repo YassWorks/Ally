@@ -2,7 +2,7 @@
 
 Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects.
 
-I built Ally to be a fully local, agentic system using **Ollama**, but it also works seamlessly with:
+I built Ally to be a fully local agentic system using **Ollama**, but it also works seamlessly with:
 
 * OpenAI
 * Anthropic
