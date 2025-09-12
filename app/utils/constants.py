@@ -49,4 +49,9 @@ DEFAULT_PATHS = {
         if os.name == "nt"
         else "~/.local/share/Ally/database/"
     ),
+    "embedding_models": (
+        "%LOCALAPPDATA%\\Ally\\embedding_models\\"
+        if os.name == "nt"
+        else "~/.local/share/Ally/embedding_models/"
+    )
 }
