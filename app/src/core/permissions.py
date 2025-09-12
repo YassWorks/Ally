@@ -1,4 +1,4 @@
-from app.src.config.ui import AgentUI
+from app.src.core.ui import AgentUI
 from app.utils.constants import CONSOLE_WIDTH
 from rich.console import Console
 

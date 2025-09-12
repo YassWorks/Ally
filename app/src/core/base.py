@@ -1,11 +1,11 @@
 from app.utils.ascii_art import ASCII_ART
-from app.src.config.exception_handler import AgentExceptionHandler
-from app.src.config.permissions import PermissionDeniedException
+from app.src.core.exception_handler import AgentExceptionHandler
+from app.src.core.permissions import PermissionDeniedException
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
 from langgraph.graph.state import CompiledStateGraph
 from typing import Callable
 from langgraph.graph import StateGraph
-from app.src.config.ui import AgentUI
+from app.src.core.ui import AgentUI
 from rich.console import Console
 import langgraph.errors as lg_errors
 from app.utils.constants import CONTINUE_MESSAGE

@@ -1,5 +1,5 @@
 import argparse
-from app.src.config.ui import AgentUI
+from app.src.core.ui import AgentUI
 import sys
 
 class ArgsParser(argparse.ArgumentParser):

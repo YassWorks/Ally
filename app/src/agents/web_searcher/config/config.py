@@ -1,4 +1,4 @@
-from app.src.config.create_base_agent import create_base_agent
+from app.src.core.create_base_agent import create_base_agent
 from app.src.agents.web_searcher.config.tools import search_and_scrape
 import os
 

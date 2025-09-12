@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
-from app.src.config.ui import AgentUI
+from app.src.core.ui import AgentUI
 from rich.console import Console
 from app.utils.constants import CONSOLE_WIDTH
-from app.src.config.base import BaseAgent
+from app.src.core.base import BaseAgent
 
 
 class BaseUnit(ABC):

@@ -1,4 +1,4 @@
-from app.src.config.create_base_agent import create_base_agent
+from app.src.core.create_base_agent import create_base_agent
 from app.src.tools.file_tools import FILE_TOOLS
 import os
 

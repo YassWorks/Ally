@@ -1,7 +1,7 @@
 from app.src.agents.general.config.config import get_agent
-from app.src.config.ui import AgentUI
+from app.src.core.ui import AgentUI
 from rich.console import Console
-from app.src.config.base import BaseAgent
+from app.src.core.base import BaseAgent
 from app.utils.constants import CONSOLE_WIDTH
 
 

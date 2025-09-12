@@ -1,6 +1,6 @@
 from app.utils.constants import DEFAULT_PATHS
 from app.src.helpers.valid_dir import validate_dir_name
-from app.src.config.ui import default_ui
+from app.src.core.ui import default_ui
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph.message import add_messages
@@ -104,7 +104,7 @@ def create_base_agent(
 
     except Exception as e:
         from rich.console import Console
-        from app.src.config.ui import AgentUI
+        from app.src.core.ui import AgentUI
         from app.utils.constants import CONSOLE_WIDTH
 
         ui = AgentUI(console=Console(width=CONSOLE_WIDTH))

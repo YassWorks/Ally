@@ -1,5 +1,5 @@
 from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
-from app.src.config.base import BaseAgent
+from app.src.core.base import BaseAgent
 from langchain_core.tools import tool
 
 

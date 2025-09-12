@@ -1,13 +1,13 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
-from app.src.config.permissions import permission_manager
-from app.src.config.agent_factory import AgentFactory
+from app.src.core.permissions import permission_manager
+from app.src.core.agent_factory import AgentFactory
 from app.src.helpers.valid_dir import validate_dir_name
 from app.utils.ascii_art import ASCII_ART
-from app.src.config.base import BaseAgent
+from app.src.core.base import BaseAgent
 from app.src.cli.flags import ArgsParser
-from app.src.config.ui import AgentUI
+from app.src.core.ui import AgentUI
 from rich.console import Console
 import textwrap
 import sys

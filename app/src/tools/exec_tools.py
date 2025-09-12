@@ -1,4 +1,4 @@
-from app.src.config.permissions import permission_manager, PermissionDeniedException
+from app.src.core.permissions import permission_manager, PermissionDeniedException
 from langchain_core.tools import tool
 from app.utils.constants import EXEC_TIMEOUT
 import subprocess
