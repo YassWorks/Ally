@@ -36,7 +36,7 @@ class PermissionManager:
     def _get_options(self, tool_name: str) -> list[str]:
         return [
             "Yes, allow once",
-            "No, deny access (exit now)",
+            "No, deny access (request modifications)",
             f"Yes, always allow this tool ({tool_name}) to run",
             "Yes, always allow all tools to run freely (USE AT YOUR OWN RISK)",
         ]
