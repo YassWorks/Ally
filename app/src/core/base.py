@@ -1,4 +1,5 @@
 from app.utils.ascii_art import ASCII_ART
+from app.utils.constants import RECURSION_LIMIT
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
@@ -51,7 +52,7 @@ class BaseAgent:
         starting_msg: str = None,
         initial_prompt_suffix: str = None,
         recurring_prompt_suffix: str = None,
-        recursion_limit: int = 100,
+        recursion_limit: int = RECURSION_LIMIT,
         config: dict = None,
         show_welcome: bool = True,
         active_dir: str = None,
@@ -121,7 +122,7 @@ class BaseAgent:
                 self.ui.goodbye()
                 return True
 
-            except PermissionDeniedException:
+            except PermissionDeniedException:  # TODO: give option to send refusal to LLM or give control to user to give instructions.
                 self.ui.error("Permission denied")
                 return False
 
@@ -146,7 +147,7 @@ class BaseAgent:
             finally:
                 first_msg = False
 
-    def _get_user_input(self, continue_flag: bool, active_dir: str = None) -> str:
+    def _get_user_input(self, continue_flag: bool = False, active_dir: str = None) -> str:
         """Get user input, handling continuation scenarios."""
         if continue_flag:
             return "Continue where you left. Don't repeat anything already done."
@@ -230,7 +231,7 @@ class BaseAgent:
     def invoke(
         self,
         message: str,
-        recursion_limit: int = 100,
+        recursion_limit: int = RECURSION_LIMIT,
         config: dict = None,
         extra_context: str | list[str] = None,
         include_thinking_block: bool = False,
@@ -238,6 +239,7 @@ class BaseAgent:
         intermediary_chunks: bool = False,
         quiet: bool = False,
         propagate_exceptions: bool = False,
+        active_dir: str = None,
     ):
         """Invoke agent with a message and return response."""
 
@@ -272,6 +274,7 @@ class BaseAgent:
             propagate=propagate_exceptions,
             continue_on_limit=False,
             retry_operation=lambda: execute_agent(CONTINUE_MESSAGE),
+            reject_operation=lambda: execute_agent(self._get_user_input(active_dir=active_dir))
         )
 
         if raw_response is None:

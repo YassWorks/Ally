@@ -2,6 +2,7 @@ import os
 
 CONSOLE_WIDTH = 90
 EXEC_TIMEOUT = 3600
+RECURSION_LIMIT = 100
 
 CONTINUE_MESSAGE = "Continue where you left off. Don't repeat anything already done."
 

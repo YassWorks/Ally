@@ -1,7 +1,7 @@
 from app.src.orchestration.units.base_unit import BaseUnit
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.orchestration.integrate_web_search import integrate_web_search
-from app.utils.constants import UI_MESSAGES, CONTINUE_MESSAGE
+from app.utils.constants import UI_MESSAGES, CONTINUE_MESSAGE, RECURSION_LIMIT
 from app.utils.ascii_art import ASCII_ART
 from pathlib import Path
 import uuid
@@ -32,7 +32,7 @@ class CodeGenUnit(BaseUnit):
     def run(
         self,
         prompt: str = None,
-        recursion_limit: int = 100,
+        recursion_limit: int = RECURSION_LIMIT,
         config: dict = None,
         stream: bool = False,
         show_welcome: bool = True,
@@ -135,6 +135,7 @@ class CodeGenUnit(BaseUnit):
                 stream=stream,
                 quiet=not stream,
                 propagate_exceptions=True,
+                active_dir=working_dir,
             ),
             ui=self.ui,
             propagate=False,
@@ -145,6 +146,15 @@ class CodeGenUnit(BaseUnit):
                 stream=stream,
                 quiet=not stream,
                 propagate_exceptions=True,
+                active_dir=working_dir,
+            ),
+            reject_operation=lambda: self.agents["brainstormer"].invoke(
+                message=self.agents["brainstormer"]._get_user_input(working_dir=working_dir),
+                config=configuration,
+                stream=stream,
+                quiet=not stream,
+                propagate_exceptions=True,
+                active_dir=working_dir,
             ),
         )
 
@@ -174,6 +184,7 @@ class CodeGenUnit(BaseUnit):
                 stream=stream,
                 quiet=not stream,
                 propagate_exceptions=True,
+                active_dir=working_dir,
             ),
             ui=self.ui,
             propagate=False,
@@ -184,6 +195,15 @@ class CodeGenUnit(BaseUnit):
                 stream=stream,
                 quiet=not stream,
                 propagate_exceptions=True,
+                active_dir=working_dir,
+            ),
+            reject_operation=lambda: self.agents["code_gen"].invoke(
+                message=self.agents["code_gen"]._get_user_input(working_dir=working_dir),
+                config=configuration,
+                stream=stream,
+                quiet=not stream,
+                propagate_exceptions=True,
+                active_dir=working_dir,
             ),
         )
 

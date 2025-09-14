@@ -17,56 +17,60 @@ class AgentExceptionHandler:
         propagate: bool = False,
         continue_on_limit: bool = False,
         retries: int = 0,
-    retry_operation: Callable | None = None,
+        retry_operation: Callable | None = None,
+        reject_operation: Callable | None = None,
     ) -> Any:
+        while True:
+            try:
+                return operation()
 
-        try:
-            return operation()
+            except PermissionDeniedException:
+                if propagate:
+                    raise
+                
+                if reject_operation:
+                    operation = reject_operation
+                    continue
 
-        except PermissionDeniedException:
-            if propagate:
-                raise
-
-            ui.error("Permission denied")
-            return None
-
-        except lg_errors.GraphRecursionError:
-            if propagate:
-                raise
-
-            ui.warning("Agent processing took longer than expected (Max recursion limit reached)")
-            if retries >= AgentExceptionHandler.MAX_RETRIES:
-                ui.status_message(
-                    title="Max Retries Reached",
-                    message="Please try again later.",
-                    style="warning",
-                )
+                ui.error("Permission denied")
                 return None
-        
-            if continue_on_limit and ui.confirm(
-                "Continue from where the agent left off?", default=True
-            ):
-                next_operation = retry_operation or operation
-                return AgentExceptionHandler.handle_agent_exceptions(
-                    operation=next_operation,
-                    ui=ui,
-                    propagate=propagate,
-                    continue_on_limit=continue_on_limit,
-                    retries=retries + 1,
-                    retry_operation=retry_operation,
-                )
-            return None
 
-        except openai.RateLimitError:
-            if propagate:
-                raise
+            except lg_errors.GraphRecursionError:
+                if propagate:
+                    raise
+                
+                if retry_operation:
+                    ui.warning(
+                        "Agent processing took longer than expected (Max recursion limit reached)"
+                    )
+                    if retries >= AgentExceptionHandler.MAX_RETRIES:
+                        ui.status_message(
+                            title="Max Retries Reached",
+                            message="Agent has been running for a while now. Please make the necessary adjustments to your prompt.",
+                            style="warning",
+                        )
+                        return None
 
-            ui.error("Rate limit exceeded. Please try again later")
-            return None
+                    if continue_on_limit and ui.confirm(
+                        "Continue from where the agent left off?", default=True
+                    ):
+                        operation = retry_operation
+                        retries += 1
+                        continue
+                
+                ui.error("Max recursion limit reached. Operation cannot continue.")
+                return None
 
-        except Exception as e:
-            if propagate:
-                raise
+            except openai.RateLimitError:
+                if propagate:
+                    raise
 
-            ui.error(f"An unexpected error occurred: {e}")
-            return None
+                ui.error("Rate limit exceeded. Please try again later")
+                return None
+
+            except Exception as e:
+                if propagate:
+                    raise
+
+                ui.error(f"An unexpected error occurred: {e}")
+                return None

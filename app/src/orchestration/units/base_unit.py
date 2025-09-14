@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 from app.src.core.ui import AgentUI
 from rich.console import Console
-from app.utils.constants import CONSOLE_WIDTH
+from app.utils.constants import CONSOLE_WIDTH, RECURSION_LIMIT
 from app.src.core.base import BaseAgent
 
 
@@ -60,7 +60,7 @@ class BaseUnit(ABC):
                 self.ui.error("Failed to create project directory")
                 working_dir = None
     
-    def _create_agent_config(self, thread_id: str, recursion_limit: int = 100) -> dict[str, Any]:
+    def _create_agent_config(self, thread_id: str, recursion_limit: int = RECURSION_LIMIT) -> dict[str, Any]:
         """Create standardized configuration for agent operations.
         
         Args:
