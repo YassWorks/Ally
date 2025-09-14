@@ -1,4 +1,4 @@
-# Ally 🗿
+# Ally
 
 Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects.
 
