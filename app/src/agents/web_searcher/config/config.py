@@ -1,5 +1,5 @@
 from app.src.core.create_base_agent import create_base_agent
-from app.src.agents.web_searcher.config.tools import search_and_scrape
+from app.src.agents.web_searcher.config.tools import search_and_scrape, fetch_tool
 import os
 
 
@@ -27,6 +27,7 @@ def get_agent(
     """
     tools = [
         search_and_scrape,
+        fetch_tool
     ]
     if extra_tools:
         tools.extend(extra_tools)

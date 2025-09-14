@@ -79,23 +79,31 @@ def google_search(query: str, n: int = 5) -> list[dict[str, str]]:
 
 
 @tool
-def fetch(url: str) -> str:
+def fetch_tool(url: str) -> str:  # Wrapper to expose fetch as a LangChain tool
     """
     ## PRIMARY PURPOSE:
     Extract clean text content from web pages with automatic script/style removal.
+    **ONLY USE when you have a specific URL and want to automatically access it.**
 
     ## WHEN TO USE:
-    - Analyze content from specific URLs found through search
-    - Extract documentation, tutorials, or technical information
-    - Scrape articles, blog posts, or research content
-    - Gather detailed information from known web sources
+    - **MUST have a specific, known URL that you want to automatically fetch content from**
+    - Analyze content from URLs already discovered through search or provided by user
+    - Extract documentation, tutorials, or technical information from known sources
+    - Scrape articles, blog posts, or research content when URL is already available
+    - Gather detailed information from specific web sources (not for searching)
 
     ## PARAMETERS:
-        url (str): Web page URL to scrape and extract text content from
+        url (str): **Specific web page URL** to scrape and extract text content from
 
     ## RETURNS:
         str: Cleaned text content (max 10,000 chars) or error message if scraping fails
     """
+    return fetch(url)
+
+
+def fetch(url: str) -> str:
+    """Fetch and extract main text content from a URL."""
+    
     session = requests.Session()
     retries = Retry(
         total=3, backoff_factor=0.5, status_forcelist=[429, 500, 502, 503, 504]
