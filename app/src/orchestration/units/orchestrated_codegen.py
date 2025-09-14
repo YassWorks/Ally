@@ -149,7 +149,7 @@ class CodeGenUnit(BaseUnit):
                 active_dir=working_dir,
             ),
             reject_operation=lambda: self.agents["brainstormer"].invoke(
-                message=self.agents["brainstormer"]._get_user_input(working_dir=working_dir),
+                message=self.agents["brainstormer"]._get_user_input(active_dir=working_dir),
                 config=configuration,
                 stream=stream,
                 quiet=not stream,
@@ -198,7 +198,7 @@ class CodeGenUnit(BaseUnit):
                 active_dir=working_dir,
             ),
             reject_operation=lambda: self.agents["code_gen"].invoke(
-                message=self.agents["code_gen"]._get_user_input(working_dir=working_dir),
+                message=self.agents["code_gen"]._get_user_input(active_dir=working_dir),
                 config=configuration,
                 stream=stream,
                 quiet=not stream,
