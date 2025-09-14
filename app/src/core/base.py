@@ -80,7 +80,6 @@ class BaseAgent:
                         message="Resuming from previous context...",
                         style="primary",
                     )
-                    continue_flag = False
 
                 if first_msg and starting_msg:
                     user_input = starting_msg
@@ -89,6 +88,8 @@ class BaseAgent:
                         continue_flag=continue_flag,
                         active_dir=active_dir,
                     )
+                
+                continue_flag = False
 
                 if not user_input:
                     continue
@@ -122,9 +123,8 @@ class BaseAgent:
                 self.ui.goodbye()
                 return True
 
-            except PermissionDeniedException:  # TODO: give option to send refusal to LLM or give control to user to give instructions.
-                self.ui.error("Permission denied")
-                return False
+            except PermissionDeniedException:
+                continue
 
             except lg_errors.GraphRecursionError:
                 self.ui.warning(
@@ -147,10 +147,12 @@ class BaseAgent:
             finally:
                 first_msg = False
 
-    def _get_user_input(self, continue_flag: bool = False, active_dir: str = None) -> str:
+    def _get_user_input(
+        self, continue_flag: bool = False, active_dir: str = None
+    ) -> str:
         """Get user input, handling continuation scenarios."""
         if continue_flag:
-            return "Continue where you left. Don't repeat anything already done."
+            return "Continue where you left. Don't repeat anything you have already done."
         else:
             return self.ui.get_input(
                 model=self.model_name,
@@ -274,7 +276,9 @@ class BaseAgent:
             propagate=propagate_exceptions,
             continue_on_limit=False,
             retry_operation=lambda: execute_agent(CONTINUE_MESSAGE),
-            reject_operation=lambda: execute_agent(self._get_user_input(active_dir=active_dir))
+            reject_operation=lambda: execute_agent(
+                self._get_user_input(active_dir=active_dir)
+            ),
         )
 
         if raw_response is None:
