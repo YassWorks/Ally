@@ -14,3 +14,5 @@ def get_embeddings_ollama(model: str, sentences: list[str]) -> list[list[float]]
     """
     response = ollama.embed(model=model, input=sentences)
     return np.array(response.embeddings)
+
+
