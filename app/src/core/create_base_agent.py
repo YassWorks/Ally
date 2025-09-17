@@ -103,11 +103,7 @@ def create_base_agent(
                 raise ValueError(f"Unsupported inference provider: {provider}")
 
     except Exception as e:
-        from rich.console import Console
-        from app.src.core.ui import AgentUI
-        from app.utils.constants import CONSOLE_WIDTH
-
-        ui = AgentUI(console=Console(width=CONSOLE_WIDTH))
+        ui = default_ui
         ui.error(f"Failed to create LLM instance: {e}")
 
     template = ChatPromptTemplate.from_messages(
