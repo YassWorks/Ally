@@ -1,10 +1,35 @@
 from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS
 from app.src.embeddings.scrapers.pdf_scraper import get_str_content, get_hash
 from app.src.core.ui import default_ui
+from app.src.helpers.valid_dir import validate_dir_name
 from typing import Callable
 import chromadb
 import sys
 import os
+from pathlib import Path
+
+
+_PATH_ERROR_PRINTED = False
+
+
+# configure database path
+db_path = ""
+if "ALLY_HISTORY_DIR" in os.environ:
+    db_path = Path(os.getenv("ALLY_HISTORY_DIR"))
+    if not validate_dir_name(str(db_path)):
+        db_path = ""
+        if not _PATH_ERROR_PRINTED:
+            default_ui.warning(
+                "Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path."
+            )
+            _PATH_ERROR_PRINTED = True
+
+if not db_path:
+    db_path = DEFAULT_PATHS["history"]
+    if os.name == "nt":
+        db_path = Path(os.path.expandvars(db_path))
+    else:
+        db_path = Path(os.path.expanduser(db_path))
 
 
 class DataBaseClient:
@@ -107,3 +132,7 @@ class DataBaseClient:
                     continue
                 except Exception:
                     default_ui.error(f"Failed to embed {file_path}")
+
+
+# injectable singleton instance
+db_client = DataBaseClient(path=db_path)
