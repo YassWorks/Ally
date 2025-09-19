@@ -77,7 +77,6 @@ class DataBaseClient:
             sys.exit(1)
 
         try:
-
             # get documents by metadata hash to find any document with the same file path
             results = collection.get(
                 where={"file_path": file_path},
