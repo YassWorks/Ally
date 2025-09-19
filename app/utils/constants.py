@@ -56,5 +56,10 @@ DEFAULT_PATHS = {
         "%LOCALAPPDATA%\\Ally\\embedding_models\\"
         if os.name == "nt"
         else "~/.local/share/Ally/embedding_models/"
-    )
+    ),
+    "parsing_models": (
+        "%LOCALAPPDATA%\\Ally\\parsing_models\\"
+        if os.name == "nt"
+        else "~/.local/share/Ally/parsing_models/"
+    ),
 }
