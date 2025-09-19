@@ -9,27 +9,22 @@ import os
 from pathlib import Path
 
 
-_PATH_ERROR_PRINTED = False
-
-
 # configure database path
-db_path = ""
-if "ALLY_HISTORY_DIR" in os.environ:
-    db_path = Path(os.getenv("ALLY_HISTORY_DIR"))
-    if not validate_dir_name(str(db_path)):
-        db_path = ""
-        if not _PATH_ERROR_PRINTED:
-            default_ui.warning(
-                "Invalid directory path found in $ALLY_HISTORY_DIR. Reverting to default path."
-            )
-            _PATH_ERROR_PRINTED = True
+DB_PATH = ""
+if "ALLY_DATABASE_DIR" in os.environ:
+    DB_PATH = Path(os.getenv("ALLY_DATABASE_DIR"))
+    if not validate_dir_name(str(DB_PATH)):
+        DB_PATH = ""
+        default_ui.warning(
+            "Invalid directory path found in $ALLY_DATABASE_DIR. Reverting to default path."
+        )
 
-if not db_path:
-    db_path = DEFAULT_PATHS["history"]
+if not DB_PATH:
+    DB_PATH = DEFAULT_PATHS["database"]
     if os.name == "nt":
-        db_path = Path(os.path.expandvars(db_path))
+        DB_PATH = Path(os.path.expandvars(DB_PATH))
     else:
-        db_path = Path(os.path.expanduser(db_path))
+        DB_PATH = Path(os.path.expanduser(DB_PATH))
 
 
 class DataBaseClient:
