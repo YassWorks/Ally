@@ -126,4 +126,4 @@ class DataBaseClient:
 
 
 # injectable singleton instance
-db_client = DataBaseClient(path=db_path)
+db_client = DataBaseClient(path=DB_PATH)
