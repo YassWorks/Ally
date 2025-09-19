@@ -1,5 +1,5 @@
 from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS
-from app.src.embeddings.scrapers.pdf_scraper import get_str_content, get_hash
+from app.src.embeddings.scrapers.scraper import scrape_file
 from app.src.core.ui import default_ui
 from app.src.helpers.valid_dir import validate_dir_name
 from typing import Callable
@@ -39,11 +39,8 @@ class DataBaseClient:
         self, file_path: str, collection_name: str, embedding_function: Callable
     ) -> None:
         """Store document content and metadata in ChromaDB."""
-        # if not pdf file, skip
-        if not file_path.lower().endswith(".pdf"):  # TODO: deal with non pdf files later
-            return
 
-        response = get_str_content(file_path)
+        response = scrape_file(file_path)
         content = response["content"]
         metadata = response["metadata"]
 
@@ -66,7 +63,7 @@ class DataBaseClient:
     def was_modified(self, file_path: str, collection_name: str) -> bool:
         """Check if the file has been modified by comparing hashes and modification dates."""
 
-        response = get_str_content(file_path)
+        response = scrape_file(file_path)
         last_hash = response["metadata"]["hash"]
         last_mod_date = response["metadata"]["mod_date"]
 
