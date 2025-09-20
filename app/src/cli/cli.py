@@ -110,7 +110,7 @@ class CLI:
         except Exception as e:
             self.ui.error(f"Failed to validate configuration: {e}")
             sys.exit(1)
-        
+
         try:
             self._setup_coding_config(
                 api_key=api_key,
@@ -285,7 +285,7 @@ class CLI:
             )
 
             if parsed_args.d:
-                if parsed_args.d == '.':
+                if parsed_args.d == ".":
                     parsed_args.d = os.getcwd()
                 elif not validate_dir_name(parsed_args.d):
                     self.ui.error(f"Invalid directory name: {parsed_args.d}")

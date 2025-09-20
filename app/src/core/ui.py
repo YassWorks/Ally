@@ -47,6 +47,9 @@ class AgentUI:
         help_content.append("  /quit, /exit, /q  → Exit")
         help_content.append("  /clear            → Clear history*")
         help_content.append("  /cls              → Clear screen")
+        help_content.append("  /model <change>   → Show/change AI model")
+        help_content.append("  /project          → Start project generation workflow")
+        help_content.append("  /help, /h         → Show this help message")
 
         if model_name:
             help_content.append("")
