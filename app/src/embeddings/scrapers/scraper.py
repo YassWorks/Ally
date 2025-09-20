@@ -18,24 +18,24 @@ _SETUP_COMPLETED = False
 
 
 # configure parsing models path
-DB_PATH = ""
+ARTIFACTS_PATH = ""
 if "ALLY_PARSING_MODELS_DIR" in os.environ:
-    DB_PATH = Path(os.getenv("ALLY_PARSING_MODELS_DIR"))
-    if not validate_dir_name(str(DB_PATH)):
-        DB_PATH = ""
+    ARTIFACTS_PATH = Path(os.getenv("ALLY_PARSING_MODELS_DIR"))
+    if not validate_dir_name(str(ARTIFACTS_PATH)):
+        ARTIFACTS_PATH = ""
         default_ui.warning(
             "Invalid directory path found in $ALLY_PARSING_MODELS_DIR. Reverting to default path."
         )
 
-if not DB_PATH:
-    DB_PATH = DEFAULT_PATHS["parsing_models"]
+if not ARTIFACTS_PATH:
+    ARTIFACTS_PATH = DEFAULT_PATHS["parsing_models"]
     if os.name == "nt":
-        DB_PATH = Path(os.path.expandvars(DB_PATH))
+        ARTIFACTS_PATH = Path(os.path.expandvars(ARTIFACTS_PATH))
     else:
-        DB_PATH = Path(os.path.expanduser(DB_PATH))
+        ARTIFACTS_PATH = Path(os.path.expanduser(ARTIFACTS_PATH))
 
 
-def _setup(path: str = DB_PATH) -> None:
+def _setup(path: str = ARTIFACTS_PATH) -> None:
     global _SETUP_COMPLETED
     try:
         with default_ui.console.status("Downloading parsing models..."):
@@ -71,7 +71,7 @@ def scrape_file(file_path: str):
         _setup()
     
     pipeline_options: PdfPipelineOptions = PdfPipelineOptions(
-        artifacts_path=DB_PATH, do_ocr=True, ocr_options=EasyOcrOptions(force_full_page_ocr=True)
+        artifacts_path=ARTIFACTS_PATH, do_ocr=True, ocr_options=EasyOcrOptions(force_full_page_ocr=True)
     )
 
     pipeline_options.do_formula_enrichment = True
