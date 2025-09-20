@@ -205,16 +205,22 @@ class CLI:
 
         try:
             active_dir, initial_prompt = self._setup_environment(args)
-            
+
             self.ui.logo(ASCII_ART)
             self.ui.help()
 
             wd_note = f"## IMPORTANT\nALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
 
-            # making the project generation a command for the general agent
+            # making the project generation a command for the general agent (an extra option for the user)
             self.general_agent.register_command(
                 "/project", lambda: self.launch_coding_units()
             )
+
+            # integrating RAG capabilities if an embedding function is configured by the user in the JSON config
+            if self.rag_available:
+                global DB_CLIENT
+                DB_CLIENT = DataBaseClient(embedding_function=self.embedding_function)
+                self._integrate_rag(self.general_agent)
 
             # giving the general agent access to the web with a separate web searcher agent
             integrate_web_search(self.general_agent, self.default_web_searcher_agent)
@@ -231,6 +237,13 @@ class CLI:
             self.ui.goodbye()
         except Exception as e:
             self.ui.error(f"An unexpected error occurred: {e}")
+
+    def _integrate_rag(self, agent: BaseAgent):
+        """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
+
+        agent.register_command("/embed", handle_embed_request)
+        agent.register_command("/start_rag", handle_start_rag_request)
+        agent.register_command("/stop_rag", handle_stop_rag_request)
 
     def launch_coding_units(self, initial_prompt: str = None, active_dir: str = None):
         """Start the agent units that create full projects from scratch."""
