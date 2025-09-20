@@ -1,12 +1,13 @@
 from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS
 from app.src.embeddings.scrapers.scraper import scrape_file
-from app.src.core.ui import default_ui
 from app.src.helpers.valid_dir import validate_dir_name
+from app.src.core.ui import default_ui
+from chromadb.config import Settings
 from typing import Callable
+from pathlib import Path
 import chromadb
 import sys
 import os
-from pathlib import Path
 
 
 # configure database path
@@ -28,16 +29,20 @@ if not DB_PATH:
 
 
 class DataBaseClient:
+    _instance = None
 
-    def __init__(self, path: str = None) -> None:
-        if path is None:
-            self.db_client = chromadb.Client()
-        else:
-            self.db_client = chromadb.PersistentClient(path=path)
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
-    def store_document(
-        self, file_path: str, collection_name: str, embedding_function: Callable
-    ) -> None:
+    def __init__(self, embedding_function: Callable = None) -> None:
+        self.db_client = chromadb.PersistentClient(
+            path=DB_PATH, settings=Settings(anonymized_telemetry=False)
+        )
+        self.embedding_function = embedding_function
+
+    def store_document(self, file_path: str, collection_name: str) -> None:
         """Store document content and metadata in ChromaDB."""
 
         response = scrape_file(file_path)
@@ -51,12 +56,12 @@ class DataBaseClient:
 
         collection = self.db_client.get_or_create_collection(
             name=collection_name,
-            embedding_function=embedding_function,
         )
 
         collection.add(
             documents=chunks,
             metadatas=[metadata] * len(chunks),
+            embeddings=self.embedding_function(chunks),
             ids=[f"{metadata['hash']}_{i}" for i in range(len(chunks))],
         )
 
@@ -69,7 +74,7 @@ class DataBaseClient:
 
         try:
             collection = self.db_client.get_collection(name=collection_name)
-            
+
         except chromadb.errors.NotFoundError:
             return True
         except Exception:
@@ -105,7 +110,7 @@ class DataBaseClient:
 
         return last_hash != stored_hash or last_mod_date != stored_mod_date
 
-    def store_documents(self, directory_path: str, collection_name: str, embedding_function: Callable) -> None:
+    def store_documents(self, directory_path: str, collection_name: str) -> None:
         """Store all documents from a directory into the database."""
 
         if not os.path.exists(directory_path):
@@ -117,13 +122,8 @@ class DataBaseClient:
                 file_path = os.path.join(root, file)
                 try:
                     if self.was_modified(file_path, collection_name):
-                        self.store_document(file_path, collection_name, embedding_function)
-                
-                except ValueError:
-                    continue
-                except Exception:
+                        self.store_document(file_path, collection_name)
+
+                except:
                     default_ui.error(f"Failed to embed {file_path}")
-
-
-# injectable singleton instance
-db_client = DataBaseClient(path=DB_PATH)
+                    raise

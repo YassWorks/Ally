@@ -1,6 +1,12 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
+from app.src.embeddings.db_client import DataBaseClient
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
+from app.src.embeddings.handle_commands import (
+    handle_embed_request,
+    handle_start_rag_request,
+    handle_stop_rag_request,
+)
 from app.src.core.permissions import permission_manager
 from app.src.core.agent_factory import AgentFactory
 from app.src.helpers.valid_dir import validate_dir_name
@@ -12,6 +18,9 @@ from rich.console import Console
 import textwrap
 import sys
 import os
+
+
+DB_CLIENT = None  # Global database client instance
 
 
 class CLI:
