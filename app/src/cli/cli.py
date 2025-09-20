@@ -24,6 +24,8 @@ class CLI:
         models: dict[str, str] = None,
         api_key: str = None,
         api_key_per_model: dict[str, str] = None,
+        embedding_provider: str = None,
+        embedding_model: str = None,
         temperatures: dict[str, float] = None,
         system_prompts: dict[str, str] = None,
         stream: bool = True,
@@ -37,6 +39,31 @@ class CLI:
         temperatures = temperatures or {}
         system_prompts = system_prompts or {}
         provider_per_model = provider_per_model or {}
+
+        match embedding_provider.lower():
+
+            case "ollama":
+                from app.src.embeddings.embedding_functions.ollama_embed import (
+                    OllamaEmbedder,
+                )
+
+                self.embedding_function = OllamaEmbedder(
+                    embedding_model
+                ).get_embeddings_ollama
+                self.rag_available = True
+
+            case "hf" | "huggingface" | "hugging face" | "hugging_face":
+                from app.src.embeddings.embedding_functions.hf_embed import HFEmbedder
+
+                self.embedding_function = HFEmbedder(embedding_model).get_embeddings_hf
+                self.rag_available = True
+
+            case _:
+                self.ui.warning(
+                    "No valid embedding provider specified. RAG features will be disabled."
+                )
+                self.embedding_function = None
+                self.rag_available = False
 
         try:
             self.general_agent: BaseAgent = AgentFactory.create_agent(

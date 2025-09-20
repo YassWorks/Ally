@@ -53,6 +53,9 @@ api_key_per_model = {k: api_keys.get(provider_per_model.get(k), api_key) for k i
 temperatures = config.get("temperatures") or {}
 system_prompts = config.get("system_prompts") or {}
 
+embedding_provider = config.get("embedding_provider")
+embedding_model = config.get("embedding_model")
+
 
 client = CLI(
     provider=provider,
@@ -60,6 +63,8 @@ client = CLI(
     models=models,
     api_key=api_key,
     api_key_per_model=api_key_per_model,
+    embedding_provider=embedding_provider,
+    embedding_model=embedding_model,
     temperatures=temperatures,
     system_prompts=system_prompts,
     stream=True,

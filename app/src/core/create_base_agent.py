@@ -49,7 +49,7 @@ def create_base_agent(
     llm = None
 
     try:
-        match provider:
+        match provider.lower():
             case "cerebras":
                 from langchain_cerebras import ChatCerebras
 

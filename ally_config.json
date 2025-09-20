@@ -26,5 +26,8 @@
         "code_gen": null,
         "brainstormer": null,
         "web_searcher": null
-    }
+    },
+
+    "embedding_provider": "ollama",
+    "embedding_model": "all-minilm"
 }
