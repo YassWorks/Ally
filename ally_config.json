@@ -28,6 +28,6 @@
         "web_searcher": null
     },
 
-    "embedding_provider": "ollama",
-    "embedding_model": "all-minilm"
+    "embedding_provider": "hf",
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
 }

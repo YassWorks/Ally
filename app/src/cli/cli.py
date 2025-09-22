@@ -49,9 +49,7 @@ class CLI:
                     OllamaEmbedder,
                 )
 
-                self.embedding_function = OllamaEmbedder(
-                    embedding_model
-                ).get_embeddings
+                self.embedding_function = OllamaEmbedder(embedding_model).get_embeddings
                 self.rag_available = True
 
             case "hf" | "huggingface" | "hugging face" | "hugging_face":
