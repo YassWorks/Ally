@@ -2,7 +2,11 @@ from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.embeddings.db_client import DataBaseClient
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
-from app.src.embeddings.handle_commands import handle_embed_request
+from app.src.embeddings.handle_commands import (
+    handle_embed_request,
+    handle_index_request,
+    handle_unindex_request,
+)
 from app.src.core.permissions import permission_manager
 from app.src.core.agent_factory import AgentFactory
 from app.src.helpers.valid_dir import validate_dir_name
@@ -235,6 +239,9 @@ class CLI:
         # This is to ensure a frictionless experience for the user as the command is pretty straightforward
         agent.register_command("/start_rag", lambda *args: self._enable_rag(agent))
         agent.register_command("/stop_rag", lambda *args: self._disable_rag(agent))
+
+        agent.register_command("/index", lambda *args: handle_index_request(*args))
+        agent.register_command("/unindex", lambda *args: handle_unindex_request(*args))
 
     def _enable_rag(self, agent: BaseAgent):
         """Enable RAG functionality."""
