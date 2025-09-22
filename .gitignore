@@ -14,3 +14,4 @@ Dockerfile
 compose.yml
 .dockerignore
 bin/
+TODO.md
