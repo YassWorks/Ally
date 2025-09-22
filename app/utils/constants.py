@@ -63,3 +63,17 @@ DEFAULT_PATHS = {
         else "~/.local/share/Ally/parsing_models/"
     ),
 }
+
+REGULAR_FILE_EXTENSIONS = [
+    ".txt",
+    ".md",
+    ".markdown",
+    ".csv",
+    ".log",
+    ".json",
+    ".xml",
+    ".html",
+    ".htm",
+    ".yaml",
+    ".yml",
+]
