@@ -2,6 +2,7 @@ from app.utils.ascii_art import ASCII_ART
 from app.utils.constants import RECURSION_LIMIT
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
+from app.src.embeddings.rag_errors import SetupFailedError, DBAccessError
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
 from app.src.embeddings.db_client import DataBaseClient
 from langgraph.graph.state import CompiledStateGraph
@@ -46,13 +47,16 @@ class BaseAgent:
         self.temperature = temperature
         self.graph = graph
         self.provider = provider
-        
+
         # a dictionary to hold custom command names and handlers
         self._custom_commands: dict[str, Callable] = {}
-        
+
         # a flag to determine if RAG features should be integrated
         self.rag = False
-    
+        
+        self.latest_refs = None
+        self.db_client = None
+
     def _toggle_rag(self, enable: bool = True):
         """Enable or disable RAG features."""
         self.rag = enable
@@ -98,7 +102,7 @@ class BaseAgent:
                         continue_flag=continue_flag,
                         active_dir=active_dir,
                     )
-                
+
                 continue_flag = False
 
                 if not user_input:
@@ -115,13 +119,25 @@ class BaseAgent:
                     user_input += f"\n\n{initial_prompt_suffix}"
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
-                
+
+                query_results = None
                 if self.rag:
-                    db_client = DataBaseClient.get_instance()
-                    if db_client is None:
-                        self.ui.warning("RAG is enabled but no database client is configured.")
+                    self.db_client = DataBaseClient.get_instance()
+                    if self.db_client is None:
+                        self.ui.warning(
+                            "RAG is enabled but no database client is configured."
+                        )
                     else:
-                        user_input += ...
+                        query_results = self.db_client.get_query_results(
+                            user_input, n_results=5
+                        )
+                        if query_results:
+                            user_input += "\n\nANSWER BASED ON THESE DOCUMENTS IF RELEVANT. IF NOT SAY YOU DON'T KNOW UNLESS THE USER GIVES PERMISSION TO USE OUTSIDE KNOWLEDGE.\n"
+                            user_input += "\n".join(
+                                [f"- {doc}" for doc, _ in query_results]
+                            )
+                if query_results:
+                    self.latest_refs = [meta["file_path"] for _, meta in query_results]
 
                 self.ui.tmp_msg("Working on the task...", 0.5)
 
@@ -169,7 +185,9 @@ class BaseAgent:
     ) -> str:
         """Get user input, handling continuation scenarios."""
         if continue_flag:
-            return "Continue where you left. Don't repeat anything you have already done."
+            return (
+                "Continue where you left. Don't repeat anything you have already done."
+            )
         else:
             return self.ui.get_input(
                 model=self.model_name,
@@ -195,14 +213,41 @@ class BaseAgent:
         if user_input.strip().lower().startswith("/model"):
             self._handle_model_command(user_input)
             return True
+        
+        if user_input.strip().lower() in ["/refs", "/references"]:
+            if self.latest_refs:
+                self.ui.status_message(
+                    title="Latest References",
+                    message="\n".join(self.latest_refs),
+                    style="primary",
+                )
+            else:
+                self.ui.status_message(
+                    title="Latest References",
+                    message="No references available.",
+                    style="muted",
+                )
+            return True
 
         for cmd, handler in self._custom_commands.items():
             cmd_parts = user_input.split()
             if cmd_parts[0].lower() == cmd:
                 try:
                     handler(*(cmd_parts[1:] if len(cmd_parts) > 1 else []))
+
+                except DBAccessError:
+                    self.ui.error("Database access error occurred.")
+                    self.ui.warning("RAG features disabled.")
+                    self.rag = False
+
+                except SetupFailedError:
+                    self.ui.error("Setup failed.")
+                    self.ui.warning("RAG features disabled.")
+                    self.rag = False
+
                 except Exception as e:
                     self.ui.error(f"Command '{cmd}' failed: {e}")
+
                 finally:
                     return True
 
