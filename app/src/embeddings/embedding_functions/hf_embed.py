@@ -1,6 +1,29 @@
 from transformers import AutoTokenizer, AutoModel
+from app.utils.constants import DEFAULT_PATHS
+from app.src.helpers.valid_dir import validate_dir_name
 import torch.nn.functional as F
 import torch
+import os
+from pathlib import Path
+from app.src.core.ui import default_ui
+
+
+# configure embedding models path
+EMBEDDING_MODEL_PATH = ""
+if "ALLY_EMBEDDING_MODELS_DIR" in os.environ:
+    EMBEDDING_MODEL_PATH = Path(os.getenv("ALLY_EMBEDDING_MODELS_DIR"))
+    if not validate_dir_name(str(EMBEDDING_MODEL_PATH)):
+        EMBEDDING_MODEL_PATH = ""
+        default_ui.warning(
+            "Invalid directory path found in $ALLY_EMBEDDING_MODELS_DIR. Reverting to default path."
+        )
+
+if not EMBEDDING_MODEL_PATH:
+    EMBEDDING_MODEL_PATH = DEFAULT_PATHS["embedding_models"]
+    if os.name == "nt":
+        EMBEDDING_MODEL_PATH = Path(os.path.expandvars(EMBEDDING_MODEL_PATH))
+    else:
+        EMBEDDING_MODEL_PATH = Path(os.path.expanduser(EMBEDDING_MODEL_PATH))
 
 
 class HFEmbedder:
