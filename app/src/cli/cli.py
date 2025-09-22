@@ -51,18 +51,18 @@ class CLI:
 
                 self.embedding_function = OllamaEmbedder(
                     embedding_model
-                ).get_embeddings_ollama
+                ).get_embeddings
                 self.rag_available = True
 
             case "hf" | "huggingface" | "hugging face" | "hugging_face":
                 from app.src.embeddings.embedding_functions.hf_embed import HFEmbedder
 
-                self.embedding_function = HFEmbedder(embedding_model).get_embeddings_hf
+                self.embedding_function = HFEmbedder(embedding_model).get_embeddings
                 self.rag_available = True
 
             case _:
                 self.ui.warning(
-                    "No valid embedding provider specified. RAG features will be disabled."
+                    "No valid embedding config specified. RAG features will be disabled."
                 )
                 self.embedding_function = None
                 self.rag_available = False
