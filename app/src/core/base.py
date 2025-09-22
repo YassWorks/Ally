@@ -3,6 +3,7 @@ from app.utils.constants import RECURSION_LIMIT
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
+from app.src.embeddings.db_client import DataBaseClient
 from langgraph.graph.state import CompiledStateGraph
 from typing import Callable
 from langgraph.graph import StateGraph
@@ -45,7 +46,16 @@ class BaseAgent:
         self.temperature = temperature
         self.graph = graph
         self.provider = provider
+        
+        # a dictionary to hold custom command names and handlers
         self._custom_commands: dict[str, Callable] = {}
+        
+        # a flag to determine if RAG features should be integrated
+        self.rag = False
+    
+    def _toggle_rag(self, enable: bool = True):
+        """Enable or disable RAG features."""
+        self.rag = enable
 
     def start_chat(
         self,
@@ -105,6 +115,13 @@ class BaseAgent:
                     user_input += f"\n\n{initial_prompt_suffix}"
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
+                
+                if self.rag:
+                    db_client = DataBaseClient.get_instance()
+                    if db_client is None:
+                        self.ui.warning("RAG is enabled but no database client is configured.")
+                    else:
+                        user_input += ...
 
                 self.ui.tmp_msg("Working on the task...", 0.5)
 
