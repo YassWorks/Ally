@@ -232,10 +232,34 @@ class CLI:
 
     def _integrate_rag(self, agent: BaseAgent):
         """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
+        agent.register_command("/embed", lambda *args: handle_embed_request(*args))
+        # If extra arguments are passed by the user, they will be ignored
+        # This is to ensure a frictionless experience for the user as the command is pretty straightforward
+        agent.register_command("/start_rag", lambda *args: self._enable_rag(agent))
+        agent.register_command("/stop_rag", lambda *args: self._disable_rag(agent))
 
-        agent.register_command("/embed", handle_embed_request)
-        agent.register_command("/start_rag", handle_start_rag_request)
-        agent.register_command("/stop_rag", handle_stop_rag_request)
+    def _enable_rag(self, agent: BaseAgent):
+        """Enable RAG functionality."""
+        if not self.rag_available:
+            self.ui.warning(
+                "RAG is not available. Please configure an embedding provider."
+            )
+            return
+        agent._toggle_rag(enable=True)
+        self.ui.status_message(
+            title="RAG Enabled",
+            message="Retrieval-Augmented Generation is now active.",
+            style="success",
+        )
+
+    def _disable_rag(self, agent: BaseAgent):
+        """Disable RAG functionality."""
+        agent._toggle_rag(enable=False)
+        self.ui.status_message(
+            title="RAG Disabled",
+            message="Retrieval-Augmented Generation is now inactive.",
+            style="primary",
+        )
 
     def launch_coding_units(self, initial_prompt: str = None, active_dir: str = None):
         """Start the agent units that create full projects from scratch."""
