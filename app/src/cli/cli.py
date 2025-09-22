@@ -211,8 +211,7 @@ class CLI:
 
             # integrating RAG capabilities if an embedding function is configured by the user in the JSON config
             if self.rag_available:
-                global DB_CLIENT
-                DB_CLIENT = DataBaseClient(embedding_function=self.embedding_function)
+                _ = DataBaseClient(embedding_function=self.embedding_function)
                 self._integrate_rag(self.general_agent)
 
             # giving the general agent access to the web with a separate web searcher agent
