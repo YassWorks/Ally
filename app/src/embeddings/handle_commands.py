@@ -8,7 +8,7 @@ def handle_embed_request(*args):
     db_client = DataBaseClient.get_instance()
     
     if db_client is None:
-        default_ui.error("Database client is not initialized.")
+        default_ui.error("Database client is not initialized. There might be an issue with your embeddings config.")
         return
     
     if len(args) < 2:

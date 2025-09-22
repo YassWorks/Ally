@@ -60,8 +60,32 @@ class DataBaseClient:
         if collection_name in self.indexed_collections:
             self.indexed_collections[collection_name] = False
 
+    def already_stored(self, file_path: str, collection_name: str) -> bool:
+        """Check if a document is already stored in the database."""
+        try:
+            collection = self.db_client.get_collection(name=collection_name)
+
+        except chromadb.errors.NotFoundError:
+            return False
+
+        except Exception:
+            raise DBAccessError()
+
+        try:
+            results = collection.get(
+                where={"file_path": file_path},
+                limit=1,
+            )
+            return bool(results["metadatas"])
+
+        except Exception:
+            raise DBAccessError()
+
     def store_document(self, file_path: str, collection_name: str) -> None:
         """Store document content and metadata in ChromaDB."""
+        if self.already_stored(file_path, collection_name):
+            return
+        
         response = scrape_file(file_path)
         content = response["content"]
         metadata = response["metadata"]
@@ -71,6 +95,9 @@ class DataBaseClient:
             for i in range(0, len(content), CHUNK_SIZE - CHUNK_OVERLAP)
         ]
 
+        if collection_name not in self.indexed_collections:
+            self.indexed_collections[collection_name] = True  # default to indexed
+        
         collection = self.db_client.get_or_create_collection(
             name=collection_name,
         )
@@ -240,7 +267,7 @@ class DataBaseClient:
 
         try:
             results = collection.query(
-                query_texts=[query],
+                query_embeddings=self.embedding_function([query]),
                 n_results=n_results,
                 include=["documents", "metadatas", "distances"],
             )

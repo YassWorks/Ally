@@ -73,6 +73,7 @@ def _read_regular_file(file_path: str) -> str:
 
 def scrape_file(file_path: str):
     """Extract text and metadata from a PDF file."""
+    
     if any(file_path.lower().endswith(x) for x in REGULAR_FILE_EXTENSIONS):
         content = _read_regular_file(file_path)
         return {

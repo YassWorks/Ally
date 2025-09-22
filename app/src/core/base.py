@@ -53,7 +53,7 @@ class BaseAgent:
 
         # a flag to determine if RAG features should be integrated
         self.rag = False
-        
+
         self.latest_refs = None
         self.db_client = None
 
@@ -138,12 +138,14 @@ class BaseAgent:
                             )
                 if query_results:
                     self.latest_refs = [meta["file_path"] for _, meta in query_results]
+                else:
+                    self.latest_refs = None
 
                 self.ui.tmp_msg("Working on the task...", 0.5)
 
                 last = None
                 for chunk in self.agent.stream(
-                    {"messages": [("human", user_input)]},
+                    {"messages": [("human", user_input)]},  # TODO: make it so that RAG info is a tool call
                     config=configuration,
                 ):
                     if stream:
@@ -177,6 +179,7 @@ class BaseAgent:
             except Exception as e:
                 self.ui.error(f"An unexpected error occurred: {e}")
                 return False
+
             finally:
                 first_msg = False
 
@@ -213,7 +216,7 @@ class BaseAgent:
         if user_input.strip().lower().startswith("/model"):
             self._handle_model_command(user_input)
             return True
-        
+
         if user_input.strip().lower() in ["/refs", "/references"]:
             if self.latest_refs:
                 self.ui.status_message(
