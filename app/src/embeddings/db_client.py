@@ -6,7 +6,6 @@ from chromadb.config import Settings
 from typing import Callable
 from pathlib import Path
 import chromadb
-import sys
 import os
 
 
@@ -41,6 +40,13 @@ class DataBaseClient:
             path=DB_PATH, settings=Settings(anonymized_telemetry=False)
         )
         self.embedding_function = embedding_function
+
+    @staticmethod
+    def get_instance() -> "DataBaseClient":
+        """Get the singleton instance of DataBaseClient."""
+        if DataBaseClient._instance is None:
+            return None
+        return DataBaseClient._instance
 
     def store_document(self, file_path: str, collection_name: str) -> None:
         """Store document content and metadata in ChromaDB."""
@@ -77,9 +83,10 @@ class DataBaseClient:
 
         except chromadb.errors.NotFoundError:
             return True
+
         except Exception:
             default_ui.error("An error occurred while accessing the database.")
-            sys.exit(1)
+            raise
 
         try:
             # get documents by metadata hash to find any document with the same file path
@@ -106,7 +113,7 @@ class DataBaseClient:
 
         except Exception:
             default_ui.error("An error occurred while accessing the database.")
-            sys.exit(1)
+            raise
 
         return last_hash != stored_hash or last_mod_date != stored_mod_date
 
@@ -127,3 +134,8 @@ class DataBaseClient:
                 except:
                     default_ui.error(f"Failed to embed {file_path}")
                     raise
+
+                # except Exception:
+                #     default_ui.error(f"An error occurred while processing {file_path}")
+                #     raise
+    
