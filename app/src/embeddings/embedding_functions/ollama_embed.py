@@ -7,7 +7,7 @@ class OllamaEmbedder:
     def __init__(self, model_name: str = "all-minilm") -> None:
         self.model_name = model_name
     
-    def get_embeddings_ollama(self, sentences: list[str] | str) -> list[list[float]]:  # 384
+    def get_embeddings(self, sentences: list[str] | str) -> list[list[float]]:  # 384
         """
         Get embeddings for a list of sentences using the Ollama API.
 
