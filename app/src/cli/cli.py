@@ -281,7 +281,6 @@ class CLI:
                 self.ui.error(
                     "Code generation workflow failed to complete successfully"
                 )
-                sys.exit(1)
 
         except KeyboardInterrupt:
             self.ui.goodbye()
