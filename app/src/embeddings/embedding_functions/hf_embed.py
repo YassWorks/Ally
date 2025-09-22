@@ -45,7 +45,7 @@ class HFEmbedder:
         )
 
 
-    def get_embeddings_hf(self, sentences: list[str] | str) -> list[list[float]]:  
+    def get_embeddings(self, sentences: list[str] | str) -> list[list[float]]:  
         """
         Get embeddings for a list of sentences using a Hugging Face model.
         Args:
@@ -55,8 +55,8 @@ class HFEmbedder:
         Returns:
             list[list[float]]: List of embeddings for each sentence.
         """
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        model = AutoModel.from_pretrained(self.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
+        model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
 
         encoded_input = tokenizer(
             sentences, padding=True, truncation=True, return_tensors="pt"
