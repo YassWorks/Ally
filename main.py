@@ -3,9 +3,19 @@ from dotenv import load_dotenv
 import os
 import sys
 import json
+import logging
+from warnings import filterwarnings
+
+
+logging.basicConfig(level=logging.ERROR)
+
+filterwarnings("ignore", category=Warning, module="torch")
+filterwarnings("ignore", category=Warning, module="docling")
+filterwarnings("ignore", category=Warning, module="huggingface_hub")
 
 
 load_dotenv()
+
 
 api_keys = {
     "cerebras": os.getenv("CEREBRAS_API_KEY"),
