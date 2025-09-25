@@ -1,5 +1,4 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
-from app.src.embeddings.db_client import DataBaseClient
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
 from app.src.embeddings.handle_commands import (
