@@ -1,8 +1,4 @@
 from typing import Any
-from app.src.agents.brainstormer.brainstormer import BrainstormerAgent
-from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
-from app.src.agents.code_gen.code_gen import CodeGenAgent
-from app.src.agents.general.general import GeneralAgent
 
 
 class AgentFactory:
@@ -28,6 +24,11 @@ class AgentFactory:
         for field in required_fields:
             if field not in config:
                 raise ValueError(f"Missing required config field: {field}")
+
+        from app.src.agents.brainstormer.brainstormer import BrainstormerAgent
+        from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
+        from app.src.agents.code_gen.code_gen import CodeGenAgent
+        from app.src.agents.general.general import GeneralAgent
 
         agent_classes = {
             "brainstormer": BrainstormerAgent,
