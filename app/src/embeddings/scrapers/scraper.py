@@ -4,18 +4,13 @@ from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import SetupFailedError, ScrapingFailedError
 import hashlib
 from pathlib import Path
-from docling.document_converter import DocumentConverter
-from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import PdfPipelineOptions, EasyOcrOptions
-from docling.datamodel.pipeline_options import smolvlm_picture_description
-from docling.document_converter import DocumentConverter, PdfFormatOption
-from docling.utils.model_downloader import download_models
 from charset_normalizer import from_path
 import datetime
 import os
 
 
 _SETUP_COMPLETED = False
+_REDOWNLOAD_TRIED = False
 
 
 # configure parsing models path
@@ -40,6 +35,8 @@ def _setup(path: str = ARTIFACTS_PATH) -> None:
     global _SETUP_COMPLETED
     try:
         with default_ui.console.status("Downloading parsing models..."):
+            from docling.utils.model_downloader import download_models
+
             download_models(
                 output_dir=path,
                 progress=False,
@@ -74,6 +71,12 @@ def _read_regular_file(file_path: str) -> str:
 def scrape_file(file_path: str):
     """Extract text and metadata from a PDF file."""
     
+    from docling.document_converter import DocumentConverter
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions, EasyOcrOptions
+    from docling.datamodel.pipeline_options import smolvlm_picture_description
+    from docling.document_converter import DocumentConverter, PdfFormatOption
+    
     if any(file_path.lower().endswith(x) for x in REGULAR_FILE_EXTENSIONS):
         content = _read_regular_file(file_path)
         return {
@@ -88,7 +91,7 @@ def scrape_file(file_path: str):
         }
 
     global _SETUP_COMPLETED
-    if not _SETUP_COMPLETED:
+    if not _SETUP_COMPLETED and not ARTIFACTS_PATH.exists():
         try:
             _setup()
         except:
@@ -111,10 +114,27 @@ def scrape_file(file_path: str):
             InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
         }
     )
+    
     try:
-        doc = doc_converter.convert(file_path).document
+        with default_ui.console.status(f"Scraping '{file_path}'..."):
+            doc = doc_converter.convert(file_path).document
     except:
-        raise ScrapingFailedError()
+        # trying to redownload models ONCE if first scraping fails
+        global _REDOWNLOAD_TRIED
+        if _REDOWNLOAD_TRIED:
+            raise ScrapingFailedError()
+        
+        _REDOWNLOAD_TRIED = True
+        try:
+            _setup()
+        except:
+            raise SetupFailedError()
+
+        try:
+            with default_ui.console.status(f"Scraping '{file_path}'..."):
+                doc = doc_converter.convert(file_path).document
+        except:
+            raise ScrapingFailedError()
 
     return {
         "content": doc.export_to_markdown(),
