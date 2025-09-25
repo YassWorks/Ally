@@ -157,9 +157,9 @@ class AgentUI:
         try:
             info_parts = []
             if cwd:
-                info_parts.append(f"[dim]📂 {cwd}[/dim]")
+                info_parts.append(f"[dim]{cwd}[/dim]")
             if model:
-                info_parts.append(f"[dim]🤖 {model}[/dim]")
+                info_parts.append(f"[dim]{model}[/dim]")
 
             info_line = " • ".join(info_parts) if info_parts else ""
 
@@ -266,7 +266,7 @@ class AgentUI:
         self.console.print()
         self.status_message(
             title="Goodbye",
-            message="Thanks for using the assistant!",
+            message="Thanks for using Ally!",
             style="primary",
         )
 
@@ -316,7 +316,6 @@ class AgentUI:
         )
 
     def tmp_msg(self, message: str, duration: int = 2):
-        self.console.print()
         with self.console.status(message):
             time.sleep(duration)
 

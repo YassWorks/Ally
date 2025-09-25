@@ -54,7 +54,7 @@ class BaseAgent:
         # a flag to determine if RAG features should be integrated
         self.rag = False
 
-        self.latest_refs = None
+        self.latest_refs: set[str] = set()
         self.db_client = None
 
     def _toggle_rag(self, enable: bool = True):
@@ -137,9 +137,9 @@ class BaseAgent:
                                 [f"- {doc}" for doc, _ in query_results]
                             )
                 if query_results:
-                    self.latest_refs = [meta["file_path"] for _, meta in query_results]
+                    self.latest_refs = {meta["file_path"] for _, meta in query_results if meta and "file_path" in meta}
                 else:
-                    self.latest_refs = None
+                    self.latest_refs = set()
 
                 self.ui.tmp_msg("Working on the task...", 0.5)
 
