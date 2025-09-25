@@ -8,6 +8,7 @@ from typing import Callable, Any
 from pathlib import Path
 from datetime import datetime
 import chromadb
+import json
 import os
 
 
@@ -42,7 +43,12 @@ class DataBaseClient:
             path=DB_PATH, settings=Settings(anonymized_telemetry=False)
         )
         self.embedding_function = embedding_function
-        self.indexed_collections: dict[str, bool] = {}  # collection_name -> is_indexed
+        
+        self.indexed_collections_path = Path(__file__).parent / "indexed_collections.json"
+        if not self.indexed_collections_path.exists():
+            self.indexed_collections_path.write_text("{}")
+        
+        self.indexed_collections: dict[str, bool] = self._load_indexed_collections()
 
     @staticmethod
     def get_instance() -> "DataBaseClient":
@@ -51,14 +57,32 @@ class DataBaseClient:
             return None
         return DataBaseClient._instance
 
+    def _load_indexed_collections(self) -> dict[str, bool]:
+        """Load indexed collections from the JSON file."""
+        try:
+            with open(self.indexed_collections_path, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {}
+
+    def _save_indexed_collections(self) -> None:
+        """Save indexed collections to the JSON file."""
+        try:
+            with open(self.indexed_collections_path, 'w') as f:
+                json.dump(self.indexed_collections, f, indent=2)
+        except Exception as e:
+            default_ui.error(f"Failed to save indexed collections: {e}")
+
     def index_collection(self, collection_name: str) -> None:
         """Mark a collection as indexed."""
         self.indexed_collections[collection_name] = True
+        self._save_indexed_collections()
 
     def unindex_collection(self, collection_name: str) -> None:
         """Mark a collection as unindexed."""
         if collection_name in self.indexed_collections:
             self.indexed_collections[collection_name] = False
+            self._save_indexed_collections()
 
     def already_stored(self, file_path: str, collection_name: str) -> bool:
         """Check if a document is already stored in the database."""
@@ -97,6 +121,7 @@ class DataBaseClient:
 
         if collection_name not in self.indexed_collections:
             self.indexed_collections[collection_name] = True  # default to indexed
+            self._save_indexed_collections()
         
         collection = self.db_client.get_or_create_collection(
             name=collection_name,
@@ -184,6 +209,10 @@ class DataBaseClient:
 
         try:
             self.db_client.delete_collection(name=collection_name)
+            # Remove from indexed collections and save
+            if collection_name in self.indexed_collections:
+                del self.indexed_collections[collection_name]
+                self._save_indexed_collections()
 
         except chromadb.errors.NotFoundError:
             default_ui.error(f"Collection {collection_name} does not exist.")
@@ -220,6 +249,9 @@ class DataBaseClient:
             collections = self.db_client.list_collections()
             for col in collections:
                 self.db_client.delete_collection(name=col.name)
+            # Clear indexed collections and save
+            self.indexed_collections.clear()
+            self._save_indexed_collections()
             default_ui.status_message(
                 title="Database Reset",
                 message="All collections have been deleted.",
