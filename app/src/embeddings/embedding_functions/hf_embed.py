@@ -1,11 +1,8 @@
-from transformers import AutoTokenizer, AutoModel
 from app.utils.constants import DEFAULT_PATHS
+from app.src.core.ui import default_ui
 from app.src.helpers.valid_dir import validate_dir_name
-import torch.nn.functional as F
-import torch
 import os
 from pathlib import Path
-from app.src.core.ui import default_ui
 
 
 # configure embedding models path
@@ -34,6 +31,8 @@ class HFEmbedder:
     # Mean Pooling - Take attention mask into account for correct averaging
     @staticmethod
     def _mean_pooling(model_output, attention_mask):
+        import torch
+        
         token_embeddings = model_output[
             0
         ]  # First element of model_output contains all token embeddings
@@ -55,6 +54,10 @@ class HFEmbedder:
         Returns:
             list[list[float]]: List of embeddings for each sentence.
         """
+        from transformers import AutoTokenizer, AutoModel
+        import torch.nn.functional as F
+        import torch
+        
         tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
         model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
 
