@@ -5,6 +5,9 @@ import os
 from pathlib import Path
 
 
+_DISPLAYED_DOWNLOADING_MESSAGE = False
+
+
 # configure embedding models path
 EMBEDDING_MODEL_PATH = ""
 if "ALLY_EMBEDDING_MODELS_DIR" in os.environ:
@@ -54,14 +57,22 @@ class HFEmbedder:
         Returns:
             list[list[float]]: List of embeddings for each sentence.
         """
+        global _DISPLAYED_DOWNLOADING_MESSAGE
+        
         from transformers import AutoTokenizer, AutoModel
         import torch.nn.functional as F
         import torch
-        import logging
+        import transformers.utils.logging as hf_logging
         
-        logging.getLogger("transformers").setLevel(logging.ERROR)
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
-        model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
+        hf_logging.set_verbosity_error()
+        if not _DISPLAYED_DOWNLOADING_MESSAGE:
+            with default_ui.console.status("Downloading embedding model..."):
+                tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
+                model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
+            _DISPLAYED_DOWNLOADING_MESSAGE = True
+        else:
+            tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
+            model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
 
         encoded_input = tokenizer(
             sentences, padding=True, truncation=True, return_tensors="pt"
