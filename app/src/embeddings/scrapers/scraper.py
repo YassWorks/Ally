@@ -145,7 +145,7 @@ def scrape_file(file_path: str):
         except:
             raise SetupFailedError()
 
-    pipeline_options: PdfPipelineOptions = PdfPipelineOptions(
+    pipeline_options = PdfPipelineOptions(
         artifacts_path=ARTIFACTS_PATH,
         do_ocr=True,
         ocr_options=EasyOcrOptions(force_full_page_ocr=True),
@@ -162,7 +162,7 @@ def scrape_file(file_path: str):
             InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
         }
     )
-    
+
     try:
         with default_ui.console.status(f"Scraping '{file_path}'..."):
             doc = doc_converter.convert(file_path).document
@@ -171,7 +171,7 @@ def scrape_file(file_path: str):
         global _REDOWNLOAD_TRIED
         if _REDOWNLOAD_TRIED:
             raise ScrapingFailedError()
-        
+
         _REDOWNLOAD_TRIED = True
         try:
             _setup()
