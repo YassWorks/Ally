@@ -205,7 +205,7 @@ class DataBaseClient:
             default_ui.error(f"Invalid directory path: {directory_path}")
             return
 
-        # convert to absolute path if not already
+        # Normalize the path
         directory_path = Path(directory_path)
 
         if os.name == "nt":
@@ -214,6 +214,19 @@ class DataBaseClient:
             directory_path = Path(os.path.expanduser(str(directory_path)))
 
         directory_path = directory_path.resolve()
+        directory_path = str(directory_path)
+        
+        # If it's a file, just process that single file
+        if os.path.isfile(directory_path):
+            try:
+                if self.was_modified(directory_path, collection_name):
+                    self.store_document(directory_path, collection_name)
+
+            except ScrapingFailedError:
+                default_ui.error(f"Failed to scrape file: {directory_path}. Skipping.")
+
+            except:
+                raise
 
         if not os.path.exists(directory_path):
             default_ui.error(f"Directory {directory_path} does not exist.")
@@ -222,7 +235,6 @@ class DataBaseClient:
         for root, _, files in os.walk(directory_path):
             for file in files:
                 file_path = os.path.join(root, file)
-                print(f"Processing file: {file_path}")
                 try:
                     if self.was_modified(file_path, collection_name):
                         self.store_document(file_path, collection_name)
@@ -232,16 +244,19 @@ class DataBaseClient:
 
                 except:
                     raise
+
         default_ui.status_message(
             title="Info",
             message=f"Documents from '{directory_path}' have been embedded into collection '{collection_name}'.",
             style="success",
         )
 
-    def delete_collection(self, collection_name: str) -> None:  # TODO: interface this with a command
+    def delete_collection(
+        self, collection_name: str
+    ) -> None:  # TODO: interface this with a command
         """Delete a collection from the database."""
         import chromadb.errors as chromadb_errors
-        
+
         if not default_ui.confirm(
             f"Are you sure you want to delete the collection '{collection_name}'?",
             default=False,
