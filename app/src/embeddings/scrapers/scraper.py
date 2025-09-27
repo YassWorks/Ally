@@ -43,9 +43,7 @@ def _setup(path: str = ARTIFACTS_PATH) -> None:
                 with_smolvlm=True,
             )
     except Exception as e:
-        default_ui.error(
-            f"Failed to download parsing models: {e}"
-        )
+        default_ui.error(f"Failed to download parsing models: {e}")
         raise
     _SETUP_COMPLETED = True
 

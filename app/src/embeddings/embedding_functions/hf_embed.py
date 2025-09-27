@@ -57,7 +57,9 @@ class HFEmbedder:
         from transformers import AutoTokenizer, AutoModel
         import torch.nn.functional as F
         import torch
+        import logging
         
+        logging.getLogger("transformers").setLevel(logging.ERROR)
         tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
         model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
 
