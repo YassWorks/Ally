@@ -70,13 +70,63 @@ def _read_regular_file(file_path: str) -> str:
 
 def scrape_file(file_path: str):
     """Extract text and metadata from a PDF file."""
-    
-    from docling.document_converter import DocumentConverter
-    from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions, EasyOcrOptions
-    from docling.datamodel.pipeline_options import smolvlm_picture_description
-    from docling.document_converter import DocumentConverter, PdfFormatOption
-    
+
+    # lazy import to avoid unnecessary dependency if not needed
+    # docling is huge, so let's only install it if the user wants to use RAG
+    def _import_docling():
+        from docling.document_converter import DocumentConverter
+        from docling.datamodel.base_models import InputFormat
+        from docling.datamodel.pipeline_options import (
+            PdfPipelineOptions,
+            EasyOcrOptions,
+        )
+        from docling.datamodel.pipeline_options import smolvlm_picture_description
+        from docling.document_converter import PdfFormatOption
+
+        return (
+            DocumentConverter,
+            InputFormat,
+            PdfPipelineOptions,
+            EasyOcrOptions,
+            smolvlm_picture_description,
+            PdfFormatOption,
+        )
+
+    try:
+        (
+            DocumentConverter,
+            InputFormat,
+            PdfPipelineOptions,
+            EasyOcrOptions,
+            smolvlm_picture_description,
+            PdfFormatOption,
+        ) = _import_docling()
+    except ImportError:
+        with default_ui.console.status("Installing additional required packages..."):
+            import subprocess
+            import sys
+
+            subprocess.check_call(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "docling",
+                    "--extra-index-url",
+                    "https://download.pytorch.org/whl/cpu",
+                    "-qqq",
+                ]
+            )
+        (
+            DocumentConverter,
+            InputFormat,
+            PdfPipelineOptions,
+            EasyOcrOptions,
+            smolvlm_picture_description,
+            PdfFormatOption,
+        ) = _import_docling()
+
     if any(file_path.lower().endswith(x) for x in REGULAR_FILE_EXTENSIONS):
         content = _read_regular_file(file_path)
         return {

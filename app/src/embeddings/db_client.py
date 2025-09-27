@@ -3,11 +3,9 @@ from app.src.embeddings.scrapers.scraper import scrape_file, get_hash
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
 from app.src.core.ui import default_ui
-from chromadb.config import Settings
 from typing import Callable, Any
 from pathlib import Path
 from datetime import datetime
-import chromadb
 import json
 import os
 
@@ -39,6 +37,24 @@ class DataBaseClient:
         return cls._instance
 
     def __init__(self, embedding_function: Callable = None) -> None:
+        try:
+            import chromadb
+            from chromadb.config import Settings
+        except ImportError:
+            with default_ui.console.status("Installing additional required packages..."):
+                import subprocess
+                import sys
+
+                # in case the user didn't setup RAG from the beginning
+                # we lazy-install chromadb when needed
+                # same for docling in scraper.py
+                # which will trigger as soon as the user tries to use RAG features
+                subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
+                )
+            import chromadb
+            from chromadb.config import Settings
+            
         self.db_client = chromadb.PersistentClient(
             path=DB_PATH, settings=Settings(anonymized_telemetry=False)
         )
