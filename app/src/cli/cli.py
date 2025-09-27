@@ -62,9 +62,6 @@ class CLI:
                 self.rag_available = True
 
             case _:
-                self.ui.warning(
-                    "No valid embedding config specified. RAG features will be disabled."
-                )
                 self.embedding_function = None
                 self.rag_available = False
 
@@ -215,7 +212,8 @@ class CLI:
                 from app.src.embeddings.db_client import DataBaseClient
 
                 _ = DataBaseClient(embedding_function=self.embedding_function)
-                self._integrate_rag(self.general_agent)
+            
+            self._integrate_rag(agent=self.general_agent, available=self.rag_available)
 
             # giving the general agent access to the web with a separate web searcher agent
             integrate_web_search(self.general_agent, self.default_web_searcher_agent)
@@ -233,8 +231,15 @@ class CLI:
         except Exception as e:
             self.ui.error(f"An unexpected error occurred: {e}")
 
-    def _integrate_rag(self, agent: BaseAgent):
+    def _integrate_rag(self, agent: BaseAgent, available: bool):
         """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
+        if not available:
+            for command in ["/embed", "/start_rag", "/stop_rag", "/index", "/unindex"]:
+                agent.register_command(command, lambda *args: self.ui.warning(
+                    "RAG is not available. Please configure an embedding provider."
+                ))
+            return
+        
         agent.register_command("/embed", lambda *args: handle_embed_request(*args))
         # If extra arguments are passed by the user, they will be ignored
         # This is to ensure a frictionless experience for the user as the command is pretty straightforward

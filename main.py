@@ -63,8 +63,8 @@ api_key_per_model = {k: api_keys.get(provider_per_model.get(k), api_key) for k i
 temperatures = config.get("temperatures") or {}
 system_prompts = config.get("system_prompts") or {}
 
-embedding_provider = config.get("embedding_provider")
-embedding_model = config.get("embedding_model")
+embedding_provider = config.get("embedding_provider") or ""
+embedding_model = config.get("embedding_model") or ""
 
 
 client = CLI(
