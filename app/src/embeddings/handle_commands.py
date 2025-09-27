@@ -24,11 +24,6 @@ def handle_embed_request(*args):
         directory_path = os.getcwd()
 
     db_client.store_documents(directory_path, collection_name)
-    default_ui.status_message(
-        title="Info",
-        message=f"Documents from '{directory_path}' have been embedded into collection '{collection_name}'.",
-        style="success",
-    )
 
 
 def handle_index_request(*args):
