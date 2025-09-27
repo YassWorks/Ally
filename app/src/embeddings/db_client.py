@@ -107,7 +107,7 @@ class DataBaseClient:
     def already_stored(self, file_path: str, collection_name: str) -> bool:
         """Check if a document is already stored in the database."""
         import chromadb.errors as chromadb_errors
-        
+
         try:
             collection = self.db_client.get_collection(name=collection_name)
 
@@ -131,7 +131,7 @@ class DataBaseClient:
         """Store document content and metadata in ChromaDB."""
         if self.already_stored(file_path, collection_name):
             return
-        
+
         response = scrape_file(file_path)
         content = response["content"]
         metadata = response["metadata"]
@@ -144,7 +144,7 @@ class DataBaseClient:
         if collection_name not in self.indexed_collections:
             self.indexed_collections[collection_name] = True  # default to indexed
             self._save_indexed_collections()
-        
+
         collection = self.db_client.get_or_create_collection(
             name=collection_name,
         )
@@ -330,7 +330,7 @@ class DataBaseClient:
         for collection_name in self.indexed_collections.keys():
             if not self.indexed_collections[collection_name]:
                 continue
-            
+
             candidates.extend(
                 self.get_query_results_from_collection(
                     query, collection_name.strip(), n_results
@@ -340,7 +340,7 @@ class DataBaseClient:
         # merging and sorting the results by distance
         candidates.sort(key=lambda x: x[2])
         query_results = [(doc, meta) for doc, meta, _ in candidates[:n_results]]
-        
+
         return query_results
 
     def get_query_results_from_collection(
@@ -348,7 +348,7 @@ class DataBaseClient:
     ) -> list[tuple[str, dict[str, Any], float]]:
         """Query the database and return relevant documents."""
         import chromadb.errors as chromadb_errors
-        
+
         try:
             collection = self.db_client.get_collection(name=collection_name)
 
