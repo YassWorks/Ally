@@ -102,10 +102,12 @@ class DataBaseClient:
 
     def already_stored(self, file_path: str, collection_name: str) -> bool:
         """Check if a document is already stored in the database."""
+        import chromadb.errors as chromadb_errors
+        
         try:
             collection = self.db_client.get_collection(name=collection_name)
 
-        except chromadb.errors.NotFoundError:
+        except chromadb_errors.NotFoundError:
             return False
 
         except Exception:
@@ -152,6 +154,7 @@ class DataBaseClient:
 
     def was_modified(self, file_path: str, collection_name: str) -> bool:
         """Check if the file has been modified by comparing hashes and modification dates."""
+        import chromadb.errors as chromadb_errors
 
         last_hash = get_hash(file_path)
         last_mod_date = datetime.fromtimestamp(
@@ -161,7 +164,7 @@ class DataBaseClient:
         try:
             collection = self.db_client.get_collection(name=collection_name)
 
-        except chromadb.errors.NotFoundError:
+        except chromadb_errors.NotFoundError:
             return True
 
         except Exception:
@@ -198,6 +201,20 @@ class DataBaseClient:
     def store_documents(self, directory_path: str, collection_name: str) -> None:
         """Store all documents from a directory into the database."""
 
+        if not validate_dir_name(directory_path):
+            default_ui.error(f"Invalid directory path: {directory_path}")
+            return
+
+        # convert to absolute path if not already
+        directory_path = Path(directory_path)
+
+        if os.name == "nt":
+            directory_path = Path(os.path.expandvars(str(directory_path)))
+        else:
+            directory_path = Path(os.path.expanduser(str(directory_path)))
+
+        directory_path = directory_path.resolve()
+
         if not os.path.exists(directory_path):
             default_ui.error(f"Directory {directory_path} does not exist.")
             return
@@ -205,6 +222,7 @@ class DataBaseClient:
         for root, _, files in os.walk(directory_path):
             for file in files:
                 file_path = os.path.join(root, file)
+                print(f"Processing file: {file_path}")
                 try:
                     if self.was_modified(file_path, collection_name):
                         self.store_document(file_path, collection_name)
@@ -303,10 +321,12 @@ class DataBaseClient:
         self, query: str, collection_name: str, n_results: int = 5
     ) -> list[tuple[str, dict[str, Any], float]]:
         """Query the database and return relevant documents."""
+        import chromadb.errors as chromadb_errors
+        
         try:
             collection = self.db_client.get_collection(name=collection_name)
 
-        except chromadb.errors.NotFoundError:
+        except chromadb_errors.NotFoundError:
             default_ui.error(f"Collection {collection_name} does not exist.")
             return []
 
