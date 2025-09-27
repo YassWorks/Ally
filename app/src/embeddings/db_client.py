@@ -232,9 +232,16 @@ class DataBaseClient:
 
                 except:
                     raise
+        default_ui.status_message(
+            title="Info",
+            message=f"Documents from '{directory_path}' have been embedded into collection '{collection_name}'.",
+            style="success",
+        )
 
-    def delete_collection(self, collection_name: str) -> None:
+    def delete_collection(self, collection_name: str) -> None:  # TODO: interface this with a command
         """Delete a collection from the database."""
+        import chromadb.errors as chromadb_errors
+        
         if not default_ui.confirm(
             f"Are you sure you want to delete the collection '{collection_name}'?",
             default=False,
@@ -248,13 +255,13 @@ class DataBaseClient:
                 del self.indexed_collections[collection_name]
                 self._save_indexed_collections()
 
-        except chromadb.errors.NotFoundError:
+        except chromadb_errors.NotFoundError:
             default_ui.error(f"Collection {collection_name} does not exist.")
 
         except Exception:
             raise DBAccessError()
 
-    def list_collections(self) -> list:
+    def list_collections(self) -> list:  # TODO: interface this with a command
         """List all collections in the database."""
         try:
             collections = self.db_client.list_collections()
@@ -271,7 +278,7 @@ class DataBaseClient:
         except Exception:
             raise DBAccessError()
 
-    def reset_database(self) -> None:
+    def reset_database(self) -> None:  # TODO: interface this with a command
         """Reset the entire database by deleting all collections."""
         if not default_ui.confirm(
             "Are you sure you want to reset the database? This action cannot be undone.",
