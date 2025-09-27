@@ -41,7 +41,9 @@ class DataBaseClient:
             import chromadb
             from chromadb.config import Settings
         except ImportError:
-            with default_ui.console.status("Installing additional required packages..."):
+            with default_ui.console.status(
+                "Installing additional required packages..."
+            ):
                 import subprocess
                 import sys
 
@@ -54,16 +56,18 @@ class DataBaseClient:
                 )
             import chromadb
             from chromadb.config import Settings
-            
+
         self.db_client = chromadb.PersistentClient(
             path=DB_PATH, settings=Settings(anonymized_telemetry=False)
         )
         self.embedding_function = embedding_function
-        
-        self.indexed_collections_path = Path(__file__).parent / "indexed_collections.json"
+
+        self.indexed_collections_path = (
+            Path(__file__).parent / "indexed_collections.json"
+        )
         if not self.indexed_collections_path.exists():
             self.indexed_collections_path.write_text("{}")
-        
+
         self.indexed_collections: dict[str, bool] = self._load_indexed_collections()
 
     @staticmethod
