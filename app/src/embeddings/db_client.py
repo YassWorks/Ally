@@ -80,7 +80,7 @@ class DataBaseClient:
     def _load_indexed_collections(self) -> dict[str, bool]:
         """Load indexed collections from the JSON file."""
         try:
-            with open(self.indexed_collections_path, 'r') as f:
+            with open(self.indexed_collections_path, "r") as f:
                 return json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return {}
@@ -88,7 +88,7 @@ class DataBaseClient:
     def _save_indexed_collections(self) -> None:
         """Save indexed collections to the JSON file."""
         try:
-            with open(self.indexed_collections_path, 'w') as f:
+            with open(self.indexed_collections_path, "w") as f:
                 json.dump(self.indexed_collections, f, indent=2)
         except Exception as e:
             default_ui.error(f"Failed to save indexed collections: {e}")
