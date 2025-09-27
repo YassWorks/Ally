@@ -8,7 +8,6 @@ from warnings import filterwarnings
 
 
 logging.basicConfig(level=logging.ERROR)
-
 filterwarnings("ignore", category=Warning, module="torch")
 filterwarnings("ignore", category=Warning, module="docling")
 filterwarnings("ignore", category=Warning, module="huggingface_hub")

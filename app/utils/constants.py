@@ -64,16 +64,13 @@ DEFAULT_PATHS = {
     ),
 }
 
-REGULAR_FILE_EXTENSIONS = [
+REGULAR_FILE_EXTENSIONS = [  # TODO: make special loading functions for json, xml, yaml
     ".txt",
     ".md",
     ".markdown",
-    ".csv",
     ".log",
     ".json",
     ".xml",
-    ".html",
-    ".htm",
     ".yaml",
     ".yml",
 ]
