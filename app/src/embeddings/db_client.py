@@ -62,9 +62,9 @@ class DataBaseClient:
         )
         self.embedding_function = embedding_function
 
-        self.indexed_collections_path = (
-            Path(__file__).parent / "indexed_collections.json"
-        )
+        # Store indexed collections JSON file in the same database folder
+        self.indexed_collections_path = DB_PATH / "indexed_collections.json"
+        self._ensure_db_directory_exists()
         if not self.indexed_collections_path.exists():
             self.indexed_collections_path.write_text("{}")
 
@@ -77,6 +77,14 @@ class DataBaseClient:
             return None
         return DataBaseClient._instance
 
+    def _ensure_db_directory_exists(self) -> None:
+        """Ensure the database directory exists."""
+        try:
+            DB_PATH.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            default_ui.error(f"Failed to create database directory: {e}")
+            raise
+
     def _load_indexed_collections(self) -> dict[str, bool]:
         """Load indexed collections from the JSON file."""
         try:
@@ -88,6 +96,8 @@ class DataBaseClient:
     def _save_indexed_collections(self) -> None:
         """Save indexed collections to the JSON file."""
         try:
+            # Ensure the database directory exists before writing
+            self._ensure_db_directory_exists()
             with open(self.indexed_collections_path, "w") as f:
                 json.dump(self.indexed_collections, f, indent=2)
         except Exception as e:
