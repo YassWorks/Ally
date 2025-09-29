@@ -1,5 +1,5 @@
 from app.utils.ascii_art import ASCII_ART
-from app.utils.constants import RECURSION_LIMIT
+from app.utils.constants import RECURSION_LIMIT, PROMPTS
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
 from app.src.embeddings.rag_errors import SetupFailedError, DBAccessError
@@ -125,7 +125,10 @@ class BaseAgent:
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
 
+                rag_temp_tool_result = None
                 query_results = None
+                extra_rag_context = ""
+                
                 if self.rag:
                     self.db_client = DataBaseClient.get_instance()
                     if self.db_client is None:
@@ -137,20 +140,37 @@ class BaseAgent:
                             user_input, n_results=5
                         )
                         if query_results:
-                            user_input += "\n\nANSWER BASED ON THESE DOCUMENTS IF RELEVANT. IF NOT SAY YOU DON'T KNOW UNLESS THE USER GIVES PERMISSION TO USE OUTSIDE KNOWLEDGE.\n"
-                            user_input += "\n".join(
+                            extra_rag_context += PROMPTS["rag_results"]
+                            extra_rag_context += "\n".join(
                                 [f"- {doc}" for doc, _ in query_results]
                             )
+                            
                 if query_results:
-                    self.latest_refs = {meta["file_path"] for _, meta in query_results if meta and "file_path" in meta}
+                    self.latest_refs = {
+                        meta["file_path"]
+                        for _, meta in query_results
+                        if meta and "file_path" in meta
+                    }
                 else:
                     self.latest_refs = set()
+
+                if extra_rag_context:
+                    rag_temp_tool_result = ToolMessage(
+                        content=extra_rag_context,
+                        tool_call_id=str(uuid.uuid4()),  # doesn't matter.
+                    )
 
                 self.ui.tmp_msg("Working on the task...", 0.5)
 
                 last = None
                 for chunk in self.agent.stream(
-                    {"messages": [("human", user_input)]},  # TODO: make it so that RAG info is a tool call
+                    {
+                        "messages": (
+                            [("human", user_input), rag_temp_tool_result]
+                            if rag_temp_tool_result
+                            else [("human", user_input)]
+                        )
+                    },
                     config=self.configuration,
                 ):
                     if stream:
@@ -221,7 +241,7 @@ class BaseAgent:
         if user_input.strip().lower().startswith("/model"):
             self._handle_model_command(user_input)
             return True
-        
+
         if user_input.strip().lower() in ["/id"]:
             self.ui.status_message(
                 title="Current Session ID",

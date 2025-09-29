@@ -41,6 +41,10 @@ UI_MESSAGES = {
     },
 }
 
+PROMPTS = {
+    "rag_results": "\n\nAnswer only from these documents. If irrelevant, say 'I don't know' unless user allows outside knowledge.\n",
+}
+
 DEFAULT_PATHS = {
     "history": (
         "%LOCALAPPDATA%\\Ally\\history\\"

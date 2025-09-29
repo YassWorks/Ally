@@ -175,7 +175,7 @@ def create_base_agent(
         return built_graph
 
 
-def build_llm_context(messages: list[BaseMessage]):
+def build_llm_context(messages: list[BaseMessage]) -> list[BaseMessage]:
     """
     Build the context for the LLM by including all messages after the last human message.
     And cleaning off anything before it.
