@@ -61,12 +61,17 @@ class BaseAgent:
         """Enable or disable RAG features."""
         self.rag = enable
 
+    def get_session_id(self) -> str:
+        """Get the current session/thread ID."""
+        return self.configuration.get("configurable", {}).get("thread_id", "")
+
     def start_chat(
         self,
         starting_msg: str = None,
         initial_prompt_suffix: str = None,
         recurring_prompt_suffix: str = None,
         recursion_limit: int = RECURSION_LIMIT,
+        thread_id: str = None,
         config: dict = None,
         show_welcome: bool = True,
         active_dir: str = None,
@@ -78,8 +83,8 @@ class BaseAgent:
             self.ui.logo(ASCII_ART)
             self.ui.help(self.model_name)
 
-        configuration = config or {
-            "configurable": {"thread_id": str(uuid.uuid4())},
+        self.configuration = config or {
+            "configurable": {"thread_id": thread_id or str(uuid.uuid4())},
             "recursion_limit": recursion_limit,
         }
 
@@ -112,7 +117,7 @@ class BaseAgent:
                     self.ui.goodbye()
                     return True
 
-                if self._handle_command(user_input, configuration):
+                if self._handle_command(user_input, self.configuration):
                     continue
 
                 if first_msg and initial_prompt_suffix:
@@ -146,7 +151,7 @@ class BaseAgent:
                 last = None
                 for chunk in self.agent.stream(
                     {"messages": [("human", user_input)]},  # TODO: make it so that RAG info is a tool call
-                    config=configuration,
+                    config=self.configuration,
                 ):
                     if stream:
                         self._display_chunk(chunk)
@@ -215,6 +220,13 @@ class BaseAgent:
 
         if user_input.strip().lower().startswith("/model"):
             self._handle_model_command(user_input)
+            return True
+        
+        if user_input.strip().lower() in ["/id"]:
+            self.ui.status_message(
+                title="Current Session ID",
+                message=self.get_session_id(),
+            )
             return True
 
         if user_input.strip().lower() in ["/refs", "/references"]:

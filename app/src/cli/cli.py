@@ -195,7 +195,7 @@ class CLI:
         """Start the main chat interface."""
 
         try:
-            active_dir, initial_prompt = self._setup_environment(args)
+            active_dir, initial_prompt, thread_id = self._setup_environment(args)
 
             self.ui.logo(ASCII_ART)
             self.ui.help()
@@ -204,7 +204,7 @@ class CLI:
 
             # making the project generation a command for the general agent (an extra option for the user)
             self.general_agent.register_command(
-                "/project", lambda: self.launch_coding_units()
+                "/project", lambda *args: self.launch_coding_units()
             )
 
             # integrating RAG capabilities if an embedding function is configured by the user in the JSON config
@@ -224,6 +224,7 @@ class CLI:
                 show_welcome=False,
                 active_dir=active_dir,
                 stream=self.stream,
+                thread_id=thread_id,
             )
 
         except KeyboardInterrupt:
@@ -298,17 +299,21 @@ class CLI:
         except Exception as e:
             self.ui.error(f"An unexpected error occurred: {e}")
 
-    def _setup_environment(self, user_args: list[str] = None) -> str:
+    def _setup_environment(self, user_args: list[str] = None) -> tuple[str, str, str]:
         """Setup working environment and configuration."""
 
         active_dir = None
         initial_prompt = None
+        thread_id = None
 
         if user_args:
             parsed_args = ArgsParser.get_args(
                 ui=self.ui,
                 user_args=list(user_args),
             )
+            
+            if parsed_args.i:
+                thread_id = parsed_args.i
 
             if parsed_args.d:
                 if parsed_args.d == ".":
@@ -334,7 +339,7 @@ class CLI:
         if active_dir is None:
             active_dir = self._setup_directory()
 
-        return active_dir, initial_prompt
+        return active_dir, initial_prompt, thread_id
 
     def _setup_directory(self) -> str:
         """Setup working directory with user interaction."""

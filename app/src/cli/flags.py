@@ -2,6 +2,7 @@ import argparse
 from app.src.core.ui import AgentUI
 import sys
 
+
 class ArgsParser(argparse.ArgumentParser):
     """Parses CLI flags with custom UI error reporting"""
 
@@ -20,6 +21,10 @@ class ArgsParser(argparse.ArgumentParser):
         )
         self.add_argument("-d", help="Specify working directory path")
         self.add_argument("-p", help="Initial message/prompt for Ally")
+        self.add_argument(
+            "-i",
+            help="Thread ID to continue of an existing old session. To view the current session ID, use the /id command within the chat.",
+        )
 
     def error(self, message):
         usage = self.format_help()
