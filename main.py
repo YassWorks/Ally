@@ -1,4 +1,4 @@
-from app import CLI
+from app import CLI, default_ui
 from dotenv import load_dotenv
 import os
 import sys
@@ -32,13 +32,13 @@ try:
     with open(config_path) as f:
         config = json.load(f)
 except FileNotFoundError:
-    print("Configuration file 'ally_config.json' not found.")
+    default_ui.error("Configuration file 'ally_config.json' not found.")
     sys.exit(1)
 except json.JSONDecodeError:
-    print("Configuration file 'ally_config.json' is not a valid JSON.")
+    default_ui.error("Configuration file 'ally_config.json' is not a valid JSON.")
     sys.exit(1)
 except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+    default_ui.error(f"An unexpected error occurred: {e}")
     sys.exit(1)
 
 

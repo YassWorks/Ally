@@ -44,16 +44,22 @@ class DataBaseClient:
             with default_ui.console.status(
                 "Installing additional required packages..."
             ):
-                import subprocess
-                import sys
+                try:
+                    import subprocess
+                    import sys
 
-                # in case the user didn't setup RAG from the beginning
-                # we lazy-install chromadb when needed
-                # same for docling in scraper.py
-                # which will trigger as soon as the user tries to use RAG features
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
-                )
+                    # in case the user didn't setup RAG from the beginning
+                    # we lazy-install chromadb when needed
+                    # same for docling in scraper.py
+                    # which will trigger as soon as the user tries to use RAG features
+                    subprocess.check_call(
+                        [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
+                    )
+                except Exception as e:
+                    default_ui.error(
+                        f"Failed to install required packages. Please install them manually. Error: {e}"
+                    )
+                    raise DBAccessError()
             import chromadb
             from chromadb.config import Settings
 

@@ -88,6 +88,7 @@ class CLI:
             )
         except Exception as e:
             self.ui.error(f"Failed to initialize default agents: {e}")
+            sys.exit(1)
 
         try:
             self._validate_config(
