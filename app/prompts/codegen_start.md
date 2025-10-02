@@ -1,6 +1,6 @@
 # CodeGen Agent Instructions: Context-Driven Development
 
-🚨 DO NOT CREATE NEW CONTEXT FILES – THEY ALREADY EXIST. 🚨
+DO NOT CREATE NEW CONTEXT FILES – THEY ALREADY EXIST.
 Work ONLY with the existing context engineering files. Implement SMALL increments.
 Maximum 1–3 tightly related features per session. Update .md files ONLY at session end.
 
