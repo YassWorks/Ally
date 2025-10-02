@@ -299,13 +299,17 @@ class DataBaseClient:
     def list_collections(self) -> list:  # TODO: interface this with a command
         """List all collections in the database."""
         try:
+            import textwrap
+
             collections = self.db_client.list_collections()
             # answer in the format "- collection_name: is_indexed"
-            listed_collections = f"""
-            Collections available:
-            ----------------------
-            {'\n-'.join([f"`{col.name}`: {"Indexed" if self.indexed_collections.get(col.name, False) else "Unindexed"}" for col in collections])}
-            """
+            lines = [
+                f"• {col.name}: {'Indexed' if self.indexed_collections.get(col.name, False) else 'Unindexed'}"
+                for col in collections
+            ]
+            listed_collections = (
+                "Collections available:\n" + "─" * 22 + "\n" + "\n".join(lines)
+            )
             default_ui.status_message(
                 title="Collections", message=listed_collections, style="success"
             )
