@@ -27,7 +27,7 @@ api_keys = {
 ########### load the configuration ###########
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(BASE_DIR, "ally_config.json")
+config_path = os.path.join(BASE_DIR, "config.json")
 try:
     with open(config_path) as f:
         config = json.load(f)

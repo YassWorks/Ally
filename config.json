@@ -28,6 +28,6 @@
         "web_searcher": null
     },
 
-    "embedding_provider": null,
-    "embedding_model": null
+    "embedding_provider": "hf",
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
 }
