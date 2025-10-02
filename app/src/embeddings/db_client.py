@@ -235,7 +235,7 @@ class DataBaseClient:
 
         directory_path = directory_path.resolve()
         directory_path = str(directory_path)
-        
+
         # If it's a file, just process that single file
         if os.path.isfile(directory_path):
             try:
