@@ -79,7 +79,7 @@ def scrape_file(file_path: str):
             EasyOcrOptions,
         )
         from docling.datamodel.pipeline_options import smolvlm_picture_description
-        from docling.document_converter import PdfFormatOption
+        from docling.document_converter import PdfFormatOption, ImageFormatOption, WordFormatOption
 
         return (
             DocumentConverter,
@@ -88,6 +88,8 @@ def scrape_file(file_path: str):
             EasyOcrOptions,
             smolvlm_picture_description,
             PdfFormatOption,
+            ImageFormatOption,
+            WordFormatOption,
         )
 
     try:
@@ -98,6 +100,8 @@ def scrape_file(file_path: str):
             EasyOcrOptions,
             smolvlm_picture_description,
             PdfFormatOption,
+            ImageFormatOption,
+            WordFormatOption,
         ) = _import_docling()
     except ImportError:
         with default_ui.console.status("Installing additional required packages..."):
@@ -112,7 +116,7 @@ def scrape_file(file_path: str):
                     "install",
                     "docling",
                     "--extra-index-url",
-                    "https://download.pytorch.org/whl/cpu",
+                    "https://download.pytorch.org/whl/cpu",  # CPU-only PyTorch for smaller download
                     "-qqq",
                 ]
             )
@@ -123,6 +127,8 @@ def scrape_file(file_path: str):
             EasyOcrOptions,
             smolvlm_picture_description,
             PdfFormatOption,
+            ImageFormatOption,
+            WordFormatOption,
         ) = _import_docling()
 
     if any(file_path.lower().endswith(x) for x in REGULAR_FILE_EXTENSIONS):
@@ -153,13 +159,15 @@ def scrape_file(file_path: str):
 
     pipeline_options.do_formula_enrichment = True
     pipeline_options.do_code_enrichment = True
-
     pipeline_options.do_picture_description = True
+
     pipeline_options.picture_description_options = smolvlm_picture_description
 
     doc_converter = DocumentConverter(
         format_options={
-            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
+            InputFormat.IMAGE: ImageFormatOption(pipeline_options=pipeline_options),
+            InputFormat.DOCX: WordFormatOption(pipeline_options=pipeline_options),
         }
     )
 
