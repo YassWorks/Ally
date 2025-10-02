@@ -279,7 +279,7 @@ class CodeGenUnit(BaseUnit):
     def _create_brainstormer_prompt(self, user_input: str, working_dir: str) -> str:
         """Create the brainstormer prompt with context engineering steps."""
 
-        ces_file_path = PROMPTS_DIR / "prompts" / "context_engineering_steps.txt"
+        ces_file_path = PROMPTS_DIR / "prompts" / "context_engineering_steps.md"
 
         with open(str(ces_file_path), "r") as file:
             context_engineering_steps = file.read()
@@ -295,7 +295,7 @@ class CodeGenUnit(BaseUnit):
     def _create_codegen_prompt(self, user_input: str, working_dir: str) -> str:
         """Create the code generation prompt."""
 
-        codegen_file_path = PROMPTS_DIR / "prompts" / "codegen_start.txt"
+        codegen_file_path = PROMPTS_DIR / "prompts" / "codegen_start.md"
 
         with open(str(codegen_file_path), "r") as file:
             codegen_start = file.read()
