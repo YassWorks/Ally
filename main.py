@@ -1,13 +1,13 @@
 from app import CLI, default_ui
 from dotenv import load_dotenv
+from warnings import filterwarnings
 import os
 import sys
 import json
 import logging
-from warnings import filterwarnings
 
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.CRITICAL)
 filterwarnings("ignore", category=Warning, module="torch")
 filterwarnings("ignore", category=Warning, module="docling")
 filterwarnings("ignore", category=Warning, module="huggingface_hub")
