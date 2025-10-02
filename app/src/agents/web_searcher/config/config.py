@@ -32,7 +32,7 @@ def get_agent(
 
     if system_prompt is None or system_prompt.strip() == "":
         dir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(dir, "system_prompt.txt"), "r") as file:
+        with open(os.path.join(dir, "system_prompt.md"), "r") as file:
             system_prompt = (
                 file.read()
                 .strip()
