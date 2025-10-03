@@ -158,8 +158,6 @@ class BaseAgent:
                         tool_call_id=str(uuid.uuid4()),  # doesn't matter.
                     )
 
-                self.ui.tmp_msg(UI_MESSAGES["messages"]["working_on_task"], 0.5)
-
                 last = None
                 for chunk in self.agent.stream(
                     {
