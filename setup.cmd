@@ -44,5 +44,5 @@ if errorlevel 1 (
     echo %BIN_DIR% is already in PATH.
 )
 
-echo === Setup complete! You can now run "ally" ===
+echo === Setup complete! You can now run "ally" in a new terminal window ===
 pause
