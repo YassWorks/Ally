@@ -5,6 +5,9 @@ from app.src.embeddings.handle_commands import (
     handle_embed_request,
     handle_index_request,
     handle_unindex_request,
+    handle_delete_command,
+    handle_purge_command,
+    handle_list_command,
 )
 from app.src.core.permissions import permission_manager
 from app.src.core.agent_factory import AgentFactory
@@ -250,6 +253,13 @@ class CLI:
 
         agent.register_command("/index", lambda *args: handle_index_request(*args))
         agent.register_command("/unindex", lambda *args: handle_unindex_request(*args))
+
+        # DB management commands
+        agent.register_command("/list", lambda *args: handle_list_command())
+        agent.register_command("/purge", lambda *args: handle_purge_command())
+        agent.register_command(
+            "/delete", lambda *args: handle_delete_command(*args)
+        )  # followed by <collection_name>
 
     def _enable_rag(self, agent: BaseAgent):
         """Enable RAG functionality."""

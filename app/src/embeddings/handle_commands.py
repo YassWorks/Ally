@@ -72,3 +72,51 @@ def handle_unindex_request(*args):
         message=f"Collection '{collection_name}' is now unindexed.",
         style="success",
     )
+
+
+def handle_list_command(*args):
+    """
+    Handle the /list command which lists collections in the database and
+    whether they are indexed or not.
+    """
+    db_client = DataBaseClient.get_instance()
+    
+    if db_client is None:
+        default_ui.error(
+            "Database client is not initialized. There might be an issue with your embeddings config."
+        )
+        return
+    
+    db_client.list_collections()
+
+
+def handle_delete_command(*args):
+    """Handles the deletion of a collection from the database by its name."""
+    db_client = DataBaseClient.get_instance()
+    
+    if len(args) < 1:
+        default_ui.error("Usage: /delete <collection_name>")
+        return
+    
+    collection_name = args[0]
+    
+    if db_client is None:
+        default_ui.error(
+            "Database client is not initialized. There might be an issue with your embeddings config."
+        )
+        return
+    
+    db_client.delete_collection(collection_name=collection_name)
+    
+
+def handle_purge_command():
+    """Handles the purging of all collections from the database."""
+    db_client = DataBaseClient.get_instance()
+    
+    if db_client is None:
+        default_ui.error(
+            "Database client is not initialized. There might be an issue with your embeddings config."
+        )
+        return
+    
+    db_client.reset_database()

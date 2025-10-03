@@ -273,7 +273,7 @@ class DataBaseClient:
 
     def delete_collection(
         self, collection_name: str
-    ) -> None:  # TODO: interface this with a command
+    ) -> None:
         """Delete a collection from the database."""
         import chromadb.errors as chromadb_errors
 
@@ -296,11 +296,9 @@ class DataBaseClient:
         except Exception:
             raise DBAccessError()
 
-    def list_collections(self) -> list:  # TODO: interface this with a command
+    def list_collections(self) -> list:
         """List all collections in the database."""
         try:
-            import textwrap
-
             collections = self.db_client.list_collections()
             # answer in the format "- collection_name: is_indexed"
             lines = [
@@ -317,7 +315,7 @@ class DataBaseClient:
         except Exception:
             raise DBAccessError()
 
-    def reset_database(self) -> None:  # TODO: interface this with a command
+    def reset_database(self) -> None:
         """Reset the entire database by deleting all collections."""
         if not default_ui.confirm(
             "Are you sure you want to reset the database? This action cannot be undone.",
