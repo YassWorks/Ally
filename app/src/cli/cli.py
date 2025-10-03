@@ -1,6 +1,6 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
-from app.utils.constants import CONSOLE_WIDTH, UI_MESSAGES
+from app.utils.ui_messages import UI_MESSAGES
 from app.src.embeddings.handle_commands import (
     handle_embed_request,
     handle_index_request,
@@ -15,8 +15,7 @@ from app.src.helpers.valid_dir import validate_dir_name
 from app.utils.ascii_art import ASCII_ART
 from app.src.core.base import BaseAgent
 from app.src.cli.flags import ArgsParser
-from app.src.core.ui import AgentUI
-from rich.console import Console
+from app.src.core.ui import default_ui
 import textwrap
 import sys
 import os
@@ -39,8 +38,7 @@ class CLI:
         stream: bool = True,
     ):
         self.stream = stream
-        self.console = Console(width=CONSOLE_WIDTH)
-        self.ui = AgentUI(self.console)
+        self.ui = default_ui
 
         models = models or {}
         api_key_per_model = api_key_per_model or {}

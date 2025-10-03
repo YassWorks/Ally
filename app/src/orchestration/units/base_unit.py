@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
-from app.src.core.ui import AgentUI
-from rich.console import Console
-from app.utils.constants import CONSOLE_WIDTH, RECURSION_LIMIT
+from app.src.core.ui import default_ui
+from app.utils.constants import RECURSION_LIMIT
 from app.src.core.base import BaseAgent
 
 
@@ -16,8 +15,7 @@ class BaseUnit(ABC):
             agents: Dictionary of agent instances
         """
         self.agents = agents
-        self.console = Console(width=CONSOLE_WIDTH)
-        self.ui = AgentUI(self.console)
+        self.ui = default_ui
         self._validate_agents()
     
     @abstractmethod

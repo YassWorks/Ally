@@ -9,9 +9,8 @@ from langgraph.graph.state import CompiledStateGraph
 from typing import Callable
 from langgraph.graph import StateGraph
 from app.src.core.ui import AgentUI
-from rich.console import Console
 import langgraph.errors as lg_errors
-from app.utils.constants import CONTINUE_MESSAGE
+from app.utils.constants import PROMPTS
 import uuid
 import os
 import openai
@@ -30,7 +29,6 @@ class BaseAgent:
         api_key: str,
         system_prompt: str,
         agent: CompiledStateGraph,
-        console: Console,
         ui: AgentUI,
         get_agent: Callable,
         temperature: float = 0,
@@ -41,7 +39,6 @@ class BaseAgent:
         self.api_key = api_key
         self.system_prompt = system_prompt
         self.agent = agent
-        self.console = console
         self.ui = ui
         self.get_agent = get_agent
         self.temperature = temperature
@@ -372,7 +369,7 @@ class BaseAgent:
             ui=self.ui,
             propagate=propagate_exceptions,
             continue_on_limit=False,
-            retry_operation=lambda: execute_agent(CONTINUE_MESSAGE),
+            retry_operation=lambda: execute_agent(PROMPTS["continue"]),
             reject_operation=lambda: execute_agent(
                 self._get_user_input(active_dir=active_dir)
             ),

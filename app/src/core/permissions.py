@@ -1,12 +1,10 @@
-from app.src.core.ui import AgentUI
-from app.utils.constants import CONSOLE_WIDTH
-from rich.console import Console
+from app.src.core.ui import default_ui
 
 
 class PermissionManager:
 
     def __init__(self):
-        self.ui = AgentUI(Console(width=CONSOLE_WIDTH))
+        self.ui = default_ui
         self.always_allow = False
         self.always_allowed_tools = set()
 
