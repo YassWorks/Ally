@@ -3,6 +3,7 @@ from app.src.embeddings.scrapers.scraper import scrape_file, get_hash
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
 from app.src.core.ui import default_ui
+from app.utils.ui_messages import UI_MESSAGES
 from typing import Callable, Any
 from pathlib import Path
 from datetime import datetime
@@ -17,7 +18,7 @@ if "ALLY_DATABASE_DIR" in os.environ:
     if not validate_dir_name(str(DB_PATH)):
         DB_PATH = ""
         default_ui.warning(
-            "Invalid directory path found in $ALLY_DATABASE_DIR. Reverting to default path."
+            UI_MESSAGES["warnings"]["invalid_db_path"]
         )
 
 if not DB_PATH:
@@ -68,7 +69,7 @@ class DataBaseClient:
                     
                 except Exception as e:
                     default_ui.error(
-                        f"Failed to install required packages. Please install them manually. Error: {e}"
+                        UI_MESSAGES["errors"]["failed_install_packages"].format(e)
                     )
                     raise DBAccessError()
             import chromadb
@@ -99,7 +100,7 @@ class DataBaseClient:
         try:
             DB_PATH.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            default_ui.error(f"Failed to create database directory: {e}")
+            default_ui.error(UI_MESSAGES["errors"]["failed_create_db_directory"].format(e))
             raise
 
     def _load_indexed_collections(self) -> dict[str, bool]:
@@ -118,7 +119,7 @@ class DataBaseClient:
             with open(self.indexed_collections_path, "w") as f:
                 json.dump(self.indexed_collections, f, indent=2)
         except Exception as e:
-            default_ui.error(f"Failed to save indexed collections: {e}")
+            default_ui.error(UI_MESSAGES["errors"]["failed_save_indexed"].format(e))
 
     def index_collection(self, collection_name: str) -> None:
         """Mark a collection as indexed."""
@@ -233,7 +234,7 @@ class DataBaseClient:
         """Store all documents from a directory into the database."""
 
         if not validate_dir_name(directory_path):
-            default_ui.error(f"Invalid directory path: {directory_path}")
+            default_ui.error(UI_MESSAGES["errors"]["invalid_directory_path"].format(directory_path))
             return
 
         # Normalize the path
@@ -254,13 +255,13 @@ class DataBaseClient:
                     self.store_document(directory_path, collection_name)
 
             except ScrapingFailedError:
-                default_ui.error(f"Failed to scrape file: {directory_path}. Skipping.")
+                default_ui.error(UI_MESSAGES["errors"]["failed_scrape"].format(directory_path))
 
             except:
                 raise
 
         if not os.path.exists(directory_path):
-            default_ui.error(f"Directory {directory_path} does not exist.")
+            default_ui.error(UI_MESSAGES["errors"]["directory_not_exist"].format(directory_path))
             return
 
         for root, _, files in os.walk(directory_path):
@@ -271,14 +272,14 @@ class DataBaseClient:
                         self.store_document(file_path, collection_name)
 
                 except ScrapingFailedError:
-                    default_ui.error(f"Failed to scrape file: {file_path}. Skipping.")
+                    default_ui.error(UI_MESSAGES["errors"]["failed_scrape"].format(file_path))
 
                 except:
                     raise
 
         default_ui.status_message(
-            title="Info",
-            message=f"Documents from '{directory_path}' have been embedded into collection '{collection_name}'.",
+            title=UI_MESSAGES["titles"]["info"],
+            message=UI_MESSAGES["success"]["documents_embedded"].format(directory_path, collection_name),
             style="success",
         )
 
@@ -289,7 +290,7 @@ class DataBaseClient:
         import chromadb.errors as chromadb_errors
 
         if not default_ui.confirm(
-            f"Are you sure you want to delete the collection '{collection_name}'?",
+            UI_MESSAGES["confirmations"]["delete_collection"].format(collection_name),
             default=False,
         ):
             return
@@ -302,7 +303,7 @@ class DataBaseClient:
                 self._save_indexed_collections()
 
         except chromadb_errors.NotFoundError:
-            default_ui.error(f"Collection {collection_name} does not exist.")
+            default_ui.error(UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name))
 
         except Exception:
             raise DBAccessError()
@@ -317,10 +318,10 @@ class DataBaseClient:
                 for col in collections
             ]
             listed_collections = (
-                "Collections available:\n" + "─" * 22 + "\n" + "\n".join(lines)
+                UI_MESSAGES["messages"]["collections_header"] + "\n" + "─" * 22 + "\n" + "\n".join(lines)
             )
             default_ui.status_message(
-                title="Collections", message=listed_collections, style="success"
+                title=UI_MESSAGES["titles"]["collections"], message=listed_collections, style="success"
             )
 
         except Exception:
@@ -329,7 +330,7 @@ class DataBaseClient:
     def reset_database(self) -> None:
         """Reset the entire database by deleting all collections."""
         if not default_ui.confirm(
-            "Are you sure you want to reset the database? This action cannot be undone.",
+            UI_MESSAGES["confirmations"]["reset_database"],
             default=False,
         ):
             return
@@ -342,8 +343,8 @@ class DataBaseClient:
             self.indexed_collections.clear()
             self._save_indexed_collections()
             default_ui.status_message(
-                title="Database Reset",
-                message="All collections have been deleted.",
+                title=UI_MESSAGES["titles"]["database_reset"],
+                message=UI_MESSAGES["messages"]["all_collections_deleted"],
                 style="success",
             )
 
@@ -382,7 +383,7 @@ class DataBaseClient:
             collection = self.db_client.get_collection(name=collection_name)
 
         except chromadb_errors.NotFoundError:
-            default_ui.error(f"Collection {collection_name} does not exist.")
+            default_ui.error(UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name))
             return []
 
         except Exception:

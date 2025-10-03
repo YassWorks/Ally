@@ -3,6 +3,7 @@ from typing import Any
 from app.src.core.ui import default_ui
 from app.utils.constants import RECURSION_LIMIT
 from app.src.core.base import BaseAgent
+from app.utils.ui_messages import UI_MESSAGES
 
 
 class BaseUnit(ABC):
@@ -48,14 +49,14 @@ class BaseUnit(ABC):
         while True:
             try:
                 working_dir = self.ui.get_input(
-                    message="Enter project directory",
+                    message=UI_MESSAGES["directory_prompt"],
                     default=working_dir,
                     cwd=working_dir,
                 )
                 os.makedirs(working_dir, exist_ok=True)
                 return working_dir
             except Exception:
-                self.ui.error("Failed to create project directory")
+                self.ui.error(UI_MESSAGES["errors"]["failed_create_directory"])
                 working_dir = None
     
     def _create_agent_config(self, thread_id: str, recursion_limit: int = RECURSION_LIMIT) -> dict[str, Any]:

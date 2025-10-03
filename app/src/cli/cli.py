@@ -88,7 +88,7 @@ class CLI:
                 },
             )
         except Exception as e:
-            self.ui.error(f"Failed to initialize default agents: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"].format(e))
             sys.exit(1)
 
         try:
@@ -98,10 +98,10 @@ class CLI:
                 api_key_per_model=api_key_per_model,
             )
         except ValueError as ve:
-            self.ui.error(f"Configuration error: {ve}")
+            self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
             sys.exit(1)
         except Exception as e:
-            self.ui.error(f"Failed to validate configuration: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"].format(e))
             sys.exit(1)
 
         try:
@@ -115,10 +115,10 @@ class CLI:
                 provider_per_model=provider_per_model,
             )
         except ValueError as ve:
-            self.ui.error(f"Configuration error: {ve}")
+            self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
             sys.exit(1)
         except Exception as e:
-            self.ui.error(f"Failed to setup coding configuration: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"].format(e))
             sys.exit(1)
 
     def _validate_config(
@@ -232,7 +232,7 @@ class CLI:
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
-            self.ui.error(f"An unexpected error occurred: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
 
     def _integrate_rag(self, agent: BaseAgent, available: bool):
         """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
@@ -241,7 +241,7 @@ class CLI:
                 agent.register_command(
                     command,
                     lambda *args: self.ui.warning(
-                        "RAG is not available. Please configure an embedding provider."
+                        UI_MESSAGES["warnings"]["rag_not_available"]
                     ),
                 )
             return
@@ -266,13 +266,13 @@ class CLI:
         """Enable RAG functionality."""
         if not self.rag_available:
             self.ui.warning(
-                "RAG is not available. Please configure an embedding provider."
+                UI_MESSAGES["warnings"]["rag_not_available"]
             )
             return
         agent._toggle_rag(enable=True)
         self.ui.status_message(
-            title="RAG Enabled",
-            message="Retrieval-Augmented Generation is now active.",
+            title=UI_MESSAGES["titles"]["rag_enabled"],
+            message=UI_MESSAGES["messages"]["rag_enabled"],
             style="success",
         )
 
@@ -280,8 +280,8 @@ class CLI:
         """Disable RAG functionality."""
         agent._toggle_rag(enable=False)
         self.ui.status_message(
-            title="RAG Disabled",
-            message="Retrieval-Augmented Generation is now inactive.",
+            title=UI_MESSAGES["titles"]["rag_disabled"],
+            message=UI_MESSAGES["messages"]["rag_disabled"],
             style="primary",
         )
 
@@ -296,20 +296,20 @@ class CLI:
             if active_dir is None:
                 active_dir = self._setup_directory()
 
-            self.ui.tmp_msg("Initializing agents...", duration=0.5)
+            self.ui.tmp_msg(UI_MESSAGES["messages"]["initializing_agents"], duration=0.5)
             codegen_unit_success = self._run_codegen_unit(
                 initial_prompt=initial_prompt, working_dir=active_dir
             )
 
             if not codegen_unit_success:
                 self.ui.error(
-                    "Code generation workflow failed to complete successfully"
+                    UI_MESSAGES["errors"]["codegen_failed"]
                 )
 
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
-            self.ui.error(f"An unexpected error occurred: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
 
     def _setup_environment(self, user_args: list[str] = None) -> tuple[str, str, str]:
         """Setup working environment and configuration."""
@@ -331,7 +331,7 @@ class CLI:
                 if parsed_args.d == ".":
                     parsed_args.d = os.getcwd()
                 elif not validate_dir_name(parsed_args.d):
-                    self.ui.error(f"Invalid directory name: {parsed_args.d}")
+                    self.ui.error(UI_MESSAGES["errors"]["invalid_directory"].format(parsed_args.d))
                     sys.exit(1)
                 active_dir = parsed_args.d
 
@@ -375,7 +375,7 @@ class CLI:
                     active_dir = working_dir
                     break
                 except Exception:
-                    self.ui.error("Failed to create directory")
+                    self.ui.error(UI_MESSAGES["errors"]["failed_create_directory"])
 
             self.ui.status_message(
                 title=UI_MESSAGES["titles"]["directory_updated"],
@@ -440,5 +440,5 @@ class CLI:
             )
 
         except Exception as e:
-            self.ui.error(f"Failed to initialize coding workflow: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"].format(e))
             return False

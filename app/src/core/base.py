@@ -11,6 +11,7 @@ from langgraph.graph import StateGraph
 from app.src.core.ui import AgentUI
 import langgraph.errors as lg_errors
 from app.utils.constants import PROMPTS
+from app.utils.ui_messages import UI_MESSAGES
 import uuid
 import os
 import openai
@@ -92,8 +93,8 @@ class BaseAgent:
             try:
                 if continue_flag:
                     self.ui.status_message(
-                        title="Continuing Session",
-                        message="Resuming from previous context...",
+                        title=UI_MESSAGES["titles"]["continuing_session"],
+                        message=UI_MESSAGES["messages"]["continuing_session"],
                         style="primary",
                     )
 
@@ -130,7 +131,7 @@ class BaseAgent:
                     self.db_client = DataBaseClient.get_instance()
                     if self.db_client is None:
                         self.ui.warning(
-                            "RAG is enabled but no database client is configured."
+                            UI_MESSAGES["warnings"]["rag_enabled_no_client"]
                         )
                     else:
                         query_results = self.db_client.get_query_results(
@@ -157,7 +158,7 @@ class BaseAgent:
                         tool_call_id=str(uuid.uuid4()),  # doesn't matter.
                     )
 
-                self.ui.tmp_msg("Working on the task...", 0.5)
+                self.ui.tmp_msg(UI_MESSAGES["messages"]["working_on_task"], 0.5)
 
                 last = None
                 for chunk in self.agent.stream(
@@ -185,21 +186,21 @@ class BaseAgent:
 
             except lg_errors.GraphRecursionError:
                 self.ui.warning(
-                    "Agent processing took longer than expected (Max recursion limit reached)"
+                    UI_MESSAGES["warnings"]["recursion_limit_reached"]
                 )
                 if self.ui.confirm(
-                    "Continue from where the agent left off?", default=True
+                    UI_MESSAGES["confirmations"]["continue_from_left_off"], default=True
                 ):
                     continue_flag = True
                 else:
                     return False
 
             except openai.RateLimitError:
-                self.ui.error("Rate limit exceeded. Please try again later")
+                self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
                 return False
 
             except Exception as e:
-                self.ui.error(f"An unexpected error occurred: {e}")
+                self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
                 return False
 
             finally:
@@ -241,7 +242,7 @@ class BaseAgent:
 
         if user_input.strip().lower() in ["/id"]:
             self.ui.status_message(
-                title="Current Session ID",
+                title=UI_MESSAGES["titles"]["current_session_id"],
                 message=self.get_session_id(),
             )
             return True
@@ -249,14 +250,14 @@ class BaseAgent:
         if user_input.strip().lower() in ["/refs", "/references"]:
             if self.latest_refs:
                 self.ui.status_message(
-                    title="Latest References",
+                    title=UI_MESSAGES["titles"]["latest_references"],
                     message="\n".join(self.latest_refs),
                     style="primary",
                 )
             else:
                 self.ui.status_message(
-                    title="Latest References",
-                    message="No references available.",
+                    title=UI_MESSAGES["titles"]["latest_references"],
+                    message=UI_MESSAGES["messages"]["no_references"],
                     style="muted",
                 )
             return True
@@ -268,23 +269,23 @@ class BaseAgent:
                     handler(*(cmd_parts[1:] if len(cmd_parts) > 1 else []))
 
                 except DBAccessError:
-                    self.ui.error("Database access error occurred.")
-                    self.ui.warning("RAG features disabled.")
+                    self.ui.error(UI_MESSAGES["errors"]["db_access_error"])
+                    self.ui.warning(UI_MESSAGES["warnings"]["rag_features_disabled"])
                     self.rag = False
 
                 except SetupFailedError:
-                    self.ui.error("Setup failed.")
-                    self.ui.warning("RAG features disabled.")
+                    self.ui.error(UI_MESSAGES["errors"]["setup_failed"])
+                    self.ui.warning(UI_MESSAGES["warnings"]["rag_features_disabled"])
                     self.rag = False
 
                 except Exception as e:
-                    self.ui.error(f"Command '{cmd}' failed: {e}")
+                    self.ui.error(UI_MESSAGES["errors"]["command_failed"].format(cmd, e))
 
                 finally:
                     return True
 
         if user_input.lower().startswith("/"):
-            self.ui.error("Unknown command. Type /help for instructions.")
+            self.ui.error(UI_MESSAGES["errors"]["unknown_command"])
             return True
 
         return False
@@ -295,19 +296,19 @@ class BaseAgent:
 
         if len(command_parts) == 1:
             self.ui.status_message(
-                title="Current Model",
+                title=UI_MESSAGES["titles"]["current_model"],
                 message=self.model_name,
             )
             return
 
         if command_parts[1] == "change":
             if len(command_parts) < 3:
-                self.ui.error("Please specify a model to change to.")
+                self.ui.error(UI_MESSAGES["errors"]["specify_model"])
                 return
 
             new_model = command_parts[2]
             self.ui.status_message(
-                title="Change Model",
+                title=UI_MESSAGES["titles"]["change_model"],
                 message=f"Changing model to {new_model}",
             )
             self.model_name = new_model
@@ -322,7 +323,7 @@ class BaseAgent:
             self.agent = agent
             return
 
-        self.ui.error("Unknown model command. Type /help for instructions.")
+        self.ui.error(UI_MESSAGES["errors"]["unknown_model_command"])
 
     def invoke(
         self,
@@ -376,7 +377,7 @@ class BaseAgent:
         )
 
         if raw_response is None:
-            return "[ERROR] Agent execution failed."
+            return UI_MESSAGES["errors"]["agent_execution_failed"]
 
         if intermediary_chunks and not quiet:
             for chunk in raw_response.get("messages", []):
@@ -408,7 +409,7 @@ class BaseAgent:
             and hasattr(messages[-1], "content")
         ):
             return messages[-1].content.strip()
-        return "[ERROR] Agent did not return any messages."
+        return UI_MESSAGES["errors"]["no_messages_returned"]
 
     def _remove_thinking_block(self, content: str) -> str:
         """Remove thinking block from response content."""

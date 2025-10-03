@@ -1,5 +1,6 @@
 from app.src.embeddings.db_client import DataBaseClient
 from app.src.core.ui import default_ui
+from app.utils.ui_messages import UI_MESSAGES
 import os
 
 
@@ -9,12 +10,12 @@ def handle_embed_request(*args):
 
     if db_client is None:
         default_ui.error(
-            "Database client is not initialized. There might be an issue with your embeddings config."
+            UI_MESSAGES["errors"]["db_not_initialized"]
         )
         return
 
     if len(args) < 2:
-        default_ui.error("Usage: /embed <directory_path> <collection_name>")
+        default_ui.error(UI_MESSAGES["usage"]["embed"])
         return
 
     directory_path = args[0]
@@ -32,20 +33,20 @@ def handle_index_request(*args):
 
     if db_client is None:
         default_ui.error(
-            "Database client is not initialized. There might be an issue with your embeddings config."
+            UI_MESSAGES["errors"]["db_not_initialized"]
         )
         return
 
     if len(args) < 1:
-        default_ui.error("Usage: /index <collection_name>")
+        default_ui.error(UI_MESSAGES["usage"]["index"])
         return
 
     collection_name = args[0]
 
     db_client.index_collection(collection_name)
     default_ui.status_message(
-        title="Info",
-        message=f"Collection '{collection_name}' is now indexed.",
+        title=UI_MESSAGES["titles"]["info"],
+        message=UI_MESSAGES["success"]["collection_indexed"].format(collection_name),
         style="success",
     )
 
@@ -56,20 +57,20 @@ def handle_unindex_request(*args):
 
     if db_client is None:
         default_ui.error(
-            "Database client is not initialized. There might be an issue with your embeddings config."
+            UI_MESSAGES["errors"]["db_not_initialized"]
         )
         return
 
     if len(args) < 1:
-        default_ui.error("Usage: /unindex <collection_name>")
+        default_ui.error(UI_MESSAGES["usage"]["unindex"])
         return
 
     collection_name = args[0]
 
     db_client.unindex_collection(collection_name)
     default_ui.status_message(
-        title="Info",
-        message=f"Collection '{collection_name}' is now unindexed.",
+        title=UI_MESSAGES["titles"]["info"],
+        message=UI_MESSAGES["success"]["collection_unindexed"].format(collection_name),
         style="success",
     )
 
@@ -83,7 +84,7 @@ def handle_list_command(*args):
     
     if db_client is None:
         default_ui.error(
-            "Database client is not initialized. There might be an issue with your embeddings config."
+            UI_MESSAGES["errors"]["db_not_initialized"]
         )
         return
     
@@ -95,14 +96,14 @@ def handle_delete_command(*args):
     db_client = DataBaseClient.get_instance()
     
     if len(args) < 1:
-        default_ui.error("Usage: /delete <collection_name>")
+        default_ui.error(UI_MESSAGES["usage"]["delete"])
         return
     
     collection_name = args[0]
     
     if db_client is None:
         default_ui.error(
-            "Database client is not initialized. There might be an issue with your embeddings config."
+            UI_MESSAGES["errors"]["db_not_initialized"]
         )
         return
     
@@ -115,7 +116,7 @@ def handle_purge_command():
     
     if db_client is None:
         default_ui.error(
-            "Database client is not initialized. There might be an issue with your embeddings config."
+            UI_MESSAGES["errors"]["db_not_initialized"]
         )
         return
     

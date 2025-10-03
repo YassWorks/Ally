@@ -66,7 +66,7 @@ class CodeGenUnit(BaseUnit):
             self.ui.session_interrupted()
             return True
         except Exception as e:
-            self.ui.error(f"Workflow execution failed: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["workflow_execution_failed"].format(e))
             return False
 
     def _execute_generation_workflow(
@@ -171,7 +171,7 @@ class CodeGenUnit(BaseUnit):
 
         self.ui.status_message(
             title=UI_MESSAGES["titles"]["generation_starting"],
-            message="The CodeGen Agent is now generating code based on the context provided.",
+            message=UI_MESSAGES["messages"]["generation_starting_detail"],
             style="success",
         )
 
@@ -229,7 +229,7 @@ class CodeGenUnit(BaseUnit):
         if usr_answer in ["yes", "y", "yeah"]:
             self.ui.status_message(
                 title=UI_MESSAGES["titles"]["brainstormer_ready"],
-                message="Type '/exit' or press Ctrl+C to continue to code generation",
+                message=UI_MESSAGES["messages"]["brainstormer_ready_detail"],
                 style="accent",
             )
 
@@ -243,7 +243,7 @@ class CodeGenUnit(BaseUnit):
 
             if not exited_safely:
                 if self.ui.confirm(
-                    "Something went wrong during the brainstorming process. Do you wish to continue anyway?",
+                    UI_MESSAGES["confirmations"]["continue_anyway"],
                     default=True,
                 ):
                     return True
@@ -262,7 +262,7 @@ class CodeGenUnit(BaseUnit):
 
         self.ui.status_message(
             title=UI_MESSAGES["titles"]["codegen_ready"],
-            message="Starting interactive coding session with the coding agent...",
+            message=UI_MESSAGES["messages"]["codegen_ready_detail"],
             style="accent",
         )
 
@@ -272,7 +272,7 @@ class CodeGenUnit(BaseUnit):
         )
 
         if not exited_safely:
-            self.ui.error("The interactive coding session did not exit safely")
+            self.ui.error(UI_MESSAGES["errors"]["coding_session_failed"])
             return False
 
         return True
@@ -322,6 +322,6 @@ class CodeGenUnit(BaseUnit):
                 web_searcher=self.agents["web_searcher"],
             )
         except Exception as e:
-            error_msg = f"Failed to integrate web search capabilities: {e}"
+            error_msg = UI_MESSAGES["errors"]["failed_integrate_web_search"].format(e)
             self.ui.error(error_msg)
             raise RuntimeError(error_msg)
