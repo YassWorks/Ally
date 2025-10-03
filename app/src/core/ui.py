@@ -1,8 +1,10 @@
 import os
 from rich.console import Console
 from app.utils.constants import CONSOLE_WIDTH
+from prompt_toolkit.shortcuts import prompt
+from prompt_toolkit.key_binding import KeyBindings
 from rich.markdown import Markdown
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Confirm
 from rich.panel import Panel
 from rich.text import Text
 from typing import Any
@@ -157,21 +159,28 @@ class AgentUI:
             )
             self.console.print(panel)
 
-            kwargs = {"console": self.console, "show_default": False}
-            if default is not None:
-                kwargs["default"] = default
-            if password:
-                kwargs["password"] = True
-            if choices:
-                kwargs["choices"] = choices
+            # using prompt-toolkit for multiline support
+            key_binds = KeyBindings()
 
-            return Prompt.ask(">>", **kwargs)
+            @key_binds.add("c-n")
+            def _(event):
+                event.current_buffer.insert_text("\n")
+
+            @key_binds.add("enter")
+            def _(event):
+                event.current_buffer.validate_and_handle()
+
+            result = prompt(">> ", multiline=True, key_bindings=key_binds)
+            return result.strip() if result else (default or "")
+
+        except KeyboardInterrupt:
+            self.session_interrupted()
+            sys.exit(0)
         except Exception as e:
             self.error(str(e))
             return default or ""
 
     def confirm(self, message: str, default: bool = True) -> bool:
-        self.console.print()
         try:
             panel = Panel(message, border_style=self._style("warning"), padding=(0, 1))
             self.console.print(panel)

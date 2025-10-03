@@ -217,16 +217,7 @@ class CodeGenUnit(BaseUnit):
     ) -> bool:
         """Handle optional additional context gathering."""
 
-        usr_answer = self.ui.get_input(
-            message=UI_MESSAGES["add_context"],
-            default="y",
-            choices=["y", "n"],
-            show_choices=True,
-            cwd=working_dir,
-            model=getattr(self.agents["brainstormer"], "model_name", "Brainstormer"),
-        )
-
-        if usr_answer in ["yes", "y", "yeah"]:
+        if self.ui.confirm(UI_MESSAGES["add_context"]):
             self.ui.status_message(
                 title=UI_MESSAGES["titles"]["brainstormer_ready"],
                 message=UI_MESSAGES["messages"]["brainstormer_ready_detail"],
