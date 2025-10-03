@@ -27,7 +27,6 @@ class AgentUI:
         return THEME.get(color_key, THEME["text"])
 
     def logo(self, ascii_art: str):
-        self.console.print()
         lines = ascii_art.split("\n")
         for i, line in enumerate(lines):
             progress = i / max(len(lines) - 1, 1)
@@ -40,7 +39,6 @@ class AgentUI:
             self.console.print(text)
 
     def help(self, model_name: str = None):
-        self.console.print()
         help_content = UI_MESSAGES["help"]["content"].copy()
 
         if model_name:
@@ -58,8 +56,6 @@ class AgentUI:
         self.console.print(panel)
 
     def tool_call(self, tool_name: str, args: dict[str, Any]):
-        self.console.print()
-
         tool_name = UI_MESSAGES["tool"]["title"].format(tool_name)
         content_parts = [tool_name]
         if args:
@@ -90,13 +86,13 @@ class AgentUI:
         self.console.print(panel)
 
     def tool_output(self, tool_name: str, content: str):
-        self.console.print()
-
         tool_name = f"{tool_name}"
         if len(content) > 1000:
             content = content[:1000] + UI_MESSAGES["tool"]["truncated"]
 
-        markdown_content = f"{UI_MESSAGES['tool']['output_header']}\n```\n{content}\n```"
+        markdown_content = (
+            f"{UI_MESSAGES['tool']['output_header']}\n```\n{content}\n```"
+        )
 
         try:
             rendered_content = Markdown(markdown_content)
@@ -109,7 +105,6 @@ class AgentUI:
         self.console.print(rendered_content)
 
     def ai_response(self, content: str):
-        self.console.print()
         try:
             rendered_content = Markdown(content)
         except:
@@ -124,7 +119,6 @@ class AgentUI:
         self.console.print(panel)
 
     def status_message(self, title: str, message: str, style: str = "primary"):
-        self.console.print()
         panel = Panel(
             message,
             title=f"[bold]{title}[/bold]",
@@ -137,13 +131,9 @@ class AgentUI:
         self,
         message: str = None,
         default: str | None = None,
-        password: bool = False,
-        choices: list[str] | None = None,
-        show_choices: bool = False,
         cwd: str | None = None,
         model: str | None = None,
     ) -> str:
-        self.console.print()
         try:
             info_parts = []
             if cwd:
@@ -253,7 +243,6 @@ class AgentUI:
             sys.stdout.flush()
 
     def goodbye(self):
-        self.console.print()
         self.status_message(
             title=UI_MESSAGES["titles"]["goodbye"],
             message=UI_MESSAGES["messages"]["goodbye"],
@@ -261,7 +250,6 @@ class AgentUI:
         )
 
     def history_cleared(self):
-        self.console.print()
         self.status_message(
             title=UI_MESSAGES["titles"]["history_cleared"],
             message=UI_MESSAGES["messages"]["history_cleared"],
@@ -269,7 +257,6 @@ class AgentUI:
         )
 
     def session_interrupted(self):
-        self.console.print()
         self.status_message(
             title=UI_MESSAGES["titles"]["interrupted"],
             message=UI_MESSAGES["messages"]["session_interrupted"],
@@ -277,7 +264,6 @@ class AgentUI:
         )
 
     def recursion_warning(self):
-        self.console.print()
         panel = Panel(
             UI_MESSAGES["messages"]["recursion_warning"],
             title=f"[bold]{UI_MESSAGES['titles']['extended_session']}[/bold]",
@@ -287,7 +273,6 @@ class AgentUI:
         self.console.print(panel)
 
     def warning(self, warning_msg: str):
-        self.console.print()
         self.status_message(
             title=UI_MESSAGES["titles"]["warning"],
             message=f"{warning_msg}",
@@ -295,7 +280,6 @@ class AgentUI:
         )
 
     def error(self, error_msg: str):
-        self.console.print()
         self.status_message(
             title=UI_MESSAGES["titles"]["error"],
             message=f"{error_msg}",
