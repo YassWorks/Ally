@@ -48,9 +48,10 @@ class AgentUI:
             help_content.append(UI_MESSAGES["help"]["model_suffix"].format(model_name))
 
         help_content.append(UI_MESSAGES["help"]["footer"])
+        markdown_content = Markdown("\n".join(help_content))
 
         panel = Panel(
-            "\n".join(help_content),
+            markdown_content,
             title=f"[bold]{UI_MESSAGES['titles']['help']}[/bold]",
             border_style=self._style("muted"),
             padding=(1, 2),
