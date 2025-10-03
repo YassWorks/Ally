@@ -49,12 +49,23 @@ class DataBaseClient:
                     import sys
 
                     # in case the user didn't setup RAG from the beginning
-                    # we lazy-install chromadb when needed
-                    # same for docling in scraper.py
-                    # which will trigger as soon as the user tries to use RAG features
+                    # we lazy-install chromadb & docling when needed
                     subprocess.check_call(
                         [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
                     )
+                    subprocess.check_call(
+                        [
+                            sys.executable,
+                            "-m",
+                            "pip",
+                            "install",
+                            "docling",
+                            "--extra-index-url",
+                            "https://download.pytorch.org/whl/cpu",  # CPU-only PyTorch for smaller download
+                            "-qqq",
+                        ]
+                    )
+                    
                 except Exception as e:
                     default_ui.error(
                         f"Failed to install required packages. Please install them manually. Error: {e}"

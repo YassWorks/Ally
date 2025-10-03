@@ -108,6 +108,8 @@ def scrape_file(file_path: str):
             import subprocess
             import sys
 
+            # docling should be installed at this point.
+            # but let's keep this as a fallback
             subprocess.check_call(
                 [
                     sys.executable,
