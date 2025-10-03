@@ -65,7 +65,7 @@ class HFEmbedder:
         import transformers.utils.logging as hf_logging
         
         hf_logging.set_verbosity_error()
-        if not _DISPLAYED_DOWNLOADING_MESSAGE:
+        if not _DISPLAYED_DOWNLOADING_MESSAGE and not EMBEDDING_MODEL_PATH.exists():
             with default_ui.console.status("Downloading embedding model..."):
                 tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
                 model = AutoModel.from_pretrained(self.model_name, cache_dir=EMBEDDING_MODEL_PATH)
