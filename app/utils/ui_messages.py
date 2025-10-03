@@ -129,18 +129,18 @@ UI_MESSAGES = {
     # Help Content
     "help": {
         "content": [
-            "Chat with your AI assistant",
-            "",
-            "Commands:",
-            "  /quit, /exit, /q  → Exit",
-            "  /clear            → Clear history*",
-            "  /cls              → Clear screen",
-            "  /model <change>   → Show/change AI model",
-            "  /project          → Start project generation workflow",
-            "  /help, /h         → Show this help message",
+            "Use `Ctrl+n` to enter a new line and `Enter` to submit your message.",
+            "| Command | Description |",
+            "|---------|-------------|",
+            "| `/quit`, `/exit`, `/q` | Exit |",
+            "| `/clear` | Clear history* |",
+            "| `/cls` | Clear screen |",
+            "| `/model (change)` | Show/change AI model |",
+            "| `/project` | Start project generation workflow |",
+            "| `/help`, `/h` | Show this help message |",
         ],
         "model_suffix": "Model: [bold]{}[/bold]",
-        "footer": "\n[italic][dim](*Not recommended during long running tasks. Use at your own risk.)[/dim][/italic]",
+        "footer": "\n> **Not recommended during long running tasks. Use at your own risk.*",
     },
     
     # Tool Messages
