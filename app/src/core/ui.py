@@ -193,7 +193,9 @@ class AgentUI:
             sys.exit(0)
         except Exception:
             self.warning(
-                UI_MESSAGES["warnings"]["failed_confirm"].format('y' if default else 'n')
+                UI_MESSAGES["warnings"]["failed_confirm"].format(
+                    "y" if default else "n"
+                )
             )
             return default
 
