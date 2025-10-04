@@ -12,7 +12,7 @@ class ArgsParser(argparse.ArgumentParser):
         self.add_argument(
             "--create-project",
             action="store_true",
-            help="Initialize new project workspace",
+            help="Initialize a new project generation workflow",
         )
         self.add_argument(
             "--allow-all-tools",
