@@ -28,6 +28,12 @@ A general-purpose agent that can:
 
 Ally can take your files, embed them into its knowledge base, and use them to respond to your prompts with a high level of accuracy.
 
+Currently, Ally's embedding functions can use:
+
+- Hugging Face models (locally)
+- Ollama Embedding models (locally)
+- More on the way.
+
 **RAG Tutorial:**
 
 1. Setup the `config.json` as shown below with the appropriate embedding settings.
@@ -117,8 +123,8 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
         "web_searcher": null
     },
 
-    "embedding_provider": null,  // example: "hf"
-    "embedding_model": null,     // example: "sentence-transformers/all-MiniLM-L6-v2"
+    "embedding_provider": null,  // example: "hf" or "ollama"
+    "embedding_model": null,     // example: "sentence-transformers/all-MiniLM-L6-v2" or "all-minilm"
 }
 ```
 
