@@ -32,10 +32,10 @@ try:
     with open(config_path) as f:
         config = json.load(f)
 except FileNotFoundError:
-    default_ui.error("Configuration file 'ally_config.json' not found.")
+    default_ui.error("Configuration file 'config.json' not found.")
     sys.exit(1)
 except json.JSONDecodeError:
-    default_ui.error("Configuration file 'ally_config.json' is not a valid JSON.")
+    default_ui.error("Configuration file 'config.json' is not a valid JSON.")
     sys.exit(1)
 except Exception as e:
     default_ui.error(f"An unexpected error occurred: {e}")
