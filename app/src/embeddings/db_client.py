@@ -17,9 +17,7 @@ if "ALLY_DATABASE_DIR" in os.environ:
     DB_PATH = Path(os.getenv("ALLY_DATABASE_DIR"))
     if not validate_dir_name(str(DB_PATH)):
         DB_PATH = ""
-        default_ui.warning(
-            UI_MESSAGES["warnings"]["invalid_db_path"]
-        )
+        default_ui.warning(UI_MESSAGES["warnings"]["invalid_db_path"])
 
 if not DB_PATH:
     DB_PATH = DEFAULT_PATHS["database"]
@@ -66,7 +64,7 @@ class DataBaseClient:
                             "-qqq",
                         ]
                     )
-                    
+
                 except Exception as e:
                     default_ui.error(
                         UI_MESSAGES["errors"]["failed_install_packages"].format(e)
@@ -100,7 +98,9 @@ class DataBaseClient:
         try:
             DB_PATH.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            default_ui.error(UI_MESSAGES["errors"]["failed_create_db_directory"].format(e))
+            default_ui.error(
+                UI_MESSAGES["errors"]["failed_create_db_directory"].format(e)
+            )
             raise
 
     def _load_indexed_collections(self) -> dict[str, bool]:
@@ -234,7 +234,9 @@ class DataBaseClient:
         """Store all documents from a directory into the database."""
 
         if not validate_dir_name(directory_path):
-            default_ui.error(UI_MESSAGES["errors"]["invalid_directory_path"].format(directory_path))
+            default_ui.error(
+                UI_MESSAGES["errors"]["invalid_directory_path"].format(directory_path)
+            )
             return
 
         # Normalize the path
@@ -255,13 +257,17 @@ class DataBaseClient:
                     self.store_document(directory_path, collection_name)
 
             except ScrapingFailedError:
-                default_ui.error(UI_MESSAGES["errors"]["failed_scrape"].format(directory_path))
+                default_ui.error(
+                    UI_MESSAGES["errors"]["failed_scrape"].format(directory_path)
+                )
 
             except:
                 raise
 
         if not os.path.exists(directory_path):
-            default_ui.error(UI_MESSAGES["errors"]["directory_not_exist"].format(directory_path))
+            default_ui.error(
+                UI_MESSAGES["errors"]["directory_not_exist"].format(directory_path)
+            )
             return
 
         for root, _, files in os.walk(directory_path):
@@ -272,20 +278,22 @@ class DataBaseClient:
                         self.store_document(file_path, collection_name)
 
                 except ScrapingFailedError:
-                    default_ui.error(UI_MESSAGES["errors"]["failed_scrape"].format(file_path))
+                    default_ui.error(
+                        UI_MESSAGES["errors"]["failed_scrape"].format(file_path)
+                    )
 
                 except:
                     raise
 
         default_ui.status_message(
             title=UI_MESSAGES["titles"]["info"],
-            message=UI_MESSAGES["success"]["documents_embedded"].format(directory_path, collection_name),
+            message=UI_MESSAGES["success"]["documents_embedded"].format(
+                directory_path, collection_name
+            ),
             style="success",
         )
 
-    def delete_collection(
-        self, collection_name: str
-    ) -> None:
+    def delete_collection(self, collection_name: str) -> None:
         """Delete a collection from the database."""
         import chromadb.errors as chromadb_errors
 
@@ -302,8 +310,18 @@ class DataBaseClient:
                 del self.indexed_collections[collection_name]
                 self._save_indexed_collections()
 
+                default_ui.status_message(
+                    title=UI_MESSAGES["titles"]["collection_deleted"],
+                    message=UI_MESSAGES["messages"]["collection_deleted"].format(
+                        collection_name
+                    ),
+                    style="success",
+                )
+
         except chromadb_errors.NotFoundError:
-            default_ui.error(UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name))
+            default_ui.error(
+                UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name)
+            )
 
         except Exception:
             raise DBAccessError()
@@ -317,11 +335,12 @@ class DataBaseClient:
                 f"• {col.name}: {'Indexed' if self.indexed_collections.get(col.name, False) else 'Unindexed'}"
                 for col in collections
             ]
-            listed_collections = (
-                UI_MESSAGES["messages"]["collections_header"] + "\n" + "─" * 22 + "\n" + "\n".join(lines)
-            )
+            listed_collections = "\n".join(lines) if lines else "No collections found."
+
             default_ui.status_message(
-                title=UI_MESSAGES["titles"]["collections"], message=listed_collections, style="success"
+                title=UI_MESSAGES["titles"]["collections"],
+                message=listed_collections,
+                style="success",
             )
 
         except Exception:
@@ -342,6 +361,7 @@ class DataBaseClient:
             # Clear indexed collections and save
             self.indexed_collections.clear()
             self._save_indexed_collections()
+
             default_ui.status_message(
                 title=UI_MESSAGES["titles"]["database_reset"],
                 message=UI_MESSAGES["messages"]["all_collections_deleted"],
@@ -369,7 +389,7 @@ class DataBaseClient:
 
         # merging and sorting the results by distance
         candidates.sort(key=lambda x: x[2])
-        query_results = [(doc, meta) for doc, meta, _ in candidates[:n_results]]
+        query_results = [(doc, meta) for doc, meta, _ in candidates[: n_results + 1]]
 
         return query_results
 
@@ -383,7 +403,9 @@ class DataBaseClient:
             collection = self.db_client.get_collection(name=collection_name)
 
         except chromadb_errors.NotFoundError:
-            default_ui.error(UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name))
+            default_ui.error(
+                UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name)
+            )
             return []
 
         except Exception:
