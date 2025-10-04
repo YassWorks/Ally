@@ -1,20 +1,20 @@
 # Ally
 
-Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects.
+Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
 
-I built Ally to be a fully local agentic system using **Ollama**, but it also works seamlessly with:
+Ally was built a fully local agentic system using **[Ollama](https://ollama.com/download)**, but it also works seamlessly with:
 
 * OpenAI
 * Anthropic
 * Google GenAI
 * Cerebras
-* *(with more integrations on the way!)*
+* *(more integrations on the way!)*
 
-This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow, such as in scientific research or law firms.
+This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow.
 
 ## Key Features
 
-#### Default Chat Interface
+### Default Chat Interface
 
 A general-purpose agent that can:
 
@@ -24,7 +24,33 @@ A general-purpose agent that can:
 
   ***Note:*** Tools always ask for your permission before executing.
 
-#### Full Coding Project Generation Workflow
+### RAG
+
+Ally can take your files, embed them into its knowledge base, and use them to respond to your prompts with a high level of accuracy.
+
+**RAG Tutorial:**
+
+1. Setup the `config.json` as shown below with the appropriate embedding settings.
+
+2. Provide the path to the file or folder whose contents should be embedded. As an alternative, you can launch Ally from that directory.
+
+3. Use `/embed <path> <collection_name>` or `/embed . <collection_name>` if already at the correct path.
+
+4. Start the RAG session with `/start_rag`
+
+5. End the RAG session with `/stop_rag`
+
+**Note** that Ally will not use any external data to answer your prompts during RAG sessions unless explicitly given permission to.
+
+**Additional commands:**
+
+- Edit indexed collections with `/index <collection_name>` and `/unindex <collection_name>.` ***Note:*** newly created collections are already indexed.
+
+- View all collections with `/list`
+
+- Reset the database with `/purge` or delete a specific collection with `/delete <collection_name>`
+
+### Full Coding Project Generation Workflow (Beta)
 
 * Use the `--create-project` flag or the `/project` command in the default chat interface.
 
@@ -36,9 +62,15 @@ A general-purpose agent that can:
 * Runs the ***Codegen Agent*** using the generated `.md` files.
 * Opens an interactive chat with the ***Codegen Agent*** to refine or extend the project.
 
-## Tutorial
+This workflow is still in its early stages.
 
-#### Prerequesites: simply [Python](https://www.python.org/)
+## Setup
+
+### Prerequesites:
+
+- [Python](https://www.python.org/)
+- [Git](https://git-scm.com/downloads) (or download the source code from this repo)
+- [Ollama](https://ollama.com/download)
 
 ### 1. Clone the Repo
 
@@ -48,9 +80,11 @@ In your chosen installation folder, open a terminal window and run:
 git clone https://github.com/YassWorks/Ally.git
 ```
 
-### 2. Configure `ally_config.json`
+### 2. Configure `config.json`
 
-This file (located at `Ally/`) controls Ally's main settings and integrations. Example configuration:
+This file (located at `Ally/`) controls Ally's main settings and integrations. 
+
+**Example configuration:**
 
 ```json
 {
@@ -76,12 +110,15 @@ This file (located at `Ally/`) controls Ally's main settings and integrations. E
         "brainstormer": 1,
         "web_searcher": 0
     },
-    "system_prompts": {  // leave as-is to use Ally's defaults
+    "system_prompts": {  // (recommended) leave as-is to use Ally's defaults
         "general": null,
         "code_gen": null,
         "brainstormer": null,
         "web_searcher": null
-    }
+    },
+
+    "embedding_provider": null,  // example: "hf"
+    "embedding_model": null,     // example: "sentence-transformers/all-MiniLM-L6-v2"
 }
 ```
 
@@ -91,12 +128,14 @@ This file stores your API keys.
 
 ```
 # Inference providers (only include those you need)
+
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 GOOGLE_GEN_AI_API_KEY=your_google_gen_ai_api_key_here
 CEREBRAS_API_KEY=your_api_key_here
 
-# Google Search API (if omitted, search tools will be limited)
+# Google Search API (if omitted, online search tools will be limited)
+
 GOOGLE_SEARCH_API_KEY=your_google_api_key_here
 SEARCH_ENGINE_ID=your_search_engine_id_here
 ```
@@ -107,7 +146,7 @@ Steps:
 2. Copy the contents above (or from `.env.example`) into `.env`.
 3. Fill in your API keys and IDs.
 
-### 4. Run setup
+### 4. Run setup executable
 
 Depending on your OS choose either `setup.cmd` (Windows) or `setup.sh` (Linux/Mac)
 
@@ -119,4 +158,35 @@ Use `ally -h` for more help.
 
 ## Technical notes
 
-You can set the environment variable `ALLY_HISTORY_DIR` to control where Ally stores its history.
+1. Edit the following environment variable if needed:  
+
+| Environment Variable        | Purpose                                                      |
+|-----------------------------|--------------------------------------------------------------|
+| `ALLY_HISTORY_DIR`          | Controls where Ally stores its history.                      |
+| `ALLY_DATABASE_DIR`         | Controls where Ally stores its database.                     |
+| `ALLY_EMBEDDING_MODELS_DIR` | Controls where Ally stores its embedding models (Hugging Face). |
+| `ALLY_PARSING_MODELS_DIR`   | Controls where Ally stores its parsing models used by Docling. |
+
+Defaults are:
+```
+Windows:
+%LOCALAPPDATA%\Ally\...
+
+Linux & MacOS:
+~/.local/share/Ally/...
+```
+
+2. RAG-related tools used by Ally are large in size and are therefore downloaded only after RAG settings are enabled in the config.json file. As a result, Ally will perform additional downloads the next time it is launched following these configuration changes.
+
+3. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID.
+
+4. Embedding and scraping files that require OCR (such as PDFs and DOCX) currently use a CPU-only PyTorch installation. You can modify the configuration to utilize a GPU if desired, though this is typically only necessary for processing very large files.
+
+## License
+
+Apache-2.0
+
+---
+Issues are always welcome 💌
+
+Contact me via email to discuss contributions or collaborations on other projects if you liked my work!
