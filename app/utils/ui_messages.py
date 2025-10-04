@@ -38,6 +38,7 @@ UI_MESSAGES = {
         "rag_disabled": "RAG Disabled",
         "info": "Info",
         "collections": "Collections",
+        "collection_deleted": "Collection Deleted",
         "database_reset": "Database Reset",
     },
     
@@ -57,6 +58,7 @@ UI_MESSAGES = {
         "rag_enabled": "Retrieval-Augmented Generation is now active.",
         "rag_disabled": "Retrieval-Augmented Generation is now inactive.",
         "collections_header": "Collections available:",
+        "collection_deleted": "Collection '{}' has been deleted.",
         "all_collections_deleted": "All collections have been deleted.",
     },
     
@@ -139,7 +141,7 @@ UI_MESSAGES = {
             "| `/project` | Start project generation workflow |",
             "| `/help`, `/h` | Show this help message |",
         ],
-        "model_suffix": "Model: [bold]{}[/bold]",
+        "model_suffix": "Model: *{}*",
         "footer": "\n> **Not recommended during long running tasks. Use at your own risk.*",
     },
     
