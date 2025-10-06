@@ -1,0 +1,71 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv
+.python-version
+*.egg-info
+
+# Development files
+.env*
+
+# Documentation
+README.md
+LICENSE.md
+
+# Build tools and dependencies
+pyproject.toml
+uv.lock
+
+# Logs
+logs/
+*.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Development directories
+canvas/
+bin/
+
+# Configuration files
+.env.example
+
+# Setup scripts
+setup.cmd
+setup.sh
+
+# Python specific
+.pytest_cache
+.mypy_cache
+.tox
+.cache
+
+# Temporary files
+.tmp
+.temp
+*test*
+
+# Docker files
+Dockerfile
+docker-compose.yml
+compose.yml
+.dockerignore

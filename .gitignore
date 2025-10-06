@@ -5,8 +5,6 @@ __pycache__/
 
 canvas/
 
-Dockerfile
 compose.yml
-.dockerignore
 
 bin/
