@@ -1,5 +1,14 @@
 # Ally
 
+<div align="center">
+
+<img src="https://private-user-images.githubusercontent.com/166346524/497932073-8709e1c8-bd2c-47a6-bc68-0402c7671451.jpg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTk3NzI5MTEsIm5iZiI6MTc1OTc3MjYxMSwicGF0aCI6Ii8xNjYzNDY1MjQvNDk3OTMyMDczLTg3MDllMWM4LWJkMmMtNDdhNi1iYzY4LTA0MDJjNzY3MTQ1MS5qcGc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDA2JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAwNlQxNzQzMzFaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT05ZDc5MzZjODliZjZmZWNjNjhlMGUxZDQxMTY1M2ZjMWVmMmM0ZmI4ZDAyOTBiZTlhMzE2MzE2NmY4YWNjMjc2JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.T0XbC_QDn4Kkwv47ep4mZdJ_qe5ITOK6Z5XLfBk5NFE">
+
+![GitHub Repo stars](https://img.shields.io/github/stars/YassWorks/Ally?style=social)
+![GitHub forks](https://img.shields.io/github/forks/YassWorks/Ally?style=social)
+
+</div>
+
 Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
 
 Ally was built a fully local agentic system using **[Ollama](https://ollama.com/download)**, but it also works seamlessly with:
