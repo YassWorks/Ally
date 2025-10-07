@@ -88,6 +88,56 @@ This workflow is still in its early stages.
 
 ## Setup
 
+You have 2 options: Via Docker or locally on your machine.
+
+### **1. Docker**
+
+Open a terminal and create a `.env` file (or copy `.env.example`)
+```
+# Inference providers (only include those you need)
+
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GOOGLE_GEN_AI_API_KEY=your_google_gen_ai_api_key_here
+CEREBRAS_API_KEY=your_api_key_here
+
+# Google Search API (if omitted, online search tools will be limited)
+
+GOOGLE_SEARCH_API_KEY=your_google_api_key_here
+SEARCH_ENGINE_ID=your_search_engine_id_here
+```
+
+Open a terminal in that directory and type
+```bash
+# Pull the Ally image:
+docker pull yassw0rks/ally:latest
+
+# Start the container for the first time
+docker run -it --env-file .env --name ally yassw0rks/ally:latest
+
+# You could also assign a volume:
+# Replace <YOUR_LOCAL_DIR> with a path on your machine, e.g., $(pwd)/data
+docker run -it \
+  --env-file .env \
+  -v <YOUR_LOCAL_DIR>:/data \
+  --name ally \
+  yassw0rks/ally:latest
+```
+
+Next time you want to jump back in:
+```bash
+# Check if container already running
+docker ps
+
+# If it is running
+docker exec -it ally /bin/bash
+
+# If it's stopped
+docker start -ai ally
+```
+
+### **2. Local**
+
 ### Prerequesites:
 
 - [Python](https://www.python.org/)
