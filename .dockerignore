@@ -18,6 +18,7 @@ __pycache__
 # Documentation
 README.md
 LICENSE.md
+LICENSE
 
 # Build tools and dependencies
 pyproject.toml
