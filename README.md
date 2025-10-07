@@ -137,6 +137,8 @@ docker exec -it ally /bin/bash
 docker start -ai ally
 ```
 
+**Note:** this image does **not** contain Ollama. But it can easily be setup once inside the container.
+
 ### **2. Local**
 
 ### Prerequesites:
