@@ -16,6 +16,7 @@
 
 </div>
 
+
 Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
 
 Ally was built a fully local agentic system using **[Ollama](https://ollama.com/download)**, but it also works seamlessly with:
