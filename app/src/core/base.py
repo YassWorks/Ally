@@ -126,7 +126,7 @@ class BaseAgent:
                 rag_temp_tool_result = None
                 query_results = None
                 extra_rag_context = ""
-                
+
                 if self.rag:
                     self.db_client = DataBaseClient.get_instance()
                     if self.db_client is None:
@@ -142,7 +142,7 @@ class BaseAgent:
                             extra_rag_context += "\n".join(
                                 [f"- {doc}" for doc, _ in query_results]
                             )
-                            
+
                 if query_results:
                     self.latest_refs = {
                         meta["file_path"]
@@ -183,9 +183,7 @@ class BaseAgent:
                 continue
 
             except lg_errors.GraphRecursionError:
-                self.ui.warning(
-                    UI_MESSAGES["warnings"]["recursion_limit_reached"]
-                )
+                self.ui.warning(UI_MESSAGES["warnings"]["recursion_limit_reached"])
                 if self.ui.confirm(
                     UI_MESSAGES["confirmations"]["continue_from_left_off"], default=True
                 ):
@@ -277,7 +275,9 @@ class BaseAgent:
                     self.rag = False
 
                 except Exception as e:
-                    self.ui.error(UI_MESSAGES["errors"]["command_failed"].format(cmd, e))
+                    self.ui.error(
+                        UI_MESSAGES["errors"]["command_failed"].format(cmd, e)
+                    )
 
                 finally:
                     return True
@@ -316,6 +316,7 @@ class BaseAgent:
                 system_prompt=self.system_prompt,
                 temperature=self.temperature,
                 include_graph=True,
+                provider=self.provider,
             )
             self.graph = graph
             self.agent = agent

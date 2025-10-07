@@ -11,7 +11,6 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
 from pathlib import Path
 import sqlite3
-import sys
 import os
 
 
@@ -49,64 +48,58 @@ def create_base_agent(
     """
     llm = None
 
-    try:
-        match provider.lower():
-            case "cerebras":
-                from langchain_cerebras import ChatCerebras
+    match provider.lower():
+        case "cerebras":
+            from langchain_cerebras import ChatCerebras
 
-                llm = ChatCerebras(
-                    model=model_name,
-                    temperature=temperature,
-                    timeout=None,
-                    max_retries=5,
-                    api_key=api_key,
-                )
-            case "ollama":
-                from langchain_ollama import ChatOllama
+            llm = ChatCerebras(
+                model=model_name,
+                temperature=temperature,
+                timeout=None,
+                max_retries=5,
+                api_key=api_key,
+            )
+        case "ollama":
+            from langchain_ollama import ChatOllama
 
-                llm = ChatOllama(
-                    model=model_name,
-                    temperature=temperature,
-                    validate_model_on_init=True,
-                    reasoning=False,
-                )
-            case "google":
-                from langchain_google_genai import ChatGoogleGenerativeAI
+            llm = ChatOllama(
+                model=model_name,
+                temperature=temperature,
+                validate_model_on_init=True,
+                reasoning=False,
+            )
+        case "google":
+            from langchain_google_genai import ChatGoogleGenerativeAI
 
-                llm = ChatGoogleGenerativeAI(
-                    model=model_name,
-                    temperature=temperature,
-                    timeout=None,
-                    max_retries=5,
-                    google_api_key=api_key,
-                )
-            case "openai":
-                from langchain_openai import ChatOpenAI
+            llm = ChatGoogleGenerativeAI(
+                model=model_name,
+                temperature=temperature,
+                timeout=None,
+                max_retries=5,
+                google_api_key=api_key,
+            )
+        case "openai":
+            from langchain_openai import ChatOpenAI
 
-                llm = ChatOpenAI(
-                    model=model_name,
-                    temperature=temperature,
-                    timeout=None,
-                    max_retries=5,
-                    api_key=api_key,
-                )
-            case "anthropic":
-                from langchain_anthropic import ChatAnthropic
+            llm = ChatOpenAI(
+                model=model_name,
+                temperature=temperature,
+                timeout=None,
+                max_retries=5,
+                api_key=api_key,
+            )
+        case "anthropic":
+            from langchain_anthropic import ChatAnthropic
 
-                llm = ChatAnthropic(
-                    model=model_name,
-                    temperature=temperature,
-                    timeout=None,
-                    max_retries=5,
-                    api_key=api_key,
-                )
-            case _:
-                raise ValueError(f"Unsupported inference provider: {provider}")
-
-    except Exception as e:
-        ui = default_ui
-        ui.error(f"Failed to create LLM instance: {e}")
-        sys.exit(1)
+            llm = ChatAnthropic(
+                model=model_name,
+                temperature=temperature,
+                timeout=None,
+                max_retries=5,
+                api_key=api_key,
+            )
+        case _:
+            raise ValueError(f"Unsupported inference provider: {provider}")
 
     template = ChatPromptTemplate.from_messages(
         [
