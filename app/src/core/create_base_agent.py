@@ -105,6 +105,7 @@ def create_base_agent(
     except Exception as e:
         ui = default_ui
         ui.error(f"Failed to create LLM instance: {e}")
+        sys.exit(1)
 
     template = ChatPromptTemplate.from_messages(
         [
