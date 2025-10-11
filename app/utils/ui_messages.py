@@ -61,6 +61,8 @@ UI_MESSAGES = {
         "collections_header": "Collections available:",
         "collection_deleted": "Collection '{}' has been deleted.",
         "all_collections_deleted": "All collections have been deleted.",
+        "generating_response": "Generating response...",
+        "querying_knowledge_base": "Querying knowledge base...",
     },
     
     # Warnings

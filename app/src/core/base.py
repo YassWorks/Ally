@@ -130,53 +130,61 @@ class BaseAgent:
                 query_results = None
                 extra_rag_context = ""
 
-                if self.rag:
-                    self.db_client = DataBaseClient.get_instance()
-                    if self.db_client is None:
-                        self.ui.warning(
-                            UI_MESSAGES["warnings"]["rag_enabled_no_client"]
-                        )
-                    else:
-                        query_results = self.db_client.get_query_results(
-                            user_input, n_results=5
-                        )
-                        if query_results:
-                            extra_rag_context += PROMPTS["rag_results"]
-                            extra_rag_context += "\n".join(
-                                [f"- {doc}" for doc, _ in query_results]
-                            )
-
-                if query_results:
-                    self.latest_refs = {
-                        meta["file_path"]
-                        for _, meta in query_results
-                        if meta and "file_path" in meta
-                    }
-                else:
-                    self.latest_refs = set()
-
-                if extra_rag_context:
-                    rag_temp_tool_result = ToolMessage(
-                        content=extra_rag_context,
-                        tool_call_id=str(uuid.uuid4()),  # doesn't matter.
-                    )
-
-                last = None
-                for chunk in self.agent.stream(
-                    {
-                        "messages": (
-                            [("human", user_input), rag_temp_tool_result]
-                            if rag_temp_tool_result
-                            else [("human", user_input)]
-                        )
-                    },
-                    config=self.configuration,
+                with self.ui.console.status(
+                    UI_MESSAGES["messages"]["querying_knowledge_base"]
                 ):
-                    if stream:
-                        self._display_chunk(chunk)
-                    last = chunk
-                if not stream:
-                    self._display_chunk(last)
+                    if self.rag:
+                        self.db_client = DataBaseClient.get_instance()
+                        if self.db_client is None:
+                            self.ui.warning(
+                                UI_MESSAGES["warnings"]["rag_enabled_no_client"]
+                            )
+                        else:
+                            query_results = self.db_client.get_query_results(
+                                user_input, n_results=5
+                            )
+                            if query_results:
+                                extra_rag_context += PROMPTS["rag_results"]
+                                extra_rag_context += "\n".join(
+                                    [f"- {doc}" for doc, _ in query_results]
+                                )
+
+                    if query_results:
+                        self.latest_refs = {
+                            meta["file_path"]
+                            for _, meta in query_results
+                            if meta and "file_path" in meta
+                        }
+                    else:
+                        self.latest_refs = set()
+
+                    if extra_rag_context:
+                        rag_temp_tool_result = HumanMessage(
+                            content=extra_rag_context,
+                            additional_kwargs={
+                                "RAG": True,
+                            },
+                        )
+
+                with self.ui.console.status(
+                    UI_MESSAGES["messages"]["generating_response"]
+                ):
+                    last = None
+                    for chunk in self.agent.stream(
+                        {
+                            "messages": (
+                                [("human", user_input), rag_temp_tool_result]
+                                if rag_temp_tool_result
+                                else [("human", user_input)]
+                            )
+                        },
+                        config=self.configuration,
+                    ):
+                        if stream:
+                            self._display_chunk(chunk)
+                        last = chunk
+                    if not stream:
+                        self._display_chunk(last)
 
             except KeyboardInterrupt:
                 self.ui.goodbye()
