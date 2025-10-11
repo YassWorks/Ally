@@ -222,7 +222,7 @@ class CLI:
 
             self.general_agent.start_chat(
                 starting_msg=initial_prompt,
-                initial_prompt_suffix=wd_note,
+                recurring_prompt_suffix=wd_note,
                 show_welcome=False,
                 active_dir=active_dir,
                 stream=self.stream,
