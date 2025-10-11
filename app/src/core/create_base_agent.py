@@ -1,4 +1,4 @@
-from app.utils.constants import DEFAULT_PATHS
+from app.utils.constants import DEFAULT_PATHS, LAST_N_TURNS
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.core.ui import default_ui
 from langgraph.graph.state import CompiledStateGraph
@@ -20,7 +20,6 @@ class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
-LAST_N_TURNS = 10
 _PATH_ERROR_PRINTED = False
 
 

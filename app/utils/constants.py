@@ -6,6 +6,8 @@ RECURSION_LIMIT = 100
 CHUNK_OVERLAP = 200
 CHUNK_SIZE = 1000
 
+LAST_N_TURNS = 20
+
 THEME = {
     "primary": "#4566db",
     "secondary": "#9c79ee",
