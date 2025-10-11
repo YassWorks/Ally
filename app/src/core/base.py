@@ -3,7 +3,7 @@ from app.utils.constants import RECURSION_LIMIT, PROMPTS
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
 from app.src.embeddings.rag_errors import SetupFailedError, DBAccessError
-from langchain_core.messages import AIMessage, ToolMessage, BaseMessage
+from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMessage
 from app.src.embeddings.db_client import DataBaseClient
 from langgraph.graph.state import CompiledStateGraph
 from typing import Callable

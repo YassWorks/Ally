@@ -181,7 +181,9 @@ def build_llm_context(messages: list[BaseMessage]) -> list[BaseMessage]:
     last_human_idx = len(messages) - 1
 
     for i in range(len(messages) - 1, -1, -1):
-        if isinstance(messages[i], HumanMessage):
+        if isinstance(messages[i], HumanMessage) and not messages[
+            i
+        ].additional_kwargs.get("RAG", False):
             last_human_idx = i
             break
 
@@ -201,7 +203,9 @@ def clean_context_window(messages: list[BaseMessage]):
 
     for message in reversed(messages):
 
-        if isinstance(message, HumanMessage):
+        if isinstance(message, HumanMessage) and not message.additional_kwargs.get(
+            "RAG", False
+        ):
             new_context.append(message)
             turn_count += 1
             if turn_count > LAST_N_TURNS:
