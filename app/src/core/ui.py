@@ -298,9 +298,5 @@ class AgentUI:
             style="error",
         )
 
-    def tmp_msg(self, message: str, duration: int = 2):
-        with self.console.status(message):
-            time.sleep(duration)
-
 
 default_ui = AgentUI(Console(width=CONSOLE_WIDTH))
