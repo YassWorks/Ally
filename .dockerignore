@@ -70,3 +70,6 @@ Dockerfile
 docker-compose.yml
 compose.yml
 .dockerignore
+
+# Workflow files
+.github/
