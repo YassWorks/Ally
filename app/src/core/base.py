@@ -55,6 +55,9 @@ class BaseAgent:
         self.latest_refs: set[str] = set()
         self.db_client = None
 
+        # backup model name after failed `/model change` command
+        self.prev_model_name = None
+
     def _toggle_rag(self, enable: bool = True):
         """Enable or disable RAG features."""
         self.rag = enable
@@ -179,6 +182,32 @@ class BaseAgent:
                 self.ui.goodbye()
                 return True
 
+            except openai.NotFoundError:
+                self.ui.error(
+                    UI_MESSAGES["errors"]["model_not_found"].format(self.model_name)
+                )
+                if self.prev_model_name:
+                    self.ui.status_message(
+                        title=UI_MESSAGES["titles"]["reverting_model"],
+                        message=f"Reverting to previous model: {self.prev_model_name}",
+                    )
+                    self.model_name = self.prev_model_name
+                    self._handle_model_change(self.model_name)
+                else:
+                    if self.ui.confirm(
+                        UI_MESSAGES["confirmations"]["change_model"], default=True
+                    ):
+                        new_model = self.ui.get_input(
+                            message="Enter new model name: ",
+                        ).strip()
+                        if new_model:
+                            self.prev_model_name = self.model_name
+                            self.model_name = new_model
+                            self._handle_model_change(self.model_name)
+                    else:
+                        self.ui.goodbye()
+                        return True
+
             except PermissionDeniedException:
                 continue
 
@@ -288,6 +317,19 @@ class BaseAgent:
 
         return False
 
+    def _handle_model_change(self, new_model: str):
+        """Handle changing the model."""
+        graph, agent = self.get_agent(
+            model_name=new_model,
+            api_key=self.api_key,
+            system_prompt=self.system_prompt,
+            temperature=self.temperature,
+            include_graph=True,
+            provider=self.provider,
+        )
+        self.graph = graph
+        self.agent = agent
+
     def _handle_model_command(self, user_input: str):
         """Handle model-related commands."""
         command_parts = user_input.lower().split(" ")
@@ -309,17 +351,11 @@ class BaseAgent:
                 title=UI_MESSAGES["titles"]["change_model"],
                 message=f"Changing model to {new_model}",
             )
+
+            self.prev_model_name = self.model_name
             self.model_name = new_model
-            graph, agent = self.get_agent(
-                model_name=self.model_name,
-                api_key=self.api_key,
-                system_prompt=self.system_prompt,
-                temperature=self.temperature,
-                include_graph=True,
-                provider=self.provider,
-            )
-            self.graph = graph
-            self.agent = agent
+
+            self._handle_model_change(self.model_name)
             return
 
         self.ui.error(UI_MESSAGES["errors"]["unknown_model_command"])

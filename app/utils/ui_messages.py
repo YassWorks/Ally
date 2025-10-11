@@ -40,6 +40,7 @@ UI_MESSAGES = {
         "collections": "Collections",
         "collection_deleted": "Collection Deleted",
         "database_reset": "Database Reset",
+        "reverting_model": "Reverting Model",
     },
     
     # Messages
@@ -103,6 +104,7 @@ UI_MESSAGES = {
         "unknown_model_command": "Unknown model command. Type /help for instructions.",
         "agent_execution_failed": "[ERROR] Agent execution failed.",
         "no_messages_returned": "[ERROR] Agent did not return any messages.",
+        "model_not_found": "Model '{}' not found or not supported.",
     },
     
     # Confirmations
@@ -111,6 +113,7 @@ UI_MESSAGES = {
         "continue_anyway": "Something went wrong during the brainstorming process. Do you wish to continue anyway?",
         "delete_collection": "Are you sure you want to delete the collection '{}'?",
         "reset_database": "Are you sure you want to reset the database? This action cannot be undone.",
+        "change_model": "Do you want to enter in the name of a different model?",
     },
     
     # Usage Messages
