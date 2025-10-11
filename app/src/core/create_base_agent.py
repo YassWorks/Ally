@@ -71,6 +71,8 @@ def create_base_agent(
         case "google":
             from langchain_google_genai import ChatGoogleGenerativeAI
 
+            os.environ["GRPC_VERBOSITY"] = "NONE"  # Suppress gRPC warnings
+
             llm = ChatGoogleGenerativeAI(
                 model=model_name,
                 temperature=temperature,
