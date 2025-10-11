@@ -2,9 +2,9 @@ from app.src.core.ui import default_ui
 from app.utils.constants import DEFAULT_PATHS, REGULAR_FILE_EXTENSIONS
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import SetupFailedError, ScrapingFailedError
-import hashlib
-from pathlib import Path
 from charset_normalizer import from_path
+from pathlib import Path
+import hashlib
 import datetime
 import os
 
