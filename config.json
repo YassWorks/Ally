@@ -1,5 +1,5 @@
 {
-    "provider": "cerebras",
+    "provider": "google",
     "provider_per_model": {
         "general": null,
         "code_gen": null,
@@ -7,7 +7,7 @@
         "web_searcher": null
     },
 
-    "model": "qwen-3-32b",
+    "model": "gemini-2.5-flash",
     "models": {
         "general": null,
         "code_gen": null,
@@ -28,6 +28,6 @@
         "web_searcher": null
     },
 
-    "embedding_provider": null,
-    "embedding_model": null
+    "embedding_provider": "hf",
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
 }
