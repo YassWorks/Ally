@@ -13,6 +13,7 @@ from app.utils.ui_messages import UI_MESSAGES
 import time
 import sys
 
+
 if os.name == "nt":
     import msvcrt
 else:
@@ -30,8 +31,10 @@ class AgentUI:
 
     def logo(self, ascii_art: str):
         lines = ascii_art.split("\n")
+        n = max(len(lines) - 1, 1)
         for i, line in enumerate(lines):
-            progress = i / max(len(lines) - 1, 1)
+            progress = max(0.0, (i - 1) / n)
+
             red = int(139 + (239 - 139) * progress)
             green = int(92 + (68 - 92) * progress)
             blue = int(246 + (68 - 246) * progress)

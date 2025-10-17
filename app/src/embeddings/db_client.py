@@ -43,7 +43,7 @@ class DataBaseClient:
             from chromadb.config import Settings
         except ImportError:
             with default_ui.console.status(
-                "Installing additional required packages..."
+                "Embedding config found. Installing additional required packages: chromadb"
             ):
                 try:
                     import subprocess
