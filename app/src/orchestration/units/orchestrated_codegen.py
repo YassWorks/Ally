@@ -65,6 +65,7 @@ class CodeGenUnit(BaseUnit):
         except KeyboardInterrupt:
             self.ui.session_interrupted()
             return True
+
         except Exception as e:
             self.ui.error(UI_MESSAGES["errors"]["workflow_execution_failed"].format(e))
             return False
@@ -150,7 +151,9 @@ class CodeGenUnit(BaseUnit):
                 active_dir=working_dir,
             ),
             reject_operation=lambda: self.agents["brainstormer"].invoke(
-                message=self.agents["brainstormer"]._get_user_input(active_dir=working_dir),
+                message=self.agents["brainstormer"]._get_user_input(
+                    active_dir=working_dir
+                ),
                 config=configuration,
                 stream=stream,
                 quiet=not stream,
