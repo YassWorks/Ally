@@ -1,34 +1,26 @@
 # Ally
 
 <div align="center">
-<img src="./assets/ally_cover.jpg" alt="Ally cover" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);" />
+<img src="./assets/ally_cover.jpg" alt="Ally cover"/>
 
 <p align="center">
     <a href="https://github.com/YassWorks/Ally/stargazers">
-        <img
-            src="https://img.shields.io/github/stars/YassWorks/Ally?style=flat-square&color=brightgreen"
-            alt="GitHub stars"
-        />
+        <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=flat-square&color=brightgreen" alt="GitHub stars" />
     </a>
+    &nbsp;
     <a href="https://github.com/YassWorks/Ally/network/members">
-        <img
-            src="https://img.shields.io/github/forks/YassWorks/Ally?style=flat-square&color=blue"
-            alt="GitHub forks"
-        />
+        <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=flat-square&color=blue" alt="GitHub forks" />
     </a>
+    &nbsp;
     <a href="https://hub.docker.com/r/yassw0rks/ally">
-        <img
-            src="https://img.shields.io/docker/v/yassw0rks/ally?style=flat-square"
-            alt="Docker Image Version"
-        />
+        <img src="https://img.shields.io/docker/v/yassw0rks/ally?style=flat-square" alt="Docker Image Version" />
     </a>
+    &nbsp;
     <a href="https://hub.docker.com/r/yassw0rks/ally">
-        <img
-            src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=flat-square&color=blue"
-            alt="Docker Pulls"
-        />
+        <img src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=flat-square&color=blue" alt="Docker Pulls" />
     </a>
 </p>
+</br>
 </br>
 </div>
 
@@ -164,9 +156,9 @@ docker exec -it ally /bin/bash
 docker start -ai ally
 ```
 
-    Edit the config file `config.json` _(see below for more details)_ inside `/app` as needed. Nano is included in the image for your conveninence.
+> Edit the `config.json` file (see below) inside `/app` as needed. Nano is included in the image for your convenience.
 
-**Note** this image does **not** contain Ollama. But it can easily be setup once inside the container.
+> **Note** this image does **not** contain Ollama. But it can easily be setup once inside the container.
 
 ### **2. Local**
 
