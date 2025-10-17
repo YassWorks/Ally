@@ -45,6 +45,7 @@ Thumbs.db
 
 # Development directories
 canvas/
+assets/
 bin/
 
 # Configuration files

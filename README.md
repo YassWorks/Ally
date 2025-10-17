@@ -1,9 +1,7 @@
 # Ally
 
 <div align="center">
-<img
-    src="https://private-user-images.githubusercontent.com/166346524/497934948-e743b381-29af-4bbb-b98a-e08e3f275684.jpg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTk3NzM0MDksIm5iZiI6MTc1OTc3MzEwOSwicGF0aCI6Ii8xNjYzNDY1MjQvNDk3OTM0OTQ4LWU3NDNiMzgxLTI5YWYtNGJiYi1iOThhLWUwOGUzZjI3NTY4NC5qcGc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDA2JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAwNlQxNzUxNDlaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT1mYWY4MjJiNzY5ZTUyYWQ1NDhiNjE5MzkxYzMyNzk3N2Q3NDhmOGExZDc3ZmY5ZDMzODUwYTY2OWZkYzE1OTMyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.f5dDsMzeCdIJ9ZIQDatsdRwkc1BeS8DTg_xwjZ2XQbM"
-/>
+<img src="./assets/ally_cover.jpg" alt="Ally cover" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);" />
 
 <p align="center">
     <a href="https://github.com/YassWorks/Ally/stargazers">
