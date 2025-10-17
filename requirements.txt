@@ -17,3 +17,5 @@ rapidfuzz>=3.14.0
 requests>=2.32.5
 rich>=14.1.0
 hf_xet>=1.1.10
+python-docx>=1.2.0
+pymupdf4llm>=0.0.27
