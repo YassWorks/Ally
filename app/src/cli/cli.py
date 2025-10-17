@@ -62,9 +62,27 @@ class CLI:
                 self.embedding_function = HFEmbedder(embedding_model).get_embeddings
                 self.rag_available = True
 
+            case "openai":
+                from app.src.embeddings.embedding_functions.openai_embed import (
+                    OpenAIEmbedder,
+                )
+
+                self.embedding_function = OpenAIEmbedder(embedding_model).get_embeddings
+                self.rag_available = True
+            
+            case "nlpcloud" | "nlp cloud" | "nlp_cloud":
+                from app.src.embeddings.embedding_functions.nlp_cloud_embed import (
+                    NLPCloudEmbedder,
+                )
+
+                self.embedding_function = NLPCloudEmbedder(embedding_model).get_embeddings
+                self.rag_available = True
+
             case _:
                 self.embedding_function = None
                 self.rag_available = False
+        
+        # TODO: handle scraper options (simple vs docling)
 
         try:
             self.general_agent: BaseAgent = AgentFactory.create_agent(
@@ -202,18 +220,18 @@ class CLI:
             self.ui.logo(ASCII_ART)
             self.ui.help()
 
-            wd_note = f"## IMPORTANT\nALWAYS place your work inside {active_dir} unless stated otherwise by the user.\n"
+            wd_note = f"## Important:\nAlways place your work inside {active_dir} unless stated otherwise by the user.\n"
 
             # making the project generation a command for the general agent (an extra option for the user)
             self.general_agent.register_command(
                 "/project", lambda *args: self.launch_coding_units()
             )
 
-            # integrating RAG capabilities if an embedding function is configured by the user in the JSON config
+            # integrating RAG capabilities if an embedding function is configured by the user in config.json
             if self.rag_available:
                 from app.src.embeddings.db_client import DataBaseClient
 
-                _ = DataBaseClient(embedding_function=self.embedding_function)
+                _ = DataBaseClient(embedding_function=self.embedding_function, scraper=self.scraper)
 
             self._integrate_rag(agent=self.general_agent, available=self.rag_available)
 

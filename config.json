@@ -28,6 +28,6 @@
         "web_searcher": null
     },
 
-    "embedding_provider": "hf",
-    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+    "embedding_provider": "nlpcloud",
+    "embedding_model": "paraphrase-multilingual-mpnet-base-v2"
 }
