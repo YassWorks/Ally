@@ -1,5 +1,6 @@
 from app.src.core.create_base_agent import create_base_agent
 from app.src.agents.general.config.tools import ALL_TOOLS
+from app.src.tools.web_tools import fetch_tool
 from datetime import datetime
 import os
 
@@ -29,10 +30,13 @@ def get_agent(
     tools = ALL_TOOLS.copy()
     if extra_tools:
         tools.extend(extra_tools)
+    
+    # Giving the general agent the ability to access URLs without the need for the WebSearcher agent.
+    tools.append(fetch_tool)
 
     if system_prompt is None or system_prompt.strip() == "":
         dir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(dir, "system_prompt.md"), "r") as file:
+        with open(os.path.join(dir, "system_prompt.md"), "r", encoding="utf-8") as file:
             system_prompt = file.read().strip().format(date=datetime.today().strftime("%-d %B %Y" if os.name != "nt" else "%d %B %Y").lstrip("0"))
 
     return create_base_agent(
