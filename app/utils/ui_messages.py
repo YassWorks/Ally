@@ -1,4 +1,3 @@
-
 UI_MESSAGES = {
     # Prompts
     "directory_prompt": "Enter project directory",
@@ -9,7 +8,6 @@ UI_MESSAGES = {
     "add_context": "Add more context before code generation?",
     "continue_generation": "Continue to code generation anyway?",
     "change_models": "Change any of the current models?",
-    
     # Titles
     "titles": {
         "current_directory": "Current Directory",
@@ -41,8 +39,8 @@ UI_MESSAGES = {
         "collection_deleted": "Collection Deleted",
         "database_reset": "Database Reset",
         "reverting_model": "Reverting Model",
+        "changed_session_id": "Changed Session ID",
     },
-    
     # Messages
     "messages": {
         "goodbye": "Thanks for using Ally!",
@@ -64,7 +62,6 @@ UI_MESSAGES = {
         "generating_response": "Generating response...",
         "querying_knowledge_base": "Querying knowledge base...",
     },
-    
     # Warnings
     "warnings": {
         "failed_confirm": "Failed to confirm action. Continuing with default value ({})",
@@ -74,7 +71,6 @@ UI_MESSAGES = {
         "invalid_db_path": "Invalid directory path found in $ALLY_DATABASE_DIR. Reverting to default path.",
         "recursion_limit_reached": "Agent processing took longer than expected (Max recursion limit reached)",
     },
-    
     # Errors
     "errors": {
         "failed_initialize_agents": "Failed to initialize default agents: {}",
@@ -108,7 +104,6 @@ UI_MESSAGES = {
         "no_messages_returned": "[ERROR] Agent did not return any messages.",
         "model_not_found": "Model '{}' not found or not supported.",
     },
-    
     # Confirmations
     "confirmations": {
         "continue_from_left_off": "Continue from where the agent left off?",
@@ -117,7 +112,6 @@ UI_MESSAGES = {
         "reset_database": "Are you sure you want to reset the database? This action cannot be undone.",
         "change_model": "Do you want to enter in the name of a different model?",
     },
-    
     # Usage Messages
     "usage": {
         "embed": "Usage: /embed <directory_path> <collection_name>",
@@ -125,14 +119,12 @@ UI_MESSAGES = {
         "unindex": "Usage: /unindex <collection_name>",
         "delete": "Usage: /delete <collection_name>",
     },
-    
     # Success Messages
     "success": {
         "collection_indexed": "Collection '{}' is now indexed.",
         "collection_unindexed": "Collection '{}' is now unindexed.",
         "documents_embedded": "Documents from '{}' have been embedded into collection '{}'.",
     },
-    
     # Help Content
     "help": {
         "content": [
@@ -149,7 +141,6 @@ UI_MESSAGES = {
         "model_suffix": "Model: *{}*",
         "footer": "\n> **Not recommended during long running tasks. Use at your own risk.*",
     },
-    
     # Tool Messages
     "tool": {
         "title": "## {}",
