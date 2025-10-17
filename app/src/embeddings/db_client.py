@@ -1,5 +1,5 @@
 from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS
-from app.src.embeddings.scrapers.scraper import scrape_file, get_hash
+from app.src.embeddings.scrapers.abstract_scraper import Scraper
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
 from app.src.core.ui import default_ui
@@ -35,7 +35,9 @@ class DataBaseClient:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, embedding_function: Callable = None) -> None:
+    def __init__(
+        self, embedding_function: Callable = None, scraper: Scraper = None
+    ) -> None:
         try:
             import chromadb
             from chromadb.config import Settings
@@ -48,21 +50,9 @@ class DataBaseClient:
                     import sys
 
                     # in case the user didn't setup RAG from the beginning
-                    # we lazy-install chromadb & docling when needed
+                    # we lazy-install chromadb when needed
                     subprocess.check_call(
                         [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
-                    )
-                    subprocess.check_call(
-                        [
-                            sys.executable,
-                            "-m",
-                            "pip",
-                            "install",
-                            "docling",
-                            "--extra-index-url",
-                            "https://download.pytorch.org/whl/cpu",  # CPU-only PyTorch for smaller download
-                            "-qqq",
-                        ]
                     )
 
                 except Exception as e:
@@ -73,10 +63,14 @@ class DataBaseClient:
             import chromadb
             from chromadb.config import Settings
 
+        os.makedirs(DB_PATH, exist_ok=True)
+
         self.db_client = chromadb.PersistentClient(
             path=DB_PATH, settings=Settings(anonymized_telemetry=False)
         )
         self.embedding_function = embedding_function
+
+        self.scraper = scraper
 
         # Store indexed collections JSON file in the same database folder
         self.indexed_collections_path = DB_PATH / "indexed_collections.json"
@@ -160,7 +154,7 @@ class DataBaseClient:
         if self.already_stored(file_path, collection_name):
             return
 
-        response = scrape_file(file_path)
+        response = self.scraper.scrape(file_path)
         content = response["content"]
         metadata = response["metadata"]
 
@@ -188,7 +182,7 @@ class DataBaseClient:
         """Check if the file has been modified by comparing hashes and modification dates."""
         import chromadb.errors as chromadb_errors
 
-        last_hash = get_hash(file_path)
+        last_hash = self.scraper.get_hash(file_path)
         last_mod_date = datetime.fromtimestamp(
             Path(file_path).stat().st_mtime
         ).isoformat()
