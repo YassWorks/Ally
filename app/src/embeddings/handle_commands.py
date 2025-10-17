@@ -24,7 +24,8 @@ def handle_embed_request(*args):
     if directory_path == "." or directory_path == "./":
         directory_path = os.getcwd()
 
-    db_client.store_documents(directory_path, collection_name)
+    with default_ui.console.status("Embedding documents..."):
+        db_client.store_documents(directory_path, collection_name)
 
 
 def handle_index_request(*args):
