@@ -1,31 +1,48 @@
 # Ally
 
 <div align="center">
-
-<img src="https://private-user-images.githubusercontent.com/166346524/497934948-e743b381-29af-4bbb-b98a-e08e3f275684.jpg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTk3NzM0MDksIm5iZiI6MTc1OTc3MzEwOSwicGF0aCI6Ii8xNjYzNDY1MjQvNDk3OTM0OTQ4LWU3NDNiMzgxLTI5YWYtNGJiYi1iOThhLWUwOGUzZjI3NTY4NC5qcGc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDA2JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAwNlQxNzUxNDlaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT1mYWY4MjJiNzY5ZTUyYWQ1NDhiNjE5MzkxYzMyNzk3N2Q3NDhmOGExZDc3ZmY5ZDMzODUwYTY2OWZkYzE1OTMyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.f5dDsMzeCdIJ9ZIQDatsdRwkc1BeS8DTg_xwjZ2XQbM">
+<img
+    src="https://private-user-images.githubusercontent.com/166346524/497934948-e743b381-29af-4bbb-b98a-e08e3f275684.jpg?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTk3NzM0MDksIm5iZiI6MTc1OTc3MzEwOSwicGF0aCI6Ii8xNjYzNDY1MjQvNDk3OTM0OTQ4LWU3NDNiMzgxLTI5YWYtNGJiYi1iOThhLWUwOGUzZjI3NTY4NC5qcGc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjUxMDA2JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI1MTAwNlQxNzUxNDlaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT1mYWY4MjJiNzY5ZTUyYWQ1NDhiNjE5MzkxYzMyNzk3N2Q3NDhmOGExZDc3ZmY5ZDMzODUwYTY2OWZkYzE1OTMyJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCJ9.f5dDsMzeCdIJ9ZIQDatsdRwkc1BeS8DTg_xwjZ2XQbM"
+/>
 
 <p align="center">
-  <a href="https://github.com/YassWorks/Ally/stargazers">
-    <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=flat-square&color=brightgreen" alt="GitHub stars">
-  </a>
-  <a href="https://github.com/YassWorks/Ally/network/members">
-    <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=flat-square&color=blue" alt="GitHub forks">
-  </a>
+    <a href="https://github.com/YassWorks/Ally/stargazers">
+        <img
+            src="https://img.shields.io/github/stars/YassWorks/Ally?style=flat-square&color=brightgreen"
+            alt="GitHub stars"
+        />
+    </a>
+    <a href="https://github.com/YassWorks/Ally/network/members">
+        <img
+            src="https://img.shields.io/github/forks/YassWorks/Ally?style=flat-square&color=blue"
+            alt="GitHub forks"
+        />
+    </a>
+    <a href="https://hub.docker.com/r/yassw0rks/ally">
+        <img
+            src="https://img.shields.io/docker/v/yassw0rks/ally?style=flat-square"
+            alt="Docker Image Version"
+        />
+    </a>
+    <a href="https://hub.docker.com/r/yassw0rks/ally">
+        <img
+            src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=flat-square&color=blue"
+            alt="Docker Pulls"
+        />
+    </a>
 </p>
 </br>
-
 </div>
 
-
-Ally is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
+**Ally** is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
 
 Ally was built a fully local agentic system using **[Ollama](https://ollama.com/download)**, but it also works seamlessly with:
 
-* OpenAI
-* Anthropic
-* Google GenAI
-* Cerebras
-* *(more integrations on the way!)*
+-   OpenAI
+-   Anthropic
+-   Google GenAI
+-   Cerebras
+-   _(more integrations on the way!)_
 
 This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow.
 
@@ -35,11 +52,11 @@ This tool is best suited for scenarios where privacy is paramount and agentic ca
 
 A general-purpose agent that can:
 
-* Read, write, modify, and delete files and directories.
-* Access the internet.
-* Execute commands and code.
+-   Read, write, modify, and delete files and directories.
+-   Access the internet.
+-   Execute commands and code.
 
-  ***Note:*** Tools always ask for your permission before executing.
+    **_Note:_** Tools always ask for your permission before executing.
 
 ### RAG
 
@@ -47,9 +64,11 @@ Ally can take your files, embed them into its knowledge base, and use them to re
 
 Currently, Ally's embedding functions can use:
 
-- Hugging Face models (locally)
-- Ollama Embedding models (locally)
-- More on the way.
+-   Hugging Face models (locally)
+-   Ollama Embedding models (locally)
+-   NLP Cloud (hosted)
+-   OpenAI (hosted)
+-   _More on the way..._
 
 **RAG Tutorial:**
 
@@ -67,23 +86,23 @@ Currently, Ally's embedding functions can use:
 
 **Additional commands:**
 
-- Edit indexed collections with `/index <collection_name>` and `/unindex <collection_name>.` ***Note:*** newly created collections are already indexed.
+-   Edit indexed collections with `/index <collection_name>` and `/unindex <collection_name>.` **_Note:_** newly created collections are already indexed.
 
-- View all collections with `/list`
+-   View all collections with `/list`
 
-- Reset the database with `/purge` or delete a specific collection with `/delete <collection_name>`
+-   Reset the database with `/purge` or delete a specific collection with `/delete <collection_name>`
 
 ### Full Coding Project Generation Workflow (Beta)
 
-* Use the `--create-project` flag or the `/project` command in the default chat interface.
+-   Use the `--create-project` flag or the `/project` command in the default chat interface.
 
 **Complete workflow:**
 
-* Asks for your project idea.
-* Runs the ***Brainstormer Agent*** to create the context space and full project specification for the ***Codegen Agent*** (in `.md` format).
-* Optionally lets you provide more context by chatting interactively with the ***Brainstormer Agent***.
-* Runs the ***Codegen Agent*** using the generated `.md` files.
-* Opens an interactive chat with the ***Codegen Agent*** to refine or extend the project.
+-   Asks for your project idea.
+-   Runs the **_Brainstormer Agent_** to create the context space and full project specification for the **_Codegen Agent_** (in `.md` format).
+-   Optionally lets you provide more context by chatting interactively with the **_Brainstormer Agent_**.
+-   Runs the **_Codegen Agent_** using the generated `.md` files.
+-   Opens an interactive chat with the **_Codegen Agent_** to refine or extend the project.
 
 This workflow is still in its early stages.
 
@@ -94,6 +113,7 @@ You have 2 options: Via Docker or locally on your machine.
 ### **1. Docker**
 
 Create a `.env` file (or copy `.env.example`) in any location
+
 ```
 # Inference providers (only include those you need)
 
@@ -102,6 +122,10 @@ ANTHROPIC_API_KEY=...
 GOOGLE_GEN_AI_API_KEY=...
 CEREBRAS_API_KEY=...
 
+# Embedding providers APIs (As needed. Only add those you need.)
+
+NLP_CLOUD_API_KEY=...
+
 # Google Search API (if omitted, online search tools will be limited)
 
 GOOGLE_SEARCH_API_KEY=...
@@ -109,6 +133,7 @@ SEARCH_ENGINE_ID=...
 ```
 
 Open a terminal in that directory and type
+
 ```bash
 # Pull the Ally image:
 docker pull yassw0rks/ally:latest
@@ -129,6 +154,7 @@ docker run -it \
 ```
 
 Next time you want to jump back in
+
 ```bash
 # Check if container already running
 docker ps
@@ -140,15 +166,17 @@ docker exec -it ally /bin/bash
 docker start -ai ally
 ```
 
+    Edit the config file `config.json` _(see below for more details)_ inside `/app` as needed. Nano is included in the image for your conveninence.
+
 **Note** this image does **not** contain Ollama. But it can easily be setup once inside the container.
 
 ### **2. Local**
 
 ### Prerequesites:
 
-- [Python](https://www.python.org/)
-- [Git](https://git-scm.com/downloads) (or download the source code from this repo)
-- [Ollama](https://ollama.com/download) (optional)
+-   [Python](https://www.python.org/)
+-   [Git](https://git-scm.com/downloads) (or download the source code from this repo)
+-   [Ollama](https://ollama.com/download) (optional)
 
 ### 1. Clone the Repo
 
@@ -160,7 +188,7 @@ git clone https://github.com/YassWorks/Ally.git
 
 ### 2. Configure `config.json` in `/Ally`
 
-This file (located at `Ally/`) controls Ally's main settings and integrations. 
+This file (located at `Ally/`) controls Ally's main settings and integrations.
 
 **Example configuration:**
 
@@ -170,35 +198,40 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
     "provider_per_model": {
         "general": "ollama",
         "code_gen": "anthropic",
-        "brainstormer": null,  // autofilled with 'openai'
-        "web_searcher": null   // autofilled with 'openai'
+        "brainstormer": null, // autofilled with 'openai'
+        "web_searcher": null // autofilled with 'openai'
     },
 
     "model": "gpt-4o",
     "models": {
         "general": "gpt-oss:20b",
         "code_gen": "claude-sonnet-3.5",
-        "brainstormer": null,  // autofilled with 'gpt-4o'
-        "web_searcher": null   // autofilled with 'gpt-4o'
+        "brainstormer": null, // autofilled with 'gpt-4o'
+        "web_searcher": null // autofilled with 'gpt-4o'
     },
-    
+
     "temperatures": {
         "general": 0.7,
         "code_gen": 0,
         "brainstormer": 1,
         "web_searcher": 0
     },
-    "system_prompts": {  // (recommended) leave as-is to use Ally's defaults
+    "system_prompts": {
+        // (recommended) leave as-is to use Ally's defaults
         "general": null,
         "code_gen": null,
         "brainstormer": null,
         "web_searcher": null
     },
 
-    "embedding_provider": null,  // example: "hf" or "ollama"
-    "embedding_model": null,     // example: "sentence-transformers/all-MiniLM-L6-v2" or "all-minilm"
+    "embedding_provider": null, // example: "hf" or "ollama"
+    "embedding_model": null, // example: "sentence-transformers/all-MiniLM-L6-v2" or "all-minilm"
+
+    "scraping_method": "simple" // or "docling"
 }
 ```
+
+**Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling.
 
 ### 3. Configure `.env` in `/Ally`
 
@@ -211,6 +244,10 @@ OPENAI_API_KEY=...
 ANTHROPIC_API_KEY=...
 GOOGLE_GEN_AI_API_KEY=...
 CEREBRAS_API_KEY=...
+
+# Embedding providers APIs (As needed. Only add those you need.)
+
+NLP_CLOUD_API_KEY=...
 
 # Google Search API (if omitted, online search tools will be limited)
 
@@ -228,7 +265,7 @@ Steps:
 
 Depending on your OS choose either `setup.cmd` (Windows) or `setup.sh` (Linux/Mac)
 
-***Note:*** Ally creates its own virtual environment to keep dependencies isolated and automatically adds itself to your PATH.
+**_Note:_** Ally creates its own virtual environment to keep dependencies isolated and automatically adds itself to your PATH.
 
 Now you’re ready to run Ally from anywhere in the terminal using `ally`.
 
@@ -236,16 +273,17 @@ Use `ally -h` for more help.
 
 ## Technical notes
 
-1. Edit the following environment variable if needed:  
+1. Edit the following environment variable if needed:
 
-| Environment Variable        | Purpose                                                      |
-|-----------------------------|--------------------------------------------------------------|
-| `ALLY_HISTORY_DIR`          | Controls where Ally stores its history.                      |
-| `ALLY_DATABASE_DIR`         | Controls where Ally stores its database.                     |
+| Environment Variable        | Purpose                                                         |
+| --------------------------- | --------------------------------------------------------------- |
+| `ALLY_HISTORY_DIR`          | Controls where Ally stores its history.                         |
+| `ALLY_DATABASE_DIR`         | Controls where Ally stores its database.                        |
 | `ALLY_EMBEDDING_MODELS_DIR` | Controls where Ally stores its embedding models (Hugging Face). |
-| `ALLY_PARSING_MODELS_DIR`   | Controls where Ally stores its parsing models used by Docling. |
+| `ALLY_PARSING_MODELS_DIR`   | Controls where Ally stores its parsing models used by Docling.  |
 
 Defaults are:
+
 ```
 Windows:
 %LOCALAPPDATA%\Ally\...
@@ -256,7 +294,7 @@ Linux & MacOS:
 
 2. RAG-related tools used by Ally are large in size and are therefore downloaded only after RAG settings are enabled in the config.json file. As a result, Ally will perform additional downloads the next time it is launched following these configuration changes.
 
-3. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID.
+3. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID. You can do the same inside the CLI, just do `/id <your_id>`
 
 4. Embedding and scraping files that require OCR (such as PDFs and DOCX) currently use a CPU-only PyTorch installation. You can modify the configuration to utilize a GPU if desired, though this is typically only necessary for processing very large files.
 
@@ -265,6 +303,7 @@ Linux & MacOS:
 Apache-2.0
 
 ---
+
 Issues are always welcome 💌
 
 Contact me via email to discuss contributions or collaborations on other projects if you liked my work!

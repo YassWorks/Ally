@@ -6,16 +6,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+##### Install system dependencies
+##### nano is included to edit the config.json file easily if needed.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
+    && apt-get install -y nano \
     && rm -rf /var/lib/apt/lists/*
 
+##### Install Python dependencies
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
+##### Copy project
 COPY . .
 
+##### Adding Ally to PATH
 RUN printf '#!/bin/sh\nexec python /app/main.py "$@"\n' > /usr/local/bin/ally \
     && chmod +x /usr/local/bin/ally
 
