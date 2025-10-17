@@ -93,19 +93,19 @@ You have 2 options: Via Docker or locally on your machine.
 
 ### **1. Docker**
 
-Open a terminal and create a `.env` file (or copy `.env.example`)
+Create a `.env` file (or copy `.env.example`) in any location
 ```
 # Inference providers (only include those you need)
 
-OPENAI_API_KEY=your_openai_api_key_here
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-GOOGLE_GEN_AI_API_KEY=your_google_gen_ai_api_key_here
-CEREBRAS_API_KEY=your_api_key_here
+OPENAI_API_KEY=...
+ANTHROPIC_API_KEY=...
+GOOGLE_GEN_AI_API_KEY=...
+CEREBRAS_API_KEY=...
 
 # Google Search API (if omitted, online search tools will be limited)
 
-GOOGLE_SEARCH_API_KEY=your_google_api_key_here
-SEARCH_ENGINE_ID=your_search_engine_id_here
+GOOGLE_SEARCH_API_KEY=...
+SEARCH_ENGINE_ID=...
 ```
 
 Open a terminal in that directory and type
@@ -113,11 +113,14 @@ Open a terminal in that directory and type
 # Pull the Ally image:
 docker pull yassw0rks/ally:latest
 
+
 # Start the container for the first time
 docker run -it --env-file .env --name ally yassw0rks/ally:latest
 
+
 # You could also assign a volume:
-# Replace <YOUR_LOCAL_DIR> with a path on your machine, e.g., $(pwd)/data
+# Replace <YOUR_LOCAL_DIR> with a path on your machine.
+# Note that Docker must have permission to <YOUR_LOCAL_DIR>. It can be configured from the settings.
 docker run -it \
   --env-file .env \
   -v <YOUR_LOCAL_DIR>:/data \
@@ -125,7 +128,7 @@ docker run -it \
   yassw0rks/ally:latest
 ```
 
-Next time you want to jump back in:
+Next time you want to jump back in
 ```bash
 # Check if container already running
 docker ps
@@ -137,7 +140,7 @@ docker exec -it ally /bin/bash
 docker start -ai ally
 ```
 
-<span style="color:red; font-weight:bold;">Note:</span> this image does **not** contain Ollama. But it can easily be setup once inside the container.
+**Note** this image does **not** contain Ollama. But it can easily be setup once inside the container.
 
 ### **2. Local**
 
@@ -145,7 +148,7 @@ docker start -ai ally
 
 - [Python](https://www.python.org/)
 - [Git](https://git-scm.com/downloads) (or download the source code from this repo)
-- [Ollama](https://ollama.com/download)
+- [Ollama](https://ollama.com/download) (optional)
 
 ### 1. Clone the Repo
 
@@ -155,7 +158,7 @@ In your chosen installation folder, open a terminal window and run:
 git clone https://github.com/YassWorks/Ally.git
 ```
 
-### 2. Configure `config.json`
+### 2. Configure `config.json` in `/Ally`
 
 This file (located at `Ally/`) controls Ally's main settings and integrations. 
 
@@ -197,22 +200,22 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 }
 ```
 
-### 3. Configure `.env`
+### 3. Configure `.env` in `/Ally`
 
 This file stores your API keys.
 
 ```
 # Inference providers (only include those you need)
 
-OPENAI_API_KEY=your_openai_api_key_here
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-GOOGLE_GEN_AI_API_KEY=your_google_gen_ai_api_key_here
-CEREBRAS_API_KEY=your_api_key_here
+OPENAI_API_KEY=...
+ANTHROPIC_API_KEY=...
+GOOGLE_GEN_AI_API_KEY=...
+CEREBRAS_API_KEY=...
 
 # Google Search API (if omitted, online search tools will be limited)
 
-GOOGLE_SEARCH_API_KEY=your_google_api_key_here
-SEARCH_ENGINE_ID=your_search_engine_id_here
+GOOGLE_SEARCH_API_KEY=...
+SEARCH_ENGINE_ID=...
 ```
 
 Steps:
