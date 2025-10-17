@@ -7,23 +7,23 @@ from pathlib import Path
 import datetime
 
 
-_SETUP_COMPLETED = False
-_REDOWNLOAD_TRIED = False
+_DOCLING_SETUP_COMPLETED = False
+_RETRIED_DOCLING_SETUP = False
 
 
 class DoclingScraper(Scraper):
-    
+
     def scrape(self, file_path: str | Path) -> dict:
-        """Extract text and metadata from a PDF file."""
-        
-        global _SETUP_COMPLETED
-        if not _SETUP_COMPLETED:
+        """Extract text and metadata from a file using Docling."""
+
+        global _DOCLING_SETUP_COMPLETED
+        if not _DOCLING_SETUP_COMPLETED:
             try:
                 setup(path=ARTIFACTS_PATH)
-                _SETUP_COMPLETED = True
+                _DOCLING_SETUP_COMPLETED = True
             except:
                 raise SetupFailedError()
-        
+
         from docling.document_converter import DocumentConverter
         from docling.datamodel.base_models import InputFormat
         from docling.datamodel.pipeline_options import (
@@ -31,7 +31,11 @@ class DoclingScraper(Scraper):
             EasyOcrOptions,
         )
         from docling.datamodel.pipeline_options import smolvlm_picture_description
-        from docling.document_converter import PdfFormatOption, ImageFormatOption, WordFormatOption
+        from docling.document_converter import (
+            PdfFormatOption,
+            ImageFormatOption,
+            WordFormatOption,
+        )
 
         if any(file_path.lower().endswith(x) for x in REGULAR_FILE_EXTENSIONS):
             content = self.read_regular_file(file_path)
@@ -45,7 +49,6 @@ class DoclingScraper(Scraper):
                     "hash": self.get_hash(file_path),
                 },
             }
-
 
         pipeline_options = PdfPipelineOptions(
             artifacts_path=ARTIFACTS_PATH,
@@ -74,14 +77,15 @@ class DoclingScraper(Scraper):
                 doc = doc_converter.convert(file_path).document
         except:
             # trying to redownload models ONCE if first scraping fails
-            global _REDOWNLOAD_TRIED
-            if _REDOWNLOAD_TRIED:
+            global _RETRIED_DOCLING_SETUP
+            if _RETRIED_DOCLING_SETUP:
                 raise ScrapingFailedError()
 
             default_ui.warning(
                 "Scraping failed. Attempting to redownload parsing models and retry..."
             )
-            _REDOWNLOAD_TRIED = True
+            
+            _RETRIED_DOCLING_SETUP = True
             try:
                 setup(path=ARTIFACTS_PATH)
             except:

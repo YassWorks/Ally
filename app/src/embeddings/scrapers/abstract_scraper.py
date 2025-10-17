@@ -1,6 +1,7 @@
+from app.src.embeddings.rag_errors import ScrapingFailedError
+from charset_normalizer import from_path
 from abc import ABC, abstractmethod
 from pathlib import Path
-from charset_normalizer import from_path
 
 
 class Scraper(ABC):
@@ -48,7 +49,6 @@ class Scraper(ABC):
                 data = json.load(f)
                 return json.dumps(data, indent=2, ensure_ascii=False)
         except (json.JSONDecodeError, UnicodeDecodeError):
-            # Fallback to regular text reading if JSON parsing fails
             return str(from_path(file_path).best())
 
     @staticmethod
@@ -105,17 +105,22 @@ class Scraper(ABC):
         """Read and format file based on its extension."""
         file_lower = str(file_path).lower()
 
-        if file_lower.endswith(".json"):
-            return Scraper._read_json_file(file_path)
-
-        elif file_lower.endswith(".xml"):
-            return Scraper._read_xml_file(file_path)
-
-        elif file_lower.endswith((".yaml", ".yml")):
-            return Scraper._read_yaml_file(file_path)
-
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                return f.read()
-        except UnicodeDecodeError:
-            return str(from_path(file_path).best())
+            if file_lower.endswith(".json"):
+                return Scraper._read_json_file(file_path)
+
+            elif file_lower.endswith(".xml"):
+                return Scraper._read_xml_file(file_path)
+
+            elif file_lower.endswith((".yaml", ".yml")):
+                return Scraper._read_yaml_file(file_path)
+
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return f.read()
+            
+            except UnicodeDecodeError:
+                return str(from_path(file_path).best())
+        
+        except Exception as e:
+            raise ScrapingFailedError(f"Failed to read file: {e}")
