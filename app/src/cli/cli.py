@@ -35,6 +35,7 @@ class CLI:
         embedding_model: str = None,
         temperatures: dict[str, float] = None,
         system_prompts: dict[str, str] = None,
+        scraping_method: str = "simple",
         stream: bool = True,
     ):
         self.stream = stream
@@ -82,7 +83,16 @@ class CLI:
                 self.embedding_function = None
                 self.rag_available = False
         
-        # TODO: handle scraper options (simple vs docling)
+        match scraping_method.lower():
+            case "docling":
+                from app.src.embeddings.scrapers.docling_scraper import DoclingScraper
+
+                self.scraper = DoclingScraper()
+
+            case _:  # default to simple scraper, even for unrecognized methods as it doesn't matter really.
+                from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
+
+                self.scraper = SimpleScraper()
 
         try:
             self.general_agent: BaseAgent = AgentFactory.create_agent(

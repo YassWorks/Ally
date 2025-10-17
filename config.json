@@ -29,5 +29,7 @@
     },
 
     "embedding_provider": "nlpcloud",
-    "embedding_model": "paraphrase-multilingual-mpnet-base-v2"
+    "embedding_model": "paraphrase-multilingual-mpnet-base-v2",
+
+    "scraping_method": "simple"
 }

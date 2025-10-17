@@ -65,6 +65,7 @@ system_prompts = config.get("system_prompts") or {}
 embedding_provider = config.get("embedding_provider") or ""
 embedding_model = config.get("embedding_model") or ""
 
+scraping_method = config.get("scraping_method") or "simple"
 
 client = CLI(
     provider=provider,
@@ -76,6 +77,7 @@ client = CLI(
     embedding_model=embedding_model,
     temperatures=temperatures,
     system_prompts=system_prompts,
+    scraping_method=scraping_method,
     stream=True,
 )
 
