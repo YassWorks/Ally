@@ -10,7 +10,6 @@ from typing import Callable
 from langgraph.graph import StateGraph
 from app.src.core.ui import AgentUI
 import langgraph.errors as lg_errors
-from app.utils.constants import PROMPTS
 from app.utils.ui_messages import UI_MESSAGES
 import uuid
 import os
@@ -126,7 +125,7 @@ class BaseAgent:
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
 
-                rag_temp_tool_result = None
+                rag_final_message = None
                 query_results = None
                 extra_rag_context = ""
 
@@ -159,7 +158,7 @@ class BaseAgent:
                         self.latest_refs = set()
 
                     if extra_rag_context:
-                        rag_temp_tool_result = HumanMessage(
+                        rag_final_message = HumanMessage(
                             content=extra_rag_context,
                             additional_kwargs={
                                 "RAG": True,
@@ -173,8 +172,8 @@ class BaseAgent:
                     for chunk in self.agent.stream(
                         {
                             "messages": (
-                                [("human", user_input), rag_temp_tool_result]
-                                if rag_temp_tool_result
+                                [("human", user_input), rag_final_message]
+                                if rag_final_message
                                 else [("human", user_input)]
                             )
                         },
@@ -217,7 +216,7 @@ class BaseAgent:
                         return True
 
             except PermissionDeniedException:
-                continue
+                continue  # Do nothing. Let the user enter a new input.
 
             except lg_errors.GraphRecursionError:
                 self.ui.warning(UI_MESSAGES["warnings"]["recursion_limit_reached"])
@@ -230,7 +229,18 @@ class BaseAgent:
 
             except openai.RateLimitError:
                 self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
-                return False
+                if self.ui.confirm(
+                    UI_MESSAGES["confirmations"]["change_model"], default=True
+                ):
+                    new_model = self.ui.get_input(
+                        message="Enter new model name: ",
+                    ).strip()
+                    if new_model:
+                        self.model_name = new_model
+                        self._handle_model_change(self.model_name)
+                else:
+                    self.ui.goodbye()
+                    return True
 
             except Exception as e:
                 self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
@@ -244,9 +254,7 @@ class BaseAgent:
     ) -> str:
         """Get user input, handling continuation scenarios."""
         if continue_flag:
-            return (
-                "Continue where you left. Don't repeat anything you have already done."
-            )
+            return PROMPTS["continue"]
         else:
             return self.ui.get_input(
                 model=self.model_name,
@@ -273,12 +281,22 @@ class BaseAgent:
             self._handle_model_command(user_input)
             return True
 
-        if user_input.strip().lower() in ["/id"]:
-            self.ui.status_message(
-                title=UI_MESSAGES["titles"]["current_session_id"],
-                message=self.get_session_id(),
-            )
-            return True
+        if user_input.strip().lower().startswith("/id"):
+            parts = user_input.split()
+            if len(parts) == 1:
+                self.ui.status_message(
+                    title=UI_MESSAGES["titles"]["current_session_id"],
+                    message=self.get_session_id(),
+                )
+                return True
+            else:
+                new_id = parts[1]
+                self.configuration["configurable"]["thread_id"] = new_id
+                self.ui.status_message(
+                    title=UI_MESSAGES["titles"]["changed_session_id"],
+                    message=f"Session ID changed to: {new_id}",
+                )
+                return True
 
         if user_input.strip().lower() in ["/refs", "/references"]:
             if self.latest_refs:
@@ -433,7 +451,7 @@ class BaseAgent:
 
         return ret
 
-    def _add_extra_context(self, message: str, extra_context) -> str:
+    def _add_extra_context(self, message: str, extra_context: str | list[str]) -> str:
         """Add extra context to the message."""
         if isinstance(extra_context, str):
             return f"{message}\n\nExtra context you must know:\n{extra_context}"
