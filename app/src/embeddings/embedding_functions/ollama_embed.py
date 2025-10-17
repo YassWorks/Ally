@@ -12,7 +12,7 @@ class OllamaEmbedder:
         Get embeddings for a list of sentences using the Ollama API.
 
         Args:
-            sentences (list[str]): List of sentences to embed.
+            sentences (list[str] | str): List of sentences to embed.
 
         Returns:
             list[list[float]]: List of embeddings for each sentence.
