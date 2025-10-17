@@ -273,7 +273,7 @@ class CodeGenUnit(BaseUnit):
 
         ces_file_path = PROMPTS_DIR / "prompts" / "context_engineering_steps.md"
 
-        with open(str(ces_file_path), "r") as file:
+        with open(str(ces_file_path), "r", encoding="utf-8") as file:
             context_engineering_steps = file.read()
 
         return (
@@ -289,7 +289,7 @@ class CodeGenUnit(BaseUnit):
 
         codegen_file_path = PROMPTS_DIR / "prompts" / "codegen_start.md"
 
-        with open(str(codegen_file_path), "r") as file:
+        with open(str(codegen_file_path), "r", encoding="utf-8") as file:
             codegen_start = file.read()
 
         return (
