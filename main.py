@@ -1,5 +1,8 @@
-from app import CLI, default_ui
 from dotenv import load_dotenv
+load_dotenv()
+
+from app import CLI, default_ui
+
 from warnings import filterwarnings
 import os
 import sys
@@ -11,9 +14,6 @@ logging.basicConfig(level=logging.CRITICAL)
 filterwarnings("ignore", category=Warning, module="torch")
 filterwarnings("ignore", category=Warning, module="docling")
 filterwarnings("ignore", category=Warning, module="huggingface_hub")
-
-
-load_dotenv()
 
 
 api_keys = {
