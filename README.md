@@ -1,7 +1,7 @@
 # Ally
 
 <div align="center">
-<img src="./assets/ally_cover.jpg" alt="Ally cover"/>
+<img src="./assets/ally_cover.jpg" alt="Ally cover" style="max-width:60%;height:auto;width:600px;" />
 
 <p align="center">
     <a href="https://github.com/YassWorks/Ally/stargazers">
