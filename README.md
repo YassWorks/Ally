@@ -3,7 +3,7 @@
 <div align="center">
 
 <div align="center">
-    <img src="./assets/ally_cover.jpg" alt="Ally cover" style="width:60%;max-width:100%;height:auto;" />
+    <img src="./assets/ally_cover.jpg" alt="Ally cover" style="width:80%;max-width:100%;height:auto;" />
 </div>
 
 [![GitHub stars](https://img.shields.io/github/stars/YassWorks/Ally?style=social)](https://github.com/YassWorks/Ally/stargazers)
@@ -73,7 +73,7 @@ Currently, Ally's embedding functions can use:
 
 -   Reset the database with `/purge` or delete a specific collection with `/delete <collection_name>`
 
-### Full Coding Project Generation Workflow (Beta)
+### Full Coding Project Generation Workflow (Preview version)
 
 -   Use the `--create-project` flag or the `/project` command in the default chat interface.
 
@@ -112,6 +112,8 @@ NLP_CLOUD_API_KEY=...
 GOOGLE_SEARCH_API_KEY=...
 SEARCH_ENGINE_ID=...
 ```
+
+> See [steps](#programmable-search-engine-steps) for the Google Search API part.
 
 Open a terminal in that directory and type
 
@@ -212,7 +214,9 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 }
 ```
 
-**Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling.
+> **Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling. 
+
+> **Alternatively**, you could setup a volume (for the parsing and the embedding models) between your machine and the container so that models are persisted across sessions. See below for information where the models are stored inside the container by default.
 
 ### 3. Configure `.env` in `/Ally`
 
@@ -236,7 +240,7 @@ GOOGLE_SEARCH_API_KEY=...
 SEARCH_ENGINE_ID=...
 ```
 
-Steps:
+#### Programmable search engine steps:
 
 1. Set up a Google [Programmable Search Engine](https://developers.google.com/custom-search/v1/overview)
 2. Copy the contents above (or from `.env.example`) into `.env`.
