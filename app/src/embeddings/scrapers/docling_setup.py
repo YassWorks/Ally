@@ -39,7 +39,7 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
     - Raises an exception on failure.
     """
     
-    with default_ui.console.status("Installing additional required packages..."):
+    with default_ui.console.status("Docling setup found. Installing additional required packages: Docling"):
         import subprocess
         import sys
 
@@ -51,7 +51,7 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
                 "install",
                 "--extra-index-url",
                 "https://download.pytorch.org/whl/cpu",  # CPU-only PyTorch. Adjust if needed.
-                "docling",
+                "docling==2.55.1",
                 "-qqq",
             ]
         )
@@ -65,7 +65,6 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
                 output_dir=path,
                 progress=False,
                 with_smolvlm=True,
-                with_easyocr=True,
             )
     except Exception as e:
         default_ui.error(f"Failed to download parsing models: {e}")
