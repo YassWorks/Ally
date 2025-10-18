@@ -2,30 +2,29 @@
 
 <div align="center">
 
-<img src="./assets/ally_cover.jpg" alt="Ally cover" width="600" style="max-width: 80%; height: auto;" />
+<img src="./assets/ally_cover.jpg" alt="Ally cover" width="600" style="max-width:80%;height:auto;" />
 
-<p align="center">
-  <a href="https://github.com/YassWorks/Ally/stargazers" style="text-decoration:none;">
-    <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=for-the-badge&color=brightgreen" alt="GitHub stars" />
+<p align="center" style="line-height:0;">
+  <a href="https://github.com/YassWorks/Ally/stargazers">
+    <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=for-the-badge&color=brightgreen" alt="GitHub stars" style="vertical-align:middle;display:inline-block;" />
   </a>
   &nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/YassWorks/Ally/network/members" style="text-decoration:none;">
-    <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=for-the-badge&color=purple" alt="GitHub forks" />
+  <a href="https://github.com/YassWorks/Ally/network/members">
+    <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=for-the-badge&color=purple" alt="GitHub forks" style="vertical-align:middle;display:inline-block;" />
   </a>
   &nbsp;&nbsp;&nbsp;
-  <a href="https://hub.docker.com/r/yassw0rks/ally" style="text-decoration:none;">
-    <img src="https://img.shields.io/docker/v/yassw0rks/ally?style=for-the-badge&logo=docker&color=2496ED" alt="Docker Image Version" />
+  <a href="https://hub.docker.com/r/yassw0rks/ally">
+    <img src="https://img.shields.io/docker/v/yassw0rks/ally?style=for-the-badge&logo=docker&color=2496ED" alt="Docker Image Version" style="vertical-align:middle;display:inline-block;" />
   </a>
   &nbsp;&nbsp;&nbsp;
-  <a href="https://hub.docker.com/r/yassw0rks/ally" style="text-decoration:none;">
-    <img src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=for-the-badge&color=blue" alt="Docker Pulls" />
+  <a href="https://hub.docker.com/r/yassw0rks/ally">
+    <img src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=for-the-badge&color=blue" alt="Docker Pulls" style="vertical-align:middle;display:inline-block;" />
   </a>
 </p>
 
 <p><b>Ally</b> — lightweight, private service assistant for anyone</p>
 
 </div>
-
 
 
 **Ally** is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
