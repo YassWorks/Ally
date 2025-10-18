@@ -1,28 +1,32 @@
 # Ally
 
 <div align="center">
-<img src="./assets/ally_cover.jpg" alt="Ally cover" style="max-width:60%;height:auto;width:600px;" />
+
+<img src="./assets/ally_cover.jpg" alt="Ally cover" width="600" style="max-width: 80%; height: auto;" />
 
 <p align="center">
-    <a href="https://github.com/YassWorks/Ally/stargazers">
-        <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=flat-square&color=brightgreen" alt="GitHub stars" />
-    </a>
-    &nbsp;
-    <a href="https://github.com/YassWorks/Ally/network/members">
-        <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=flat-square&color=blue" alt="GitHub forks" />
-    </a>
-    &nbsp;
-    <a href="https://hub.docker.com/r/yassw0rks/ally">
-        <img src="https://img.shields.io/docker/v/yassw0rks/ally?style=flat-square" alt="Docker Image Version" />
-    </a>
-    &nbsp;
-    <a href="https://hub.docker.com/r/yassw0rks/ally">
-        <img src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=flat-square&color=blue" alt="Docker Pulls" />
-    </a>
+  <a href="https://github.com/YassWorks/Ally/stargazers">
+    <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=for-the-badge&color=brightgreen" alt="GitHub stars" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/YassWorks/Ally/network/members">
+    <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=for-the-badge&color=purple" alt="GitHub forks" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://hub.docker.com/r/yassw0rks/ally">
+    <img src="https://img.shields.io/docker/v/yassw0rks/ally?style=for-the-badge&logo=docker&color=2496ED" alt="Docker Image Version" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://hub.docker.com/r/yassw0rks/ally">
+    <img src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=for-the-badge&color=blue" alt="Docker Pulls" />
+  </a>
 </p>
-</br>
-</br>
+
+
+<p><b>Ally</b> — lightweight, private service assistant for anyone</p>
+
 </div>
+
 
 **Ally** is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
 
