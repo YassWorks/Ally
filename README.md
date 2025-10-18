@@ -2,7 +2,9 @@
 
 <div align="center">
 
-![Ally cover](./assets/ally_cover.jpg)
+<div align="center">
+    <img src="./assets/ally_cover.jpg" alt="Ally cover" style="width:60%;max-width:100%;height:auto;" />
+</div>
 
 [![GitHub stars](https://img.shields.io/github/stars/YassWorks/Ally?style=social)](https://github.com/YassWorks/Ally/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/YassWorks/Ally?style=social)](https://github.com/YassWorks/Ally/network/members)
