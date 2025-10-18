@@ -2,30 +2,16 @@
 
 <div align="center">
 
-<img src="./assets/ally_cover.jpg" alt="Ally cover" width="600" style="max-width:80%;height:auto;" />
+![Ally cover](./assets/ally_cover.jpg)
 
-<p align="center" style="line-height:0;">
-  <a href="https://github.com/YassWorks/Ally/stargazers">
-    <img src="https://img.shields.io/github/stars/YassWorks/Ally?style=for-the-badge&color=brightgreen" alt="GitHub stars" style="vertical-align:middle;display:inline-block;" />
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/YassWorks/Ally/network/members">
-    <img src="https://img.shields.io/github/forks/YassWorks/Ally?style=for-the-badge&color=purple" alt="GitHub forks" style="vertical-align:middle;display:inline-block;" />
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://hub.docker.com/r/yassw0rks/ally">
-    <img src="https://img.shields.io/docker/v/yassw0rks/ally?style=for-the-badge&logo=docker&color=2496ED" alt="Docker Image Version" style="vertical-align:middle;display:inline-block;" />
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://hub.docker.com/r/yassw0rks/ally">
-    <img src="https://img.shields.io/docker/pulls/yassw0rks/ally?style=for-the-badge&color=blue" alt="Docker Pulls" style="vertical-align:middle;display:inline-block;" />
-  </a>
-</p>
+[![GitHub stars](https://img.shields.io/github/stars/YassWorks/Ally?style=social)](https://github.com/YassWorks/Ally/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/YassWorks/Ally?style=social)](https://github.com/YassWorks/Ally/network/members)
+[![Docker Image Version](https://img.shields.io/docker/v/yassw0rks/ally)](https://hub.docker.com/r/yassw0rks/ally)
+[![Docker Pulls](https://img.shields.io/docker/pulls/yassw0rks/ally)](https://hub.docker.com/r/yassw0rks/ally)
 
-<p><b>Ally</b> — lightweight, private service assistant for anyone</p>
+**Ally** — lightweight, private service assistant for anyone
 
 </div>
-
 
 **Ally** is an AI-powered CLI tool designed to assist with anything from everyday tasks to complex projects efficiently, without leaving the terminal.
 
