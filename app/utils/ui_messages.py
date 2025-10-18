@@ -103,6 +103,7 @@ UI_MESSAGES = {
         "agent_execution_failed": "[ERROR] Agent execution failed.",
         "no_messages_returned": "[ERROR] Agent did not return any messages.",
         "model_not_found": "Model '{}' not found or not supported.",
+        "collection_name_too_short": "Collection name must be at least 3 characters long.",
     },
     # Confirmations
     "confirmations": {

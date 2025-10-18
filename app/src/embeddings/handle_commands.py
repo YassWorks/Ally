@@ -20,6 +20,10 @@ def handle_embed_request(*args):
 
     directory_path = args[0]
     collection_name = args[1]
+    
+    if len(collection_name) < 3:
+        default_ui.error(UI_MESSAGES["errors"]["collection_name_too_short"])
+        return
 
     if directory_path == "." or directory_path == "./":
         directory_path = os.getcwd()
