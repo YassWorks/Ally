@@ -27,6 +27,8 @@ class NLPCloudEmbedder:
             "Authorization": f"Token {API_TOKEN}",
             "Content-Type": "application/json",
         }
+        if isinstance(sentences, str):
+            sentences = [sentences]
         payload = {"sentences": sentences}
 
         response = requests.post(API_URL, json=payload, headers=headers)

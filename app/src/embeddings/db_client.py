@@ -1,4 +1,4 @@
-from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS, MAX_RESULTS
+from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS, MAX_RESULTS, BATCH_SIZE
 from app.src.embeddings.scrapers.abstract_scraper import Scraper
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
@@ -9,6 +9,8 @@ from pathlib import Path
 from datetime import datetime
 import json
 import os
+import time
+from requests.exceptions import HTTPError
 
 
 # configure database path
@@ -171,10 +173,16 @@ class DataBaseClient:
             name=collection_name,
         )
 
+        embeddings = []
+        
+        for i in range(0, len(chunks), BATCH_SIZE):
+            time.sleep(5)  # TODO: adjust delay based on rate limits
+            embeddings.extend(self.embedding_function(chunks[i : i + BATCH_SIZE]))
+
         collection.add(
             documents=chunks,
             metadatas=[metadata] * len(chunks),
-            embeddings=self.embedding_function(chunks),
+            embeddings=embeddings,
             ids=[f"{metadata['hash']}_{i}" for i in range(len(chunks))],
         )
 
@@ -383,7 +391,13 @@ class DataBaseClient:
 
         # merging and sorting the results by distance
         candidates.sort(key=lambda x: x[2])
-        query_results = [(doc, meta) for doc, meta, _ in candidates[: n_results + 1]]
+        # deduplicate by file hash
+        seen = set()
+        query_results = [
+            (doc, meta)
+            for doc, meta, _ in candidates
+            if meta.get("hash") not in seen and not seen.add(meta.get("hash"))
+        ][:n_results]
 
         return query_results
 
