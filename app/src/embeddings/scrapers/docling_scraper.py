@@ -7,7 +7,6 @@ from pathlib import Path
 import datetime
 
 
-_DOCLING_SETUP_COMPLETED = False
 _RETRIED_DOCLING_SETUP = False
 
 
@@ -16,11 +15,11 @@ class DoclingScraper(Scraper):
     def scrape(self, file_path: str | Path) -> dict:
         """Extract text and metadata from a file using Docling."""
 
-        global _DOCLING_SETUP_COMPLETED
-        if not _DOCLING_SETUP_COMPLETED:
+        setup_flag_file = Path(ARTIFACTS_PATH) / ".setup_flag"
+        if not setup_flag_file.exists():
             try:
                 setup(path=ARTIFACTS_PATH)
-                _DOCLING_SETUP_COMPLETED = True
+                setup_flag_file.touch(exist_ok=True)  # for thread safety
             except:
                 raise SetupFailedError()
 
