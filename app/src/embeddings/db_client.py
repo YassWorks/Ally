@@ -1,4 +1,4 @@
-from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS
+from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS, MAX_RESULTS
 from app.src.embeddings.scrapers.abstract_scraper import Scraper
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
@@ -43,7 +43,7 @@ class DataBaseClient:
             from chromadb.config import Settings
         except ImportError:
             with default_ui.console.status(
-                "Embedding config found. Installing additional required packages: chromadb"
+                "Embedding config found. Installing additional required packages: ChromaDB"
             ):
                 try:
                     import subprocess
@@ -366,7 +366,7 @@ class DataBaseClient:
             raise DBAccessError()
 
     def get_query_results(
-        self, query: str, n_results: int = 5
+        self, query: str, n_results: int = MAX_RESULTS
     ) -> list[tuple[str, dict[str, Any]]]:
         """Query the database and return relevant documents."""
         candidates = []
@@ -388,7 +388,7 @@ class DataBaseClient:
         return query_results
 
     def get_query_results_from_collection(
-        self, query: str, collection_name: str, n_results: int = 5
+        self, query: str, collection_name: str, n_results: int = MAX_RESULTS
     ) -> list[tuple[str, dict[str, Any], float]]:
         """Query the database and return relevant documents."""
         import chromadb.errors as chromadb_errors
@@ -397,9 +397,6 @@ class DataBaseClient:
             collection = self.db_client.get_collection(name=collection_name)
 
         except chromadb_errors.NotFoundError:
-            default_ui.error(
-                UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name)
-            )
             return []
 
         except Exception:
