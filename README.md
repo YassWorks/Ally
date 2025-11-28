@@ -289,6 +289,6 @@ Apache-2.0
 
 ---
 
-Issues are always welcome 💌
+Issues and PRs are always welcome 💌
 
 Contact me via email to discuss contributions or collaborations on other projects if you liked my work!
