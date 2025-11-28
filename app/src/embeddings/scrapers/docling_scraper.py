@@ -8,13 +8,13 @@ import datetime
 
 
 _RETRIED_DOCLING_SETUP = False
+_DOC_CONVERTER = None
 
 
 class DoclingScraper(Scraper):
 
-    def scrape(self, file_path: str | Path) -> dict:
-        """Extract text and metadata from a file using Docling."""
-
+    def get_converter(self):
+        """Initialize and return a Docling DocumentConverter."""
         setup_flag_file = Path(ARTIFACTS_PATH) / ".setup_flag"
         if not setup_flag_file.exists():
             try:
@@ -36,6 +36,40 @@ class DoclingScraper(Scraper):
             WordFormatOption,
         )
 
+        pipeline_options = PdfPipelineOptions(
+            artifacts_path=ARTIFACTS_PATH,
+            do_ocr=True,
+            ocr_options=EasyOcrOptions(force_full_page_ocr=True),
+        )
+
+        pipeline_options.do_table_structure = True
+        pipeline_options.do_formula_enrichment = True
+        pipeline_options.do_code_enrichment = True
+        pipeline_options.do_picture_description = True
+        pipeline_options.generate_picture_images = True
+        pipeline_options.do_picture_classification = True
+
+        pipeline_options.picture_description_options = smolvlm_picture_description
+
+        doc_converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
+                InputFormat.IMAGE: ImageFormatOption(pipeline_options=pipeline_options),
+                InputFormat.DOCX: WordFormatOption(pipeline_options=pipeline_options),
+            }
+        )
+        
+        return doc_converter
+
+    def scrape(self, file_path: str | Path) -> dict:
+        """Extract text and metadata from a file using Docling."""
+        global _DOC_CONVERTER
+
+        if _DOC_CONVERTER is None:
+            _DOC_CONVERTER = self.get_converter()
+
+        doc_converter = _DOC_CONVERTER
+
         if any(file_path.lower().endswith(x) for x in REGULAR_FILE_EXTENSIONS):
             content = self.read_regular_file(file_path)
             return {
@@ -48,28 +82,6 @@ class DoclingScraper(Scraper):
                     "hash": self.get_hash(file_path),
                 },
             }
-
-        pipeline_options = PdfPipelineOptions(
-            artifacts_path=ARTIFACTS_PATH,
-            do_ocr=True,
-            ocr_options=EasyOcrOptions(force_full_page_ocr=True),
-        )
-
-        pipeline_options.do_table_structure = True
-        pipeline_options.do_formula_enrichment = True
-        pipeline_options.do_code_enrichment = True
-        pipeline_options.do_picture_description = True
-        pipeline_options.generate_picture_images = True
-
-        pipeline_options.picture_description_options = smolvlm_picture_description
-
-        doc_converter = DocumentConverter(
-            format_options={
-                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
-                InputFormat.IMAGE: ImageFormatOption(pipeline_options=pipeline_options),
-                InputFormat.DOCX: WordFormatOption(pipeline_options=pipeline_options),
-            }
-        )
 
         try:
             with default_ui.console.status(f"Scraping '{file_path}'..."):
