@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from app import CLI, default_ui
@@ -14,13 +15,15 @@ logging.basicConfig(level=logging.CRITICAL)
 filterwarnings("ignore", category=Warning, module="torch")
 filterwarnings("ignore", category=Warning, module="docling")
 filterwarnings("ignore", category=Warning, module="huggingface_hub")
+filterwarnings("ignore", category=Warning, module="onnxruntime")
 
 
 api_keys = {
+    
     "cerebras": os.getenv("CEREBRAS_API_KEY"),
     "openai": os.getenv("OPENAI_API_KEY"),
     "anthropic": os.getenv("ANTHROPIC_API_KEY"),
-    "google": os.getenv("GOOGLE_GEN_AI_API_KEY")
+    "google": os.getenv("GOOGLE_GEN_AI_API_KEY"),
 }
 
 
@@ -52,12 +55,16 @@ model = config.get("model")
 api_key = api_keys.get(provider)
 
 raw_provider_per_model = config.get("provider_per_model") or {}
-provider_per_model = {k: (raw_provider_per_model.get(k) or provider) for k in AGENT_TYPES}
+provider_per_model = {
+    k: (raw_provider_per_model.get(k) or provider) for k in AGENT_TYPES
+}
 
 raw_models = config.get("models") or {}
 models = {k: (raw_models.get(k) or model) for k in AGENT_TYPES}
 
-api_key_per_model = {k: api_keys.get(provider_per_model.get(k), api_key) for k in AGENT_TYPES}
+api_key_per_model = {
+    k: api_keys.get(provider_per_model.get(k), api_key) for k in AGENT_TYPES
+}
 
 temperatures = config.get("temperatures") or {}
 system_prompts = config.get("system_prompts") or {}
@@ -84,9 +91,11 @@ client = CLI(
 
 ########### run the CLI ###########
 
+
 def main():
     args = sys.argv[1:]
     client.start_chat(*args)
+
 
 if __name__ == "__main__":
     main()
