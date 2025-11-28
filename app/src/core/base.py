@@ -165,25 +165,22 @@ class BaseAgent:
                             },
                         )
 
-                with self.ui.console.status(
-                    UI_MESSAGES["messages"]["generating_response"]
+                last = None
+                for chunk in self.agent.stream(
+                    {
+                        "messages": (
+                            [("human", user_input), rag_final_message]
+                            if rag_final_message
+                            else [("human", user_input)]
+                        )
+                    },
+                    config=self.configuration,
                 ):
-                    last = None
-                    for chunk in self.agent.stream(
-                        {
-                            "messages": (
-                                [("human", user_input), rag_final_message]
-                                if rag_final_message
-                                else [("human", user_input)]
-                            )
-                        },
-                        config=self.configuration,
-                    ):
-                        if stream:
-                            self._display_chunk(chunk)
-                        last = chunk
-                    if not stream:
-                        self._display_chunk(last)
+                    if stream:
+                        self._display_chunk(chunk)
+                    last = chunk
+                if not stream:
+                    self._display_chunk(last)
 
             except KeyboardInterrupt:
                 self.ui.goodbye()
