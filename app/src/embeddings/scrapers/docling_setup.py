@@ -38,8 +38,10 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
     - Installs the `docling` package (uses CPU PyTorch wheel by default).
     - Raises an exception on failure.
     """
-    
-    with default_ui.console.status("Docling setup found. Installing additional required packages: Docling"):
+
+    with default_ui.console.status(
+        "Docling setup found. Installing additional required packages: Docling"
+    ):
         import subprocess
         import sys
 
@@ -51,11 +53,11 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
                 "install",
                 "--extra-index-url",
                 "https://download.pytorch.org/whl/cpu",  # CPU-only PyTorch. Adjust if needed.
-                "docling==2.55.1",
+                "docling==2.55.1",  # TODO: fix
                 "-qqq",
             ]
         )
-    
+
     try:
         os.makedirs(path, exist_ok=True)
         with default_ui.console.status("Downloading parsing models..."):
@@ -66,6 +68,7 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
                 progress=False,
                 with_smolvlm=True,
             )
+
     except Exception as e:
         default_ui.error(f"Failed to download parsing models: {e}")
         raise
