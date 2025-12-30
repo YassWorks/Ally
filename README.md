@@ -23,6 +23,7 @@ Ally was built a fully local agentic system using **[Ollama](https://ollama.com/
 -   Anthropic
 -   Google GenAI
 -   Cerebras
+-   OpenAI-compatible providers (OpenRouter, GitHub Models)
 -   _(more integrations on the way!)_
 
 This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow.
@@ -37,7 +38,7 @@ A general-purpose agent that can:
 -   Access the internet.
 -   Execute commands and code.
 
-    **_Note:_** Tools always ask for your permission before executing.
+    **_Note:_** Tools always ask for your permission before executing. Multiple tool calls are processed sequentially to ensure clear approval flow.
 
 ### RAG
 
@@ -214,7 +215,7 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 }
 ```
 
-> **Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling. 
+> **Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling.
 
 > **Alternatively**, you could setup a volume (for the parsing and the embedding models) between your machine and the container so that models are persisted across sessions. See below for information where the models are stored inside the container by default.
 
