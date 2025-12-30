@@ -1,7 +1,7 @@
 import os
 from rich.console import Console
 from app.utils.constants import CONSOLE_WIDTH
-from prompt_toolkit.shortcuts import prompt
+from prompt_toolkit.shortcuts import prompt, choice
 from prompt_toolkit.key_binding import KeyBindings
 from rich.markdown import Markdown
 from rich.prompt import Confirm
@@ -12,13 +12,6 @@ from app.utils.constants import THEME
 from app.utils.ui_messages import UI_MESSAGES
 import time
 import sys
-
-
-if os.name == "nt":
-    import msvcrt
-else:
-    import tty
-    import termios
 
 
 class AgentUI:
@@ -117,6 +110,7 @@ class AgentUI:
         except:
             rendered_content = content
 
+        self.console.print()
         panel = Panel(
             rendered_content,
             title=f"[bold]{UI_MESSAGES['titles']['assistant']}[/bold]",
@@ -203,60 +197,32 @@ class AgentUI:
             )
             return default
 
-    def get_key(self):
-        """Read a single key press and return a string identifier."""
-        if os.name == "nt":
-            key = msvcrt.getch()
-            if key == b"\xe0":  # Special keys (arrows, F keys, etc.)
-                key = msvcrt.getch()
-                return {
-                    b"H": "UP",
-                    b"P": "DOWN",
-                }.get(key, None)
-            elif key in (b"\r", b"\n"):
-                return "ENTER"
-        else:
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(fd)
-                ch1 = sys.stdin.read(1)
-                if ch1 == "\x1b":  # Escape sequence
-                    ch2 = sys.stdin.read(1)
-                    if ch2 == "[":
-                        ch3 = sys.stdin.read(1)
-                        return {
-                            "A": "UP",
-                            "B": "DOWN",
-                        }.get(ch3, None)
-                elif ch1 in ("\r", "\n"):
-                    return "ENTER"
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return None
-
     def select_option(self, message: str, options: list[str]) -> int:
-        idx = 0
-        self.console.print(f"\n{message}")
-        for i, opt in enumerate(options):
-            prefix = "▶ " if i == idx else "  "
-            print(f"{prefix}{opt}")
+        """Display an interactive inline selection menu using arrow keys.
 
-        while True:
-            key = self.get_key()
-            if key == "UP" and idx > 0:
-                idx -= 1
-            elif key == "DOWN" and idx < len(options) - 1:
-                idx += 1
-            elif key == "ENTER":
-                return idx
+        Args:
+            message: The prompt message to display
+            options: List of option strings to choose from
 
-            # Move cursor up to menu start
-            sys.stdout.write(f"\033[{len(options)}A")
-            for i, opt in enumerate(options):
-                prefix = "▶ " if i == idx else "  "
-                sys.stdout.write(f"{prefix}{opt}\033[K\n")
-            sys.stdout.flush()
+        Returns:
+            The index of the selected option (0-based)
+        """
+        # Create value tuples: (index, display_text)
+        # choice() returns the key (index), not the display text
+        values = [(i, opt) for i, opt in enumerate(options)]
+
+        try:
+            result = choice(
+                message=message,
+                options=values,
+            )
+            return result
+        except KeyboardInterrupt:
+            self.session_interrupted()
+            sys.exit(0)
+        except Exception:
+            # Fallback to first option on error
+            return 0
 
     def goodbye(self):
         self.status_message(
