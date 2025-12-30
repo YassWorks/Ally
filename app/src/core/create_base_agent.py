@@ -70,7 +70,7 @@ def create_base_agent(
         case "google":
             os.environ["GRPC_VERBOSITY"] = "NONE"
             os.environ["GRPC_CPP_VERBOSITY"] = "NONE"
-            
+
             from langchain_google_genai import ChatGoogleGenerativeAI
 
             llm = ChatGoogleGenerativeAI(
@@ -80,8 +80,15 @@ def create_base_agent(
                 max_retries=5,
                 google_api_key=api_key,
             )
-        case "openai":
+        case "openai" | "openrouter" | "github":
             from langchain_openai import ChatOpenAI
+
+            if provider.lower() == "openai":
+                base_url = None
+            elif provider.lower() == "openrouter":
+                base_url = "https://openrouter.ai/api/v1"
+            else:  # github
+                base_url = "https://models.github.ai/inference"
 
             llm = ChatOpenAI(
                 model=model_name,
@@ -89,6 +96,7 @@ def create_base_agent(
                 timeout=None,
                 max_retries=5,
                 api_key=api_key,
+                base_url=base_url,
             )
         case "anthropic":
             from langchain_anthropic import ChatAnthropic

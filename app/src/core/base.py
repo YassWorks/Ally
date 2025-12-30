@@ -197,6 +197,7 @@ class BaseAgent:
                     )
                     self.model_name = self.prev_model_name
                     self._handle_model_change(self.model_name)
+                    self.prev_model_name = None
                 else:
                     if self.ui.confirm(
                         UI_MESSAGES["confirmations"]["change_model"], default=True
@@ -213,7 +214,7 @@ class BaseAgent:
                         return True
 
             except PermissionDeniedException:
-                continue  # Do nothing. Let the user enter a new input.
+                continue  # Do nothing. Let the user enter a new prompt.
 
             except lg_errors.GraphRecursionError:
                 self.ui.warning(UI_MESSAGES["warnings"]["recursion_limit_reached"])
