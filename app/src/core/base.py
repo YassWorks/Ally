@@ -502,9 +502,6 @@ class BaseAgent:
 
     def _handle_ai_message(self, message: AIMessage):
         """Handle AI message display."""
-        if message.tool_calls:
-            for tool_call in message.tool_calls:
-                self.ui.tool_call(tool_call["name"], tool_call["args"])
         if message.content and message.content.strip():
             self.ui.ai_response(message.content)
 

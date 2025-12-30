@@ -1,12 +1,13 @@
 from app.utils.constants import DEFAULT_PATHS, LAST_N_TURNS
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.core.ui import default_ui
+from app.utils.ui_messages import UI_MESSAGES
 from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END, START
-from typing import TypedDict, Annotated
-from langgraph.prebuilt import ToolNode, tools_condition
+from typing import TypedDict, Annotated, Callable
+from langgraph.prebuilt import tools_condition
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
 from pathlib import Path
@@ -18,6 +19,98 @@ class State(TypedDict):
     """Common state structure for all agents."""
 
     messages: Annotated[list[BaseMessage], add_messages]
+
+
+class SequentialToolNode:
+    """A custom tool node that processes tool calls one at a time.
+
+    This prevents UI collisions when multiple tools require permission
+    confirmation by processing them sequentially instead of in parallel.
+    """
+
+    def __init__(self, tools: list, handle_tool_errors: bool = False):
+        self.tools_by_name: dict[str, Callable] = {tool.name: tool for tool in tools}
+        self.handle_tool_errors = handle_tool_errors
+
+    def __call__(self, state: State) -> dict:
+        """Process tool calls from the last AI message sequentially."""
+        messages = state.get("messages", [])
+        if not messages:
+            return {"messages": []}
+
+        # Find the last AI message with tool calls
+        last_ai_message = None
+        for msg in reversed(messages):
+            if isinstance(msg, AIMessage) and msg.tool_calls:
+                last_ai_message = msg
+                break
+
+        if not last_ai_message or not last_ai_message.tool_calls:
+            return {"messages": []}
+
+        tool_calls = last_ai_message.tool_calls
+        total_tools = len(tool_calls)
+        result_messages = []
+
+        # Show pending tools notification if more than 1
+        if total_tools > 1:
+            default_ui.pending_tools(total_tools)
+
+        # Process each tool call one at a time
+        for idx, tool_call in enumerate(tool_calls, start=1):
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_call_id = tool_call["id"]
+
+            # Show progress if multiple tools
+            if total_tools > 1:
+                default_ui.processing_tool(idx, total_tools, tool_name, tool_args)
+
+            tool = self.tools_by_name.get(tool_name)
+            if tool is None:
+                result_messages.append(
+                    ToolMessage(
+                        content=f"Tool '{tool_name}' not found.",
+                        name=tool_name,
+                        tool_call_id=tool_call_id,
+                    )
+                )
+                continue
+
+            try:
+                # Execute the tool (this will trigger the permission check inside the tool)
+                result = tool.invoke(tool_args)
+                result_messages.append(
+                    ToolMessage(
+                        content=str(result),
+                        name=tool_name,
+                        tool_call_id=tool_call_id,
+                    )
+                )
+            except Exception as e:
+                error_content = f"Error: {e}"
+                # Check if it's a permission denied exception
+                if "PermissionDeniedException" in type(e).__name__:
+                    error_content = UI_MESSAGES["tool"]["permission_denied"].format(
+                        tool_name
+                    )
+
+                result_messages.append(
+                    ToolMessage(
+                        content=error_content,
+                        name=tool_name,
+                        tool_call_id=tool_call_id,
+                    )
+                )
+
+                # Re-raise if not handling errors and it's not a permission issue
+                if (
+                    not self.handle_tool_errors
+                    and "PermissionDeniedException" not in type(e).__name__
+                ):
+                    raise
+
+        return {"messages": result_messages}
 
 
 _PATH_ERROR_PRINTED = False
@@ -129,7 +222,7 @@ def create_base_agent(
         context = build_llm_context(state["messages"])
         return {"messages": [llm_chain.invoke({"messages": context})]}
 
-    tool_node = ToolNode(tools=tools, handle_tool_errors=False)
+    tool_node = SequentialToolNode(tools=tools, handle_tool_errors=False)
 
     graph.add_node("llm", llm_node)
 

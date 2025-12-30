@@ -149,5 +149,8 @@ UI_MESSAGES = {
         "output_header": "**Output:**",
         "truncated": "\n... *(truncated)*",
         "tool_complete": "Tool Complete: {}",
+        "pending_tools": "{} tool(s) pending approval",
+        "processing_tool": "Processing tool {} of {}",
+        "permission_denied": "Permission denied for tool '{}'",
     },
 }

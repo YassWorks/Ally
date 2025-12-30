@@ -105,6 +105,7 @@ class AgentUI:
         except:
             rendered_content = markdown_content
 
+        self.console.print()
         self.console.print(
             f"[{self._style('secondary')}]{UI_MESSAGES['tool']['tool_complete'].format(tool_name)}[/{self._style('secondary')}]"
         )
@@ -300,6 +301,24 @@ class AgentUI:
             message=f"{error_msg}",
             style="error",
         )
+
+    def pending_tools(self, count: int):
+        """Display notification about pending tool calls."""
+        self.status_message(
+            title=UI_MESSAGES["titles"]["info"],
+            message=UI_MESSAGES["tool"]["pending_tools"].format(count),
+            style="primary",
+        )
+
+    def processing_tool(
+        self, current: int, total: int, tool_name: str, tool_args: dict
+    ):
+        """Display progress for sequential tool processing."""
+        self.console.print()
+        self.console.print(
+            f"[dim]{UI_MESSAGES['tool']['processing_tool'].format(current, total)}[/dim]"
+        )
+        self.tool_call(tool_name, tool_args)
 
 
 default_ui = AgentUI(Console(width=CONSOLE_WIDTH))
