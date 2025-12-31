@@ -70,26 +70,30 @@ class CLI:
 
                 self.embedding_function = OpenAIEmbedder(embedding_model).get_embeddings
                 self.rag_available = True
-            
+
             case "nlpcloud" | "nlp cloud" | "nlp_cloud":
                 from app.src.embeddings.embedding_functions.nlp_cloud_embed import (
                     NLPCloudEmbedder,
                 )
 
-                self.embedding_function = NLPCloudEmbedder(embedding_model).get_embeddings
+                self.embedding_function = NLPCloudEmbedder(
+                    embedding_model
+                ).get_embeddings
                 self.rag_available = True
 
             case _:
                 self.embedding_function = None
                 self.rag_available = False
-        
+
         match scraping_method.lower():
             case "docling":
                 from app.src.embeddings.scrapers.docling_scraper import DoclingScraper
 
                 self.scraper = DoclingScraper()
 
-            case _:  # default to simple scraper, even for unrecognized methods as it doesn't matter really.
+            case (
+                _
+            ):  # default to simple scraper, even for unrecognized methods as it doesn't matter really.
                 from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
 
                 self.scraper = SimpleScraper()
