@@ -246,8 +246,6 @@ class AgentUI:
     ) -> str:
         """Get user input with terminal-style prompt."""
         try:
-            self.console.print()
-
             if message:
                 self.console.print(
                     f"[{self._style('muted')}]{message}[/{self._style('muted')}]"
