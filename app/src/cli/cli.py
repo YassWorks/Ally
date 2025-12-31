@@ -248,7 +248,9 @@ class CLI:
             if self.rag_available:
                 from app.src.embeddings.db_client import DataBaseClient
 
-                _ = DataBaseClient(embedding_function=self.embedding_function, scraper=self.scraper)
+                _ = DataBaseClient(
+                    embedding_function=self.embedding_function, scraper=self.scraper
+                )
 
             self._integrate_rag(agent=self.general_agent, available=self.rag_available)
 
