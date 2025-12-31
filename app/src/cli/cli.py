@@ -363,7 +363,9 @@ class CLI:
                 if parsed_args.d == ".":
                     parsed_args.d = os.getcwd()
                 elif not validate_dir_name(parsed_args.d):
-                    self.ui.error(UI_MESSAGES["errors"]["invalid_directory"].format(parsed_args.d))
+                    self.ui.error(
+                        UI_MESSAGES["errors"]["invalid_directory"].format(parsed_args.d)
+                    )
                     sys.exit(1)
                 active_dir = parsed_args.d
 
