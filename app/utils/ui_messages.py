@@ -48,6 +48,8 @@ UI_MESSAGES = {
         "session_interrupted": "Session interrupted by user",
         "recursion_warning": "Agent has been processing for a while.\nContinue or refine your prompt?",
         "initializing_agents": "Initializing agents...",
+        "welcome": "Welcome to Ally - Your private AI assistant",
+        "welcome_help_hint": "Type /help for commands and usage",
         "working_on_task": "Working on the task...",
         "generation_starting_detail": "The CodeGen Agent is now generating code based on the context provided.",
         "brainstormer_ready_detail": "Type '/exit' or press Ctrl+C to continue to code generation",

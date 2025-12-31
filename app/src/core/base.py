@@ -13,6 +13,7 @@ import langgraph.errors as lg_errors
 from app.utils.ui_messages import UI_MESSAGES
 import uuid
 import os
+import re
 import openai
 
 
@@ -472,10 +473,7 @@ class BaseAgent:
 
     def _remove_thinking_block(self, content: str) -> str:
         """Remove thinking block from response content."""
-        think_end = content.find("</think>")
-        if think_end != -1:
-            return content[think_end + len("</think>") :].strip()
-        return content
+        return re.sub(r"<think>.*?</think>\s*", "", content, flags=re.DOTALL)
 
     def _display_chunk(self, chunk: BaseMessage | dict):
         """Display chunk content in the UI."""
@@ -503,7 +501,9 @@ class BaseAgent:
     def _handle_ai_message(self, message: AIMessage):
         """Handle AI message display."""
         if message.content and message.content.strip():
-            self.ui.ai_response(message.content)
+            # remove thinking blocks before displaying
+            content = self._remove_thinking_block(message.content)
+            self.ui.ai_response(content)
 
     def _handle_tool_message(self, message: ToolMessage):
         """Handle tool message display."""

@@ -70,6 +70,21 @@ class AgentUI:
         self.console.print(panel)
         self.console.print()
 
+    def welcome(self):
+        """Display a brief welcome message."""
+        parts = UI_MESSAGES["messages"]["welcome"].split("Ally")
+        welcome_text = Text()
+        welcome_text.append(parts[0], style=self._style("text"))
+        welcome_text.append("Ally", style=f"bold {self._style('primary')}")
+        welcome_text.append(parts[1] + "\n", style=self._style("text"))
+
+        help_msg = UI_MESSAGES["messages"]["welcome_help_hint"].split("/help")
+        welcome_text.append(help_msg[0], style=self._style("muted"))
+        welcome_text.append("/help", style=f"bold {self._style('accent')}")
+        welcome_text.append(help_msg[1], style=self._style("muted"))
+        self.console.print(welcome_text)
+        self.console.print()
+
     # ─────────────────────────────────────────────────────────────
     # Tool Execution Display
     # ─────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 {
-    "provider": "github",
+    "provider": "cerebras",
     "provider_per_model": {
         "general": null,
         "code_gen": null,
@@ -7,7 +7,7 @@
         "web_searcher": null
     },
 
-    "model": "gpt-4o",
+    "model": "zai-glm-4.6",
     "models": {
         "general": null,
         "code_gen": null,

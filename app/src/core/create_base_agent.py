@@ -65,7 +65,7 @@ class SequentialToolNode:
             # Show progress if multiple tools
             if total_tools > 1:
                 default_ui.processing_tool(idx, total_tools, tool_name, tool_args)
-            
+
             default_ui.tool_call(tool_name, tool_args)
 
             tool = self.tools_by_name.get(tool_name)

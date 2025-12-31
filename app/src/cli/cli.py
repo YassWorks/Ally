@@ -232,6 +232,7 @@ class CLI:
             active_dir, initial_prompt, thread_id = self._setup_environment(args)
 
             self.ui.logo(ASCII_ART)
+            self.ui.welcome()
 
             wd_note = (
                 f"## Important Note:\n"
