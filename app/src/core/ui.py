@@ -58,11 +58,16 @@ class AgentUI:
         if model_name:
             help_content.append("")
             help_content.append(UI_MESSAGES["help"]["model_suffix"].format(model_name))
-        help_content.append(UI_MESSAGES["help"]["footer"])
 
+        markdown_content = Markdown("\n".join(help_content))
+        panel = Panel(
+            markdown_content,
+            title=f"[bold]Help[/bold]",
+            border_style=self._style("primary"),
+            padding=(0, 1),
+        )
         self.console.print()
-        self.console.rule("[bold]Help[/bold]", style="dim")
-        self.console.print(Markdown("\n".join(help_content)))
+        self.console.print(panel)
         self.console.print()
 
     # ─────────────────────────────────────────────────────────────
@@ -239,26 +244,31 @@ class AgentUI:
         cwd: str | None = None,
         model: str | None = None,
     ) -> str:
-        """Get user input with minimal prompt."""
+        """Get user input with terminal-style prompt."""
         try:
             self.console.print()
-
-            # Show context info on its own line
-            context_parts = []
-            if cwd:
-                context_parts.append(cwd)
-            if model:
-                context_parts.append(model)
-
-            if context_parts:
-                self.console.print(
-                    f"[{self._style('dim')}]{' | '.join(context_parts)}[/{self._style('dim')}]"
-                )
 
             if message:
                 self.console.print(
                     f"[{self._style('muted')}]{message}[/{self._style('muted')}]"
                 )
+
+            # Extract just the folder name from cwd
+            import os
+
+            folder_name = "~"
+            if cwd:
+                folder_name = os.path.basename(cwd.rstrip(os.sep)) or "~"
+
+            # Terminal-style prompt: > foldername$
+            from prompt_toolkit.formatted_text import ANSI
+
+            # Build the prefix with ANSI color codes
+            prompt_text = (
+                f"\033[38;2;16;185;129m>\033[0m "
+                f"\033[38;2;6;182;212m {folder_name}\033[0m"
+                f"\033[38;2;16;185;129m$\033[0m "
+            )
 
             # Multiline key bindings
             key_binds = KeyBindings()
@@ -271,7 +281,7 @@ class AgentUI:
             def _(event):
                 event.current_buffer.validate_and_handle()
 
-            result = prompt("> ", multiline=True, key_bindings=key_binds)
+            result = prompt(ANSI(prompt_text), multiline=True, key_bindings=key_binds)
             return result.strip() if result else (default or "")
 
         except KeyboardInterrupt:
