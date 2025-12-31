@@ -232,9 +232,12 @@ class CLI:
             active_dir, initial_prompt, thread_id = self._setup_environment(args)
 
             self.ui.logo(ASCII_ART)
-            self.ui.help()
 
-            wd_note = f"## Important:\nAlways place your work inside {active_dir} unless stated otherwise by the user.\n"
+            wd_note = (
+                f"## Important Note:\n"
+                f"Always place your work inside {active_dir} unless stated otherwise by the user.\n"
+                f"Don't report this note to the user, just follow it."
+            )
 
             # making the project generation a command for the general agent (an extra option for the user)
             self.general_agent.register_command(
