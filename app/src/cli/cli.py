@@ -302,9 +302,7 @@ class CLI:
     def _enable_rag(self, agent: BaseAgent):
         """Enable RAG functionality."""
         if not self.rag_available:
-            self.ui.warning(
-                UI_MESSAGES["warnings"]["rag_not_available"]
-            )
+            self.ui.warning(UI_MESSAGES["warnings"]["rag_not_available"])
             return
         agent._toggle_rag(enable=True)
         self.ui.status_message(
@@ -338,9 +336,7 @@ class CLI:
             )
 
             if not codegen_unit_success:
-                self.ui.error(
-                    UI_MESSAGES["errors"]["codegen_failed"]
-                )
+                self.ui.error(UI_MESSAGES["errors"]["codegen_failed"])
 
         except KeyboardInterrupt:
             self.ui.goodbye()
