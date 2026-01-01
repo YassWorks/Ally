@@ -108,7 +108,7 @@ class AgentUI:
                 elif "\n" in value_str:
                     value_str = value_str.split("\n")[0][:60] + "..."
                 self.console.print(
-                    f"  [{self._style('dim')}]{k}:[/{self._style('dim')}] "
+                    f"[{self._style('dim')}]{k}:[/{self._style('dim')}]\n"
                     f"[{self._style('muted')}]{value_str}[/{self._style('muted')}]"
                 )
 
@@ -134,12 +134,10 @@ class AgentUI:
             # Show output in a subtle code block style
             for line in content.strip().split("\n")[:10]:  # Max 10 lines
                 self.console.print(
-                    f"    [{self._style('muted')}]{line}[/{self._style('muted')}]"
+                    f"[{self._style('muted')}]{line}[/{self._style('muted')}]"
                 )
             if content.strip().count("\n") > 10:
-                self.console.print(
-                    f"    [{self._style('dim')}]...[/{self._style('dim')}]"
-                )
+                self.console.print(f"[{self._style('dim')}]...[/{self._style('dim')}]")
 
     # ─────────────────────────────────────────────────────────────
     # AI Response
