@@ -24,7 +24,8 @@ Ally was built a fully local agentic system using **[Ollama](https://ollama.com/
 -   Google GenAI
 -   Groq
 -   Cerebras
--   OpenAI-compatible providers (OpenRouter, GitHub Models)
+-   OpenRouter
+-   GitHub Models
 -   _(more integrations on the way!)_
 
 This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow.
@@ -177,7 +178,7 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 
 **Example configuration:**
 
--   Options for `"provider"` are "openai", "ollama", "anthropic", "groq", "github", "openrouter", "cerebras", and "google".
+-   Options for `"provider"` are "openai", "ollama", "anthropic", "google", "groq", "cerebras", "openrouter", and "github".
 
 -   The model name depends on your chosen provider (often found within the provider's dashboard or models tab).
 
@@ -234,7 +235,10 @@ This file stores your API keys.
 OPENAI_API_KEY=...
 ANTHROPIC_API_KEY=...
 GOOGLE_GEN_AI_API_KEY=...
+GROQ_API_KEY=...
 CEREBRAS_API_KEY=...
+OPENROUTER_API_KEY=...
+GITHUB_AI_API_KEY=...
 
 # Embedding providers APIs (As needed. Only add those you need.)
 
