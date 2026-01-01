@@ -22,6 +22,7 @@ Ally was built a fully local agentic system using **[Ollama](https://ollama.com/
 -   OpenAI
 -   Anthropic
 -   Google GenAI
+-   Groq
 -   Cerebras
 -   OpenAI-compatible providers (OpenRouter, GitHub Models)
 -   _(more integrations on the way!)_
@@ -175,6 +176,10 @@ git clone https://github.com/YassWorks/Ally.git
 This file (located at `Ally/`) controls Ally's main settings and integrations.
 
 **Example configuration:**
+
+-   Options for `"provider"` are "openai", "ollama", "anthropic", "groq", "github", "openrouter", "cerebras", and "google".
+
+-   The model name depends on your chosen provider (often found within the provider's dashboard or models tab).
 
 ```json
 {
