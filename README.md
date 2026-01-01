@@ -200,10 +200,10 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
     },
 
     "temperatures": {
-        "general": 0.7,
-        "code_gen": 0,
+        "general": 1,
+        "code_gen": 1,
         "brainstormer": 1,
-        "web_searcher": 0
+        "web_searcher": 1
     },
     "system_prompts": {
         // (recommended) leave as-is to use Ally's defaults
