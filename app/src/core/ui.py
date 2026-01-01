@@ -40,17 +40,18 @@ class AgentUI:
     # ─────────────────────────────────────────────────────────────
 
     def logo(self, ascii_art: str):
-        """Display ASCII logo with gradient."""
+        """Display ASCII logo with simple styling for terminal compatibility."""
         lines = ascii_art.split("\n")
-        n = max(len(lines) - 1, 1)
+        # Use theme colors that fallback gracefully on limited color terminals
+        styles = [
+            f"bold {self._style('primary')}",
+            f"bold {self._style('secondary')}",
+        ]
+
         for i, line in enumerate(lines):
-            progress = max(0.0, (i - 1) / n)
-            # Gradient from soft purple to soft coral
-            red = int(124 + (248 - 124) * progress)
-            green = int(138 + (113 - 138) * progress)
-            blue = int(255 + (113 - 255) * progress)
-            color = f"#{red:02x}{green:02x}{blue:02x}"
-            self.console.print(Text(line, style=f"bold {color}"))
+            # Alternate between two theme colors for visual interest
+            style = styles[i % 2] if i > 0 else f"bold {self._style('primary')}"
+            self.console.print(Text(line, style=style))
 
     def help(self, model_name: str = None):
         """Display help information."""
