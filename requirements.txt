@@ -1,15 +1,29 @@
-openai==2.8.1
-beautifulsoup4==4.14.2
-google-api-python-client==2.187.0
+# AI/LLM Providers
+openai==2.14.0
+ollama==0.6.1
+langchain-anthropic==0.3.22
 langchain-cerebras==0.6.0
-langchain-core==0.3.80
+langchain-groq==0.3.8
 langchain-google-genai==2.1.12
 langchain-ollama==0.3.10
-langchain-anthropic==0.3.22
+
+# LangChain Framework
 langgraph==1.0.1
-langgraph-checkpoint-sqlite==3.0.0
+langgraph-checkpoint-sqlite==3.0.1
+
+# Web Scraping & Parsing
+beautifulsoup4==4.14.3
 lxml==6.0.2
-ollama==0.6.1
+
+# Document Processing
+python-docx==1.2.0
+pymupdf4llm==0.2.7
+pymupdf-layout==1.26.6
+
+# Google API
+google-api-python-client==2.187.0
+
+# Utilities & CLI
 prompt-toolkit==3.0.52
 python-dotenv==1.2.1
 PyYAML==6.0.3

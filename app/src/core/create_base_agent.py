@@ -143,6 +143,16 @@ def create_base_agent(
     llm = None
 
     match provider.lower():
+        case "groq":
+            from langchain_groq import ChatGroq
+
+            llm = ChatGroq(
+                model=model_name,
+                temperature=temperature,
+                timeout=None,
+                max_retries=5,
+                api_key=api_key,
+            )
         case "cerebras":
             from langchain_cerebras import ChatCerebras
 

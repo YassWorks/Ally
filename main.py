@@ -25,6 +25,7 @@ api_keys = {
     "google": os.getenv("GOOGLE_GEN_AI_API_KEY"),
     "openrouter": os.getenv("OPENROUTER_API_KEY"),
     "github": os.getenv("GITHUB_AI_API_KEY"),
+    "groq": os.getenv("GROQ_API_KEY"),
 }
 
 
