@@ -264,7 +264,15 @@ Use `ally -h` for more help.
 
 ## Technical notes
 
-1. Edit the following environment variable if needed:
+1. **Logging**: Ally uses a centralized logging system that records detailed error information in log files. Error messages shown to users are kept concise for better readability, while full technical details (including stack traces) are logged for debugging purposes.
+
+    - Log files are stored in:
+        - Windows: `%LOCALAPPDATA%\Ally\logs\`
+        - Linux/MacOS: `~/.local/share/Ally/logs/`
+    - Logs are organized by date: `ally_YYYYMMDD.log`
+    - When reporting issues, please include relevant log file excerpts
+
+2. Edit the following environment variable if needed:
 
 | Environment Variable        | Purpose                                                         |
 | --------------------------- | --------------------------------------------------------------- |
@@ -283,11 +291,11 @@ Linux & MacOS:
 ~/.local/share/Ally/...
 ```
 
-2. RAG-related tools used by Ally are large in size and are therefore downloaded only after RAG settings are enabled in the config.json file. As a result, Ally will perform additional downloads the next time it is launched following these configuration changes.
+3. RAG-related tools used by Ally are large in size and are therefore downloaded only after RAG settings are enabled in the config.json file. As a result, Ally will perform additional downloads the next time it is launched following these configuration changes.
 
-3. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID. You can do the same inside the CLI, just do `/id <your_id>`
+4. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID. You can do the same inside the CLI, just do `/id <your_id>`
 
-4. Embedding and scraping files that require OCR (such as PDFs and DOCX) currently use a CPU-only PyTorch installation. You can modify the configuration to utilize a GPU if desired, though this is typically only necessary for processing very large files.
+5. Embedding and scraping files that require OCR (such as PDFs and DOCX) currently use a CPU-only PyTorch installation. You can modify the configuration to utilize a GPU if desired, though this is typically only necessary for processing very large files.
 
 ## License
 
