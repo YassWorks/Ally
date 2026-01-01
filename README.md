@@ -93,7 +93,7 @@ This workflow is still in its early stages.
 
 You have 2 options: Via Docker or locally on your machine.
 
-### **1. Docker**
+### **1. Docker (Recommended)**
 
 Create a `.env` file (or copy `.env.example`) in any location
 
