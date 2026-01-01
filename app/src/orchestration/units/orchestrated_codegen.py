@@ -50,6 +50,7 @@ class CodeGenUnit(BaseUnit):
 
             working_dir = working_dir or self._setup_working_directory()
 
+            self.ui.blank()  # Add a blank line for better readability
             user_input = (
                 prompt
                 or self.ui.get_input(
