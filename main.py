@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app import CLI, default_ui
+from app.utils.logger import logger
 
 from warnings import filterwarnings
 import os
@@ -36,14 +37,17 @@ config_path = os.path.join(BASE_DIR, "config.json")
 try:
     with open(config_path) as f:
         config = json.load(f)
-except FileNotFoundError:
+except FileNotFoundError as e:
+    logger.error("Configuration file 'config.json' not found", exc_info=e)
     default_ui.error("Configuration file 'config.json' not found.")
     sys.exit(1)
-except json.JSONDecodeError:
+except json.JSONDecodeError as e:
+    logger.error("Configuration file 'config.json' is not valid JSON", exc_info=e)
     default_ui.error("Configuration file 'config.json' is not a valid JSON.")
     sys.exit(1)
 except Exception as e:
-    default_ui.error(f"An unexpected error occurred: {e}")
+    logger.exception("Unexpected error loading configuration")
+    default_ui.error("An unexpected error occurred")
     sys.exit(1)
 
 

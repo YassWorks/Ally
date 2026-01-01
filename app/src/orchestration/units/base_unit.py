@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 from app.src.core.ui import default_ui
+from app.utils.logger import logger
 from app.utils.constants import RECURSION_LIMIT
 from app.src.core.base import BaseAgent
 from app.utils.ui_messages import UI_MESSAGES
@@ -55,7 +56,8 @@ class BaseUnit(ABC):
                 )
                 os.makedirs(working_dir, exist_ok=True)
                 return working_dir
-            except Exception:
+            except Exception as e:
+                logger.error(f"Failed to create directory: {working_dir}", exc_info=e)
                 self.ui.error(UI_MESSAGES["errors"]["failed_create_directory"])
                 working_dir = None
     

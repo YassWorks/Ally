@@ -1,6 +1,7 @@
 from app.src.core.ui import default_ui
 from app.utils.constants import DEFAULT_PATHS
 from app.src.helpers.valid_dir import validate_dir_name
+from app.utils.logger import logger
 from pathlib import Path
 import os
 
@@ -70,5 +71,6 @@ def setup(path: str = ARTIFACTS_PATH) -> None:
             )
 
     except Exception as e:
-        default_ui.error(f"Failed to download parsing models: {e}")
+        logger.exception("Failed to download parsing models")
+        default_ui.error("Failed to download parsing models. Check logs for details.")
         raise

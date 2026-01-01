@@ -3,6 +3,7 @@ from app.utils.constants import RECURSION_LIMIT, PROMPTS
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
 from app.src.embeddings.rag_errors import SetupFailedError, DBAccessError
+from app.utils.logger import logger
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMessage
 from app.src.embeddings.db_client import DataBaseClient
 from langgraph.graph.state import CompiledStateGraph
@@ -187,9 +188,10 @@ class BaseAgent:
                 self.ui.goodbye()
                 return True
 
-            except openai.NotFoundError:
+            except openai.NotFoundError as e:
+                logger.error(f"Model not found: {self.model_name}", exc_info=e)
                 self.ui.error(
-                    UI_MESSAGES["errors"]["model_not_found"].format(self.model_name)
+                    UI_MESSAGES["errors"]["model_not_found"]
                 )
                 if self.prev_model_name:
                     self.ui.status_message(
@@ -217,7 +219,8 @@ class BaseAgent:
             except PermissionDeniedException:
                 continue  # Do nothing. Let the user enter a new prompt.
 
-            except lg_errors.GraphRecursionError:
+            except lg_errors.GraphRecursionError as e:
+                logger.warning("Graph recursion limit reached", exc_info=e)
                 self.ui.warning(UI_MESSAGES["warnings"]["recursion_limit_reached"])
                 if self.ui.confirm(
                     UI_MESSAGES["confirmations"]["continue_from_left_off"], default=True
@@ -226,7 +229,8 @@ class BaseAgent:
                 else:
                     return False
 
-            except openai.RateLimitError:
+            except openai.RateLimitError as e:
+                logger.error("OpenAI rate limit exceeded", exc_info=e)
                 self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
                 if self.ui.confirm(
                     UI_MESSAGES["confirmations"]["change_model"], default=True
@@ -242,7 +246,8 @@ class BaseAgent:
                     return True
 
             except Exception as e:
-                self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
+                logger.exception("Unexpected error in chat loop")
+                self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
                 return False
 
             finally:
@@ -329,8 +334,9 @@ class BaseAgent:
                     self.rag = False
 
                 except Exception as e:
+                    logger.exception(f"Command failed: {cmd}")
                     self.ui.error(
-                        UI_MESSAGES["errors"]["command_failed"].format(cmd, e)
+                        UI_MESSAGES["errors"]["command_failed"]
                     )
 
                 finally:

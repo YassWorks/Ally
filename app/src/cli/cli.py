@@ -1,6 +1,7 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.ui_messages import UI_MESSAGES
+from app.utils.logger import logger
 from app.src.embeddings.handle_commands import (
     handle_embed_request,
     handle_index_request,
@@ -120,7 +121,8 @@ class CLI:
                 },
             )
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"].format(e))
+            logger.exception("Failed to initialize default agents")
+            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"])
             sys.exit(1)
 
         try:
@@ -133,10 +135,12 @@ class CLI:
                     api_key_per_model=api_key_per_model,
                 )
         except ValueError as ve:
-            self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
+            logger.error("Configuration validation error", exc_info=ve)
+            self.ui.error(UI_MESSAGES["errors"]["config_error"])
             sys.exit(1)
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"].format(e))
+            logger.exception("Failed to validate configuration")
+            self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"])
             sys.exit(1)
 
         try:
@@ -150,10 +154,12 @@ class CLI:
                 provider_per_model=provider_per_model,
             )
         except ValueError as ve:
-            self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
+            logger.error("Coding configuration error", exc_info=ve)
+            self.ui.error(UI_MESSAGES["errors"]["config_error"])
             sys.exit(1)
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"].format(e))
+            logger.exception("Failed to setup coding configuration")
+            self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"])
             sys.exit(1)
 
     def _validate_config(
@@ -273,7 +279,8 @@ class CLI:
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
+            logger.exception("Unexpected error in interactive session")
+            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
     def _integrate_rag(self, agent: BaseAgent, available: bool):
         """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
@@ -345,7 +352,8 @@ class CLI:
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
+            logger.exception("Unexpected error in project workflow")
+            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
     def _setup_environment(self, user_args: list[str] = None) -> tuple[str, str, str]:
         """Setup working environment and configuration."""
@@ -367,8 +375,9 @@ class CLI:
                 if parsed_args.d == ".":
                     parsed_args.d = os.getcwd()
                 elif not validate_dir_name(parsed_args.d):
+                    logger.error(f"Invalid directory name: {parsed_args.d}")
                     self.ui.error(
-                        UI_MESSAGES["errors"]["invalid_directory"].format(parsed_args.d)
+                        UI_MESSAGES["errors"]["invalid_directory"]
                     )
                     sys.exit(1)
                 active_dir = parsed_args.d
@@ -478,5 +487,6 @@ class CLI:
             )
 
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"].format(e))
+            logger.exception("Failed to initialize coding workflow")
+            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"])
             return False

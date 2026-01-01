@@ -1,5 +1,6 @@
 import argparse
 from app.src.core.ui import AgentUI
+from app.utils.logger import logger
 import sys
 
 
@@ -27,6 +28,7 @@ class ArgsParser(argparse.ArgumentParser):
         )
 
     def error(self, message):
+        logger.error(f"Argument parsing error: {message}")
         usage = self.format_help()
         self.ui.error(f"{message}\n{usage}")
         sys.exit(2)
