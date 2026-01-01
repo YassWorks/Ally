@@ -124,11 +124,14 @@ class CLI:
             sys.exit(1)
 
         try:
-            self._validate_config(
-                api_key=api_key,
-                models=models,
-                api_key_per_model=api_key_per_model,
-            )
+            if (
+                provider != "ollama"
+            ):  # Ollama doesn't require validation of API keys and models
+                self._validate_config(
+                    api_key=api_key,
+                    models=models,
+                    api_key_per_model=api_key_per_model,
+                )
         except ValueError as ve:
             self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
             sys.exit(1)
