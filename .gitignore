@@ -8,3 +8,7 @@ canvas/
 compose.yml
 
 bin/
+
+.python-version
+uv.lock
+pyproject.toml
