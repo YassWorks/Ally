@@ -101,7 +101,7 @@ try:
         stream=True,
     )
 except Exception as e:
-    logger.error(f"Failed to initialize the CLI client: {str(e)}")
+    logger.error(f"Failed to initialize the CLI client: {str(e)}", exc_info=e)
     default_ui.error("Failed to initialize the CLI client. Please check the logs.")
     sys.exit(1)
 
@@ -114,7 +114,7 @@ def main():
         args = sys.argv[1:]
         client.start_chat(*args)
     except Exception as e:
-        logger.error(f"An unexpected error occurred during the chat session: {str(e)}")
+        logger.error(f"An unexpected error occurred during the chat session: {str(e)}", exc_info=e)
         default_ui.error(
             "An unexpected error occurred. Please check the logs for details."
         )
