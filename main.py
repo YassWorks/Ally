@@ -1,9 +1,13 @@
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
 
-load_dotenv()
+    load_dotenv()
 
-from app import CLI, default_ui
-from app.utils.logger import logger
+    from app import CLI, default_ui
+    from app.utils.logger import logger
+
+except ImportError as e:
+    print("Unexpected error happened...")
 
 from warnings import filterwarnings
 import os
@@ -80,19 +84,26 @@ embedding_model = config.get("embedding_model") or ""
 
 scraping_method = config.get("scraping_method") or "simple"
 
-client = CLI(
-    provider=provider,
-    provider_per_model=provider_per_model,
-    models=models,
-    api_key=api_key,
-    api_key_per_model=api_key_per_model,
-    embedding_provider=embedding_provider,
-    embedding_model=embedding_model,
-    temperatures=temperatures,
-    system_prompts=system_prompts,
-    scraping_method=scraping_method,
-    stream=True,
-)
+client = None
+
+try:
+    client = CLI(
+        provider=provider,
+        provider_per_model=provider_per_model,
+        models=models,
+        api_key=api_key,
+        api_key_per_model=api_key_per_model,
+        embedding_provider=embedding_provider,
+        embedding_model=embedding_model,
+        temperatures=temperatures,
+        system_prompts=system_prompts,
+        scraping_method=scraping_method,
+        stream=True,
+    )
+except Exception as e:
+    logger.error(f"Failed to initialize the CLI client: {str(e)}")
+    default_ui.error("Failed to initialize the CLI client. Please check the logs.")
+    sys.exit(1)
 
 
 ########### run the CLI ###########
@@ -103,7 +114,7 @@ def main():
         args = sys.argv[1:]
         client.start_chat(*args)
     except Exception as e:
-        logger.error(f"An unexpected error occurred during the chat session: {e}")
+        logger.error(f"An unexpected error occurred during the chat session: {str(e)}")
         default_ui.error(
             "An unexpected error occurred. Please check the logs for details."
         )
