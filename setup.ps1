@@ -20,7 +20,7 @@ if (-not (Test-Path "pyproject.toml")) {
     uv init | Out-Null
 }
 
-cmd /c "uv add -r requirements.txt" | Out-Null
+cmd /c "uv add -q -r requirements.txt"
 
 # =========================== Step 2: Create wrapper (ally.cmd) ============================
 
@@ -52,5 +52,5 @@ if ($CurrentPath -split ';' -notcontains $InstallDir) {
     Write-Host "NOTE: You must close and reopen your terminal for the 'ally' command to work." -ForegroundColor Magenta
 } else {
     Write-Host "Path already configured." -ForegroundColor Green
-    Write-Host "Setup complete! You can run 'ally' now." -ForegroundColor Green
+    Write-Host "Setup complete! You can run 'ally' now. You may need to open a new terminal window." -ForegroundColor Green
 }
