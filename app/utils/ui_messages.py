@@ -75,7 +75,8 @@ UI_MESSAGES = {
     },
     # Errors
     "errors": {
-        "failed_initialize_agents": "Failed to initialize default agents. Check your API keys and configuration.",
+        "failed_initialize_agents": "Failed to initialize default agents. Check your API keys and configuration."
+        + "\nIf you're using Ollama, ensure the Ollama app is running.",
         "config_error": "Configuration error occurred. Please check your config.json file.",
         "failed_validate_config": "Failed to validate configuration. Verify API keys and model names.",
         "failed_setup_coding": "Failed to setup coding configuration. Check your models and API settings.",

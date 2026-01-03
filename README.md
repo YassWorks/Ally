@@ -161,6 +161,7 @@ docker start -ai ally
 ### Prerequesites:
 
 -   [Python](https://www.python.org/)
+-   [UV](https://github.com/astral-sh/uv)
 -   [Git](https://git-scm.com/downloads) (or download the source code from this repo)
 -   [Ollama](https://ollama.com/download) (optional)
 

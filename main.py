@@ -99,8 +99,14 @@ client = CLI(
 
 
 def main():
-    args = sys.argv[1:]
-    client.start_chat(*args)
+    try:
+        args = sys.argv[1:]
+        client.start_chat(*args)
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during the chat session: {e}")
+        default_ui.error(
+            "An unexpected error occurred. Please check the logs for details."
+        )
 
 
 if __name__ == "__main__":
