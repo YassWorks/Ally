@@ -1,60 +1,52 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "=== Setting up Ally ==="
 
-# =========================== Step 1: Create virtual environment ===========================
+# script directory
+INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Creating virtual environment..."
-python3 -m venv .venv
+# =========================== Step 1: Install requirements =================================
 
-# =========================== Step 2: Install requirements =================================
+printf '\nInstalling dependencies...\n'
+command -v uv >/dev/null 2>&1 || {
+    echo "Error: uv not found. Please install it from https://github.com/astral-sh/uv"
+    exit 1
+}
 
-echo "Installing dependencies..."
-.venv/bin/pip install -r requirements.txt
+cd "$INSTALL_DIR"
 
-# =========================== Step 3: Create bin/ally launcher =============================
+if [ ! -f "pyproject.toml" ]; then
+    uv init >/dev/null 2>&1
+fi
 
-echo "Creating launcher script..."
-CURR_DIR="$(pwd)"
-mkdir -p bin
-cat > bin/ally <<EOF
+uv add -r requirements.txt >/dev/null 2>&1
+
+# =========================== Step 2: Create bin/ally launcher =============================
+
+printf '\nCreating launcher script...\n'
+
+# wrapper script
+cat > ally <<EOF
 #!/bin/bash
-source "$CURR_DIR/.venv/bin/activate"
-python3 "$CURR_DIR/main.py" "\$@"
+source "$INSTALL_DIR/.venv/bin/activate"
+python3 "$INSTALL_DIR/main.py" "\$@"
 EOF
-chmod +x bin/ally
 
-# =========================== Step 4: Add bin to PATH ======================================
+chmod +x ally
 
-BIN_DIR="$CURR_DIR/bin"
-SHELL_CONFIG=""
+# =========================== Step 3: Add bin to PATH ======================================
 
-# detect parent shell from environment
-PARENT_SHELL=$(ps -p $PPID -o comm= 2>/dev/null || echo "")
+printf '\nInstalling ally to /usr/local/bin...\n'
 
-if [[ "$PARENT_SHELL" == *"zsh"* ]] || [[ "$SHELL" == *"zsh"* ]]; then
-    SHELL_CONFIG="$HOME/.zshrc"
-elif [[ "$PARENT_SHELL" == *"bash"* ]] || [[ "$SHELL" == *"bash"* ]]; then
-    if [ -f "$HOME/.bash_profile" ]; then
-        SHELL_CONFIG="$HOME/.bash_profile"
-    else
-        SHELL_CONFIG="$HOME/.bashrc"
-    fi
+# check if we have permission to write to /usr/local/bin, use sudo if needed
+TARGET_PATH="/usr/local/bin/ally"
+
+if [ -w "/usr/local/bin" ]; then
+    ln -sf "$INSTALL_DIR/ally" "$TARGET_PATH"
 else
-    SHELL_CONFIG=""
+    echo "Sudo permissions required to install to /usr/local/bin"
+    sudo ln -sf "$INSTALL_DIR/ally" "$TARGET_PATH"
 fi
 
-# check PATH membership
-if [[ ":$PATH:" == *":$BIN_DIR:"* ]]; then
-    echo "$BIN_DIR already in PATH"
-else
-    if [ -n "$SHELL_CONFIG" ] && ! grep -Fxq "export PATH=\"$BIN_DIR:\$PATH\"" "$SHELL_CONFIG" 2>/dev/null; then
-        echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$SHELL_CONFIG"
-        echo "Added $BIN_DIR to $SHELL_CONFIG"
-        echo "Run: source $SHELL_CONFIG  (or restart your terminal)"
-    fi
-fi
-
-echo "\nAdd this line to your shell config if needed: export PATH=\"$BIN_DIR:\$PATH\""
 echo "=== Setup complete! You can now run 'ally' in a new terminal window ==="

@@ -87,6 +87,7 @@ class CLI:
                 self.rag_available = False
 
         match scraping_method.lower():
+
             case "docling":
                 from app.src.embeddings.scrapers.docling_scraper import DoclingScraper
 
@@ -121,7 +122,7 @@ class CLI:
                 },
             )
         except Exception as e:
-            logger.exception("Failed to initialize default agents")
+            logger.error(f"Failed to initialize default agents: {e}")
             self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"])
             sys.exit(1)
 
@@ -376,9 +377,7 @@ class CLI:
                     parsed_args.d = os.getcwd()
                 elif not validate_dir_name(parsed_args.d):
                     logger.error(f"Invalid directory name: {parsed_args.d}")
-                    self.ui.error(
-                        UI_MESSAGES["errors"]["invalid_directory"]
-                    )
+                    self.ui.error(UI_MESSAGES["errors"]["invalid_directory"])
                     sys.exit(1)
                 active_dir = parsed_args.d
 

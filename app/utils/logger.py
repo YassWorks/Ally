@@ -33,6 +33,8 @@ class AllyLogger:
         # Create logger
         self._logger = logging.getLogger("ally")
         self._logger.setLevel(logging.DEBUG)
+        # Prevent logging from propagating to root logger (which outputs to console)
+        self._logger.propagate = False
 
         # Avoid duplicate handlers if logger already configured
         if not self._logger.handlers:
@@ -45,15 +47,7 @@ class AllyLogger:
             )
             file_handler.setFormatter(file_formatter)
 
-            # Console handler - only warnings and above (optional, can be removed if not needed)
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(logging.WARNING)
-            console_formatter = logging.Formatter("%(levelname)s: %(message)s")
-            console_handler.setFormatter(console_formatter)
-
             self._logger.addHandler(file_handler)
-            # Uncomment the next line if you want console logging for warnings/errors
-            # self._logger.addHandler(console_handler)
 
     def debug(self, message: str, **kwargs):
         """Log debug message."""
