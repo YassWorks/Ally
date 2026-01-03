@@ -118,10 +118,10 @@ UI_MESSAGES = {
     },
     # Usage Messages
     "usage": {
-        "embed": "Usage: /embed <directory_path> <collection_name>",
-        "index": "Usage: /index <collection_name>",
-        "unindex": "Usage: /unindex <collection_name>",
-        "delete": "Usage: /delete <collection_name>",
+        "embed": "Usage: /embed 'directory_path' 'collection_name'",
+        "index": "Usage: /index 'collection_name'",
+        "unindex": "Usage: /unindex 'collection_name'",
+        "delete": "Usage: /delete 'collection_name'",
     },
     # Success Messages
     "success": {
