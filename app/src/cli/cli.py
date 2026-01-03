@@ -86,19 +86,10 @@ class CLI:
                 self.embedding_function = None
                 self.rag_available = False
 
-        match scraping_method.lower():
+        # simple scraper (only one available for now)
+        from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
 
-            case "docling":
-                from app.src.embeddings.scrapers.docling_scraper import DoclingScraper
-
-                self.scraper = DoclingScraper()
-
-            case (
-                _
-            ):  # default to simple scraper, even for unrecognized methods as it doesn't matter really.
-                from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
-
-                self.scraper = SimpleScraper()
+        self.scraper = SimpleScraper()
 
         try:
             self.general_agent: BaseAgent = AgentFactory.create_agent(

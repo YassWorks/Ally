@@ -191,7 +191,7 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 
 -   **`embedding_model`**: Examples: `"sentence-transformers/all-MiniLM-L6-v2"` (Hugging Face) or `"all-minilm"` (Ollama).
 
--   **`scraping_method`**: Use `"simple"` (lightweight) or `"docling"` (more powerful but requires additional dependencies).
+-   **`scraping_method`**: `"simple"` is the only option for now. More powerful options coming in future versions.
 
 ```json
 {
@@ -231,9 +231,7 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 }
 ```
 
-> **Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling.
-
-> **Alternatively**, you could setup a volume (for the parsing and the embedding models) between your machine and the container so that models are persisted across sessions. See below for information where the models are stored inside the container by default.
+> **Note**: You could setup a volume for the embedding models between your machine and the container so that models are persisted across sessions. See below for information where the models are stored inside the container by default.
 
 ### 3. Configure `.env` in `/Ally`
 
@@ -293,7 +291,6 @@ Use `ally -h` for more help.
 | `ALLY_HISTORY_DIR`          | Controls where Ally stores its history.                         |
 | `ALLY_DATABASE_DIR`         | Controls where Ally stores its database.                        |
 | `ALLY_EMBEDDING_MODELS_DIR` | Controls where Ally stores its embedding models (Hugging Face). |
-| `ALLY_PARSING_MODELS_DIR`   | Controls where Ally stores its parsing models used by Docling.  |
 
 Defaults are:
 

@@ -18,7 +18,6 @@ import logging
 
 logging.basicConfig(level=logging.CRITICAL)
 filterwarnings("ignore", category=Warning, module="torch")
-filterwarnings("ignore", category=Warning, module="docling")
 filterwarnings("ignore", category=Warning, module="huggingface_hub")
 filterwarnings("ignore", category=Warning, module="onnxruntime")
 
