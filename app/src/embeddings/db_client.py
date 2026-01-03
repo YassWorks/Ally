@@ -45,27 +45,9 @@ class DataBaseClient:
             import chromadb
             from chromadb.config import Settings
         except ImportError:
-            with default_ui.console.status(
-                "Embedding config found. Installing additional required packages: ChromaDB"
-            ):
-                try:
-                    import subprocess
-                    import sys
-
-                    # in case the user didn't setup RAG from the beginning
-                    # we lazy-install chromadb when needed
-                    subprocess.check_call(
-                        [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
-                    )
-
-                except Exception as e:
-                    logger.exception("Failed to install ChromaDB package")
-                    default_ui.error(
-                        UI_MESSAGES["errors"]["failed_install_packages"]
-                    )
-                    raise DBAccessError()
-            import chromadb
-            from chromadb.config import Settings
+            raise ImportError(
+                "ChromaDB is not installed. Please run 'pip install chromadb' to use the database features."
+            )
 
         os.makedirs(DB_PATH, exist_ok=True)
 

@@ -6,7 +6,7 @@ try:
     from app import CLI, default_ui
     from app.utils.logger import logger
 
-except ImportError as e:
+except Exception as e:
     print("Unexpected error happened...")
 
 from warnings import filterwarnings
@@ -114,7 +114,10 @@ def main():
         args = sys.argv[1:]
         client.start_chat(*args)
     except Exception as e:
-        logger.error(f"An unexpected error occurred during the chat session: {str(e)}", exc_info=e)
+        logger.error(
+            f"An unexpected error occurred during the chat session: {str(e)}",
+            exc_info=e,
+        )
         default_ui.error(
             "An unexpected error occurred. Please check the logs for details."
         )
