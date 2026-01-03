@@ -1,8 +1,13 @@
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
 
-load_dotenv()
+    load_dotenv()
 
-from app import CLI, default_ui
+    from app import CLI, default_ui
+    from app.utils.logger import logger
+
+except Exception as e:
+    print("Unexpected error happened...")
 
 from warnings import filterwarnings
 import os
@@ -13,17 +18,18 @@ import logging
 
 logging.basicConfig(level=logging.CRITICAL)
 filterwarnings("ignore", category=Warning, module="torch")
-filterwarnings("ignore", category=Warning, module="docling")
 filterwarnings("ignore", category=Warning, module="huggingface_hub")
 filterwarnings("ignore", category=Warning, module="onnxruntime")
 
 
 api_keys = {
-    
     "cerebras": os.getenv("CEREBRAS_API_KEY"),
     "openai": os.getenv("OPENAI_API_KEY"),
     "anthropic": os.getenv("ANTHROPIC_API_KEY"),
     "google": os.getenv("GOOGLE_GEN_AI_API_KEY"),
+    "openrouter": os.getenv("OPENROUTER_API_KEY"),
+    "github": os.getenv("GITHUB_AI_API_KEY"),
+    "groq": os.getenv("GROQ_API_KEY"),
 }
 
 
@@ -34,14 +40,17 @@ config_path = os.path.join(BASE_DIR, "config.json")
 try:
     with open(config_path) as f:
         config = json.load(f)
-except FileNotFoundError:
+except FileNotFoundError as e:
+    logger.error("Configuration file 'config.json' not found", exc_info=e)
     default_ui.error("Configuration file 'config.json' not found.")
     sys.exit(1)
-except json.JSONDecodeError:
+except json.JSONDecodeError as e:
+    logger.error("Configuration file 'config.json' is not valid JSON", exc_info=e)
     default_ui.error("Configuration file 'config.json' is not a valid JSON.")
     sys.exit(1)
 except Exception as e:
-    default_ui.error(f"An unexpected error occurred: {e}")
+    logger.exception("Unexpected error loading configuration")
+    default_ui.error("An unexpected error occurred")
     sys.exit(1)
 
 
@@ -74,27 +83,43 @@ embedding_model = config.get("embedding_model") or ""
 
 scraping_method = config.get("scraping_method") or "simple"
 
-client = CLI(
-    provider=provider,
-    provider_per_model=provider_per_model,
-    models=models,
-    api_key=api_key,
-    api_key_per_model=api_key_per_model,
-    embedding_provider=embedding_provider,
-    embedding_model=embedding_model,
-    temperatures=temperatures,
-    system_prompts=system_prompts,
-    scraping_method=scraping_method,
-    stream=True,
-)
+client = None
+
+try:
+    client = CLI(
+        provider=provider,
+        provider_per_model=provider_per_model,
+        models=models,
+        api_key=api_key,
+        api_key_per_model=api_key_per_model,
+        embedding_provider=embedding_provider,
+        embedding_model=embedding_model,
+        temperatures=temperatures,
+        system_prompts=system_prompts,
+        scraping_method=scraping_method,
+        stream=True,
+    )
+except Exception as e:
+    logger.error(f"Failed to initialize the CLI client: {str(e)}", exc_info=e)
+    default_ui.error("Failed to initialize the CLI client. Please check the logs.")
+    sys.exit(1)
 
 
 ########### run the CLI ###########
 
 
 def main():
-    args = sys.argv[1:]
-    client.start_chat(*args)
+    try:
+        args = sys.argv[1:]
+        client.start_chat(*args)
+    except Exception as e:
+        logger.error(
+            f"An unexpected error occurred during the chat session: {str(e)}",
+            exc_info=e,
+        )
+        default_ui.error(
+            "An unexpected error occurred. Please check the logs for details."
+        )
 
 
 if __name__ == "__main__":

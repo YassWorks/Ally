@@ -1,3 +1,4 @@
+from app.utils.logger import logger
 from langchain_core.tools import tool
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter, Retry
@@ -44,8 +45,10 @@ def fetch(url: str) -> str:
         return text[:10000]
 
     except requests.RequestException as e:
+        logger.error(f"HTTP error fetching {url}", exc_info=e)
         return f"[ERROR] HTTP error for {url}: {e}"
     except Exception as e:
+        logger.error(f"Failed to parse {url}", exc_info=e)
         return f"[ERROR] Failed to parse {url}: {e}"
 
 

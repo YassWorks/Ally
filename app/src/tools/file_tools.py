@@ -1,4 +1,5 @@
 from app.src.core.permissions import permission_manager, PermissionDeniedException
+from app.utils.logger import logger
 from langchain_core.tools import tool
 import os
 import shutil
@@ -28,6 +29,7 @@ def create_wd(path: str) -> str:
         os.makedirs(path, exist_ok=True)
         return f"Working directory created at {path}"
     except Exception as e:
+        logger.error(f"Failed to create working directory: {path}", exc_info=e)
         return f"Error creating working directory: {str(e)}"
 
 
@@ -63,6 +65,7 @@ def create_file(file_path: str, content: str) -> str:
             f.write(content)
         return f"File created at {file_path}"
     except Exception as e:
+        logger.error(f"Failed to create file: {file_path}", exc_info=e)
         return f"[ERROR] Failed to create file: {str(e)}"
 
 
@@ -106,6 +109,7 @@ def modify_file(file_path: str, old_content: str, new_content: str) -> str:
             f.write(contents)
         return f"File modified at {file_path}"
     except Exception as e:
+        logger.error(f"Failed to modify file: {file_path}", exc_info=e)
         return f"Error modifying file: {str(e)}"
 
 
@@ -143,6 +147,7 @@ def append_file(file_path: str, content: str) -> str:
             f.write(content)
         return f"Content appended to {file_path}"
     except Exception as e:
+        logger.error(f"Failed to append to file: {file_path}", exc_info=e)
         return f"Error appending file: {str(e)}"
 
 
@@ -172,6 +177,7 @@ def delete_file(file_path: str) -> str:
         os.remove(file_path)
         return f"File deleted at {file_path}"
     except Exception as e:
+        logger.error(f"Failed to delete file: {file_path}", exc_info=e)
         return f"Error deleting file: {str(e)}"
 
 
@@ -201,6 +207,7 @@ def delete_directory(path: str) -> str:
         else:
             return f"Directory does not exist: {path}"
     except Exception as e:
+        logger.error(f"Failed to delete directory: {path}", exc_info=e)
         return f"Error deleting directory: {str(e)}"
 
 
@@ -231,6 +238,7 @@ def read_file(file_path: str) -> str:
             contents = f.read()
         return contents
     except Exception as e:
+        logger.error(f"Failed to read file: {file_path}", exc_info=e)
         return f"Error reading file: {str(e)}"
 
 
@@ -317,12 +325,14 @@ def list_directory(path: str = ".") -> str:
                 else:
                     items.append(f"{prefix}{item_name}")
 
-        except PermissionError:
+        except PermissionError as e:
+            logger.warning(f"Permission denied accessing: {current_path}", exc_info=e)
             if current_depth == 0:
                 items.append("❌ Permission denied")
             else:
                 items.append(f"{parent_prefix}❌ Permission denied")
         except Exception as e:
+            logger.error(f"Error listing directory: {current_path}", exc_info=e)
             if current_depth == 0:
                 items.append(f"❌ Error: {str(e)}")
             else:
@@ -338,6 +348,7 @@ def list_directory(path: str = ".") -> str:
 
         return "\n".join(result)
     except Exception as e:
+        logger.error(f"Failed to list directory: {path}", exc_info=e)
         return f"Error listing directory: {str(e)}"
 
 

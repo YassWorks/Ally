@@ -22,7 +22,10 @@ Ally was built a fully local agentic system using **[Ollama](https://ollama.com/
 -   OpenAI
 -   Anthropic
 -   Google GenAI
+-   Groq
 -   Cerebras
+-   OpenRouter
+-   GitHub Models
 -   _(more integrations on the way!)_
 
 This tool is best suited for scenarios where privacy is paramount and agentic capabilities are needed in the workflow.
@@ -37,7 +40,7 @@ A general-purpose agent that can:
 -   Access the internet.
 -   Execute commands and code.
 
-    **_Note:_** Tools always ask for your permission before executing.
+    **_Note:_** Tools always ask for your permission before executing. Multiple tool calls are processed sequentially to ensure clear approval flow.
 
 ### RAG
 
@@ -91,7 +94,7 @@ This workflow is still in its early stages.
 
 You have 2 options: Via Docker or locally on your machine.
 
-### **1. Docker**
+### **1. Docker (Recommended)**
 
 Create a `.env` file (or copy `.env.example`) in any location
 
@@ -158,6 +161,7 @@ docker start -ai ally
 ### Prerequesites:
 
 -   [Python](https://www.python.org/)
+-   [UV](https://github.com/astral-sh/uv)
 -   [Git](https://git-scm.com/downloads) (or download the source code from this repo)
 -   [Ollama](https://ollama.com/download) (optional)
 
@@ -175,48 +179,59 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 
 **Example configuration:**
 
+-   Options for `"provider"` are "openai", "ollama", "anthropic", "google", "groq", "cerebras", "openrouter", and "github".
+
+-   The model name depends on your chosen provider (often found within the provider's dashboard or models tab).
+
+-   **`provider_per_model` and `models` with `null` values**: These fields will be automatically filled with the default provider and model specified above. For example, if you set `"brainstormer": null`, it will use the main `"provider"` and `"model"` values.
+
+-   **`system_prompts`**: Leave these as `null` to use Ally's built-in default prompts (recommended). You can override individual prompts by providing custom prompt text.
+
+-   **`embedding_provider`**: Options include `"hf"` (Hugging Face - runs locally) or `"ollama"` (for locally running embedding models).
+
+-   **`embedding_model`**: Examples: `"sentence-transformers/all-MiniLM-L6-v2"` (Hugging Face) or `"all-minilm"` (Ollama).
+
+-   **`scraping_method`**: `"simple"` is the only option for now. More powerful options coming in future versions.
+
 ```json
 {
     "provider": "openai",
     "provider_per_model": {
         "general": "ollama",
         "code_gen": "anthropic",
-        "brainstormer": null, // autofilled with 'openai'
-        "web_searcher": null // autofilled with 'openai'
+        "brainstormer": null,
+        "web_searcher": null
     },
 
     "model": "gpt-4o",
     "models": {
         "general": "gpt-oss:20b",
         "code_gen": "claude-sonnet-3.5",
-        "brainstormer": null, // autofilled with 'gpt-4o'
-        "web_searcher": null // autofilled with 'gpt-4o'
+        "brainstormer": null,
+        "web_searcher": null
     },
 
     "temperatures": {
-        "general": 0.7,
-        "code_gen": 0,
+        "general": 1,
+        "code_gen": 1,
         "brainstormer": 1,
-        "web_searcher": 0
+        "web_searcher": 1
     },
     "system_prompts": {
-        // (recommended) leave as-is to use Ally's defaults
         "general": null,
         "code_gen": null,
         "brainstormer": null,
         "web_searcher": null
     },
 
-    "embedding_provider": null, // example: "hf" or "ollama"
-    "embedding_model": null, // example: "sentence-transformers/all-MiniLM-L6-v2" or "all-minilm"
+    "embedding_provider": null,
+    "embedding_model": null,
 
-    "scraping_method": "simple" // or "docling"
+    "scraping_method": "simple"
 }
 ```
 
-> **Note**: Docling is _heavy_. And requires lots of dependencies. It's recommended to go with the local install if you wish to use Docling. 
-
-> **Alternatively**, you could setup a volume (for the parsing and the embedding models) between your machine and the container so that models are persisted across sessions. See below for information where the models are stored inside the container by default.
+> **Note**: You could setup a volume for the embedding models between your machine and the container so that models are persisted across sessions. See below for information where the models are stored inside the container by default.
 
 ### 3. Configure `.env` in `/Ally`
 
@@ -228,7 +243,10 @@ This file stores your API keys.
 OPENAI_API_KEY=...
 ANTHROPIC_API_KEY=...
 GOOGLE_GEN_AI_API_KEY=...
+GROQ_API_KEY=...
 CEREBRAS_API_KEY=...
+OPENROUTER_API_KEY=...
+GITHUB_AI_API_KEY=...
 
 # Embedding providers APIs (As needed. Only add those you need.)
 
@@ -258,14 +276,21 @@ Use `ally -h` for more help.
 
 ## Technical notes
 
-1. Edit the following environment variable if needed:
+1. **Logging**: Ally uses a centralized logging system that records detailed error information in log files. Error messages shown to users are kept concise for better readability, while full technical details (including stack traces) are logged for debugging purposes.
+
+    - Log files are stored in:
+        - Windows: `%LOCALAPPDATA%\Ally\logs\`
+        - Linux/MacOS: `~/.local/share/Ally/logs/`
+    - Logs are organized by date: `ally_YYYYMMDD.log`
+    - When reporting issues, please include relevant log file excerpts
+
+2. Edit the following environment variable if needed:
 
 | Environment Variable        | Purpose                                                         |
 | --------------------------- | --------------------------------------------------------------- |
 | `ALLY_HISTORY_DIR`          | Controls where Ally stores its history.                         |
 | `ALLY_DATABASE_DIR`         | Controls where Ally stores its database.                        |
 | `ALLY_EMBEDDING_MODELS_DIR` | Controls where Ally stores its embedding models (Hugging Face). |
-| `ALLY_PARSING_MODELS_DIR`   | Controls where Ally stores its parsing models used by Docling.  |
 
 Defaults are:
 
@@ -277,11 +302,11 @@ Linux & MacOS:
 ~/.local/share/Ally/...
 ```
 
-2. RAG-related tools used by Ally are large in size and are therefore downloaded only after RAG settings are enabled in the config.json file. As a result, Ally will perform additional downloads the next time it is launched following these configuration changes.
+3. RAG-related tools used by Ally are large in size and are therefore downloaded only after RAG settings are enabled in the config.json file. As a result, Ally will perform additional downloads the next time it is launched following these configuration changes.
 
-3. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID. You can do the same inside the CLI, just do `/id <your_id>`
+4. To save a chat, use /id to view the conversation ID. The next time you open Ally, continue the conversation by using the -i flag followed by the ID. You can do the same inside the CLI, just do `/id <your_id>`
 
-4. Embedding and scraping files that require OCR (such as PDFs and DOCX) currently use a CPU-only PyTorch installation. You can modify the configuration to utilize a GPU if desired, though this is typically only necessary for processing very large files.
+5. Embedding and scraping files that require OCR (such as PDFs and DOCX) currently use a CPU-only PyTorch installation. You can modify the configuration to utilize a GPU if desired, though this is typically only necessary for processing very large files.
 
 ## License
 

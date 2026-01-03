@@ -1,3 +1,4 @@
+from app.utils.logger import logger
 from langchain_core.tools import tool
 import subprocess
 import os
@@ -53,6 +54,7 @@ def diff(commit1: str | None, commit2: str | None, cwd: str | None) -> str:
         )
 
     except Exception as e:
+        logger.error(f"Git diff execution error in {cwd}", exc_info=e)
         return f"Execution error: {str(e)}"
 
 

@@ -6,6 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+##### Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
 ##### Install system dependencies
 ##### nano is included to edit the config.json file easily if needed.
 RUN apt-get update \
@@ -15,7 +18,7 @@ RUN apt-get update \
 
 ##### Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv add -n -r requirements.txt
 
 ##### Copy project
 COPY . .

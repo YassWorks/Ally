@@ -3,6 +3,7 @@ from app.utils.constants import RECURSION_LIMIT, PROMPTS
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
 from app.src.embeddings.rag_errors import SetupFailedError, DBAccessError
+from app.utils.logger import logger
 from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMessage
 from app.src.embeddings.db_client import DataBaseClient
 from langgraph.graph.state import CompiledStateGraph
@@ -13,6 +14,7 @@ import langgraph.errors as lg_errors
 from app.utils.ui_messages import UI_MESSAGES
 import uuid
 import os
+import re
 import openai
 
 
@@ -186,9 +188,10 @@ class BaseAgent:
                 self.ui.goodbye()
                 return True
 
-            except openai.NotFoundError:
+            except openai.NotFoundError as e:
+                logger.error(f"Model not found: {self.model_name}", exc_info=e)
                 self.ui.error(
-                    UI_MESSAGES["errors"]["model_not_found"].format(self.model_name)
+                    UI_MESSAGES["errors"]["model_not_found"]
                 )
                 if self.prev_model_name:
                     self.ui.status_message(
@@ -197,6 +200,7 @@ class BaseAgent:
                     )
                     self.model_name = self.prev_model_name
                     self._handle_model_change(self.model_name)
+                    self.prev_model_name = None
                 else:
                     if self.ui.confirm(
                         UI_MESSAGES["confirmations"]["change_model"], default=True
@@ -213,9 +217,10 @@ class BaseAgent:
                         return True
 
             except PermissionDeniedException:
-                continue  # Do nothing. Let the user enter a new input.
+                continue  # Do nothing. Let the user enter a new prompt.
 
-            except lg_errors.GraphRecursionError:
+            except lg_errors.GraphRecursionError as e:
+                logger.warning("Graph recursion limit reached", exc_info=e)
                 self.ui.warning(UI_MESSAGES["warnings"]["recursion_limit_reached"])
                 if self.ui.confirm(
                     UI_MESSAGES["confirmations"]["continue_from_left_off"], default=True
@@ -224,7 +229,8 @@ class BaseAgent:
                 else:
                     return False
 
-            except openai.RateLimitError:
+            except openai.RateLimitError as e:
+                logger.error("OpenAI rate limit exceeded", exc_info=e)
                 self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
                 if self.ui.confirm(
                     UI_MESSAGES["confirmations"]["change_model"], default=True
@@ -240,7 +246,8 @@ class BaseAgent:
                     return True
 
             except Exception as e:
-                self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
+                logger.exception("Unexpected error in chat loop")
+                self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
                 return False
 
             finally:
@@ -327,8 +334,9 @@ class BaseAgent:
                     self.rag = False
 
                 except Exception as e:
+                    logger.exception(f"Command failed: {cmd}")
                     self.ui.error(
-                        UI_MESSAGES["errors"]["command_failed"].format(cmd, e)
+                        UI_MESSAGES["errors"]["command_failed"]
                     )
 
                 finally:
@@ -471,10 +479,7 @@ class BaseAgent:
 
     def _remove_thinking_block(self, content: str) -> str:
         """Remove thinking block from response content."""
-        think_end = content.find("</think>")
-        if think_end != -1:
-            return content[think_end + len("</think>") :].strip()
-        return content
+        return re.sub(r"<think>.*?</think>\s*", "", content, flags=re.DOTALL)
 
     def _display_chunk(self, chunk: BaseMessage | dict):
         """Display chunk content in the UI."""
@@ -501,11 +506,10 @@ class BaseAgent:
 
     def _handle_ai_message(self, message: AIMessage):
         """Handle AI message display."""
-        if message.tool_calls:
-            for tool_call in message.tool_calls:
-                self.ui.tool_call(tool_call["name"], tool_call["args"])
         if message.content and message.content.strip():
-            self.ui.ai_response(message.content)
+            # remove thinking blocks before displaying
+            content = self._remove_thinking_block(message.content)
+            self.ui.ai_response(content)
 
     def _handle_tool_message(self, message: ToolMessage):
         """Handle tool message display."""

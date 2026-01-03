@@ -1,5 +1,6 @@
 from app.src.core.permissions import PermissionDeniedException
 from app.src.core.ui import AgentUI
+from app.utils.logger import logger
 from typing import Callable, Any
 import langgraph.errors as lg_errors
 import openai
@@ -24,9 +25,11 @@ class AgentExceptionHandler:
             try:
                 return operation()
 
-            except PermissionDeniedException:
+            except PermissionDeniedException as e:
                 if propagate:
                     raise
+                
+                logger.warning("Permission denied for operation", exc_info=e)
                 
                 if reject_operation:
                     operation = reject_operation
@@ -35,15 +38,18 @@ class AgentExceptionHandler:
                 ui.error("Permission denied")
                 return None
 
-            except lg_errors.GraphRecursionError:
+            except lg_errors.GraphRecursionError as e:
                 if propagate:
                     raise
+                
+                logger.warning(f"Graph recursion error, retries: {retries}", exc_info=e)
                 
                 if retry_operation:
                     ui.warning(
                         "Agent processing took longer than expected (Max recursion limit reached)"
                     )
                     if retries >= AgentExceptionHandler.MAX_RETRIES:
+                        logger.error(f"Max retries ({AgentExceptionHandler.MAX_RETRIES}) reached")
                         ui.status_message(
                             title="Max Retries Reached",
                             message="Agent has been running for a while now. Please make the necessary adjustments to your prompt.",
@@ -61,10 +67,11 @@ class AgentExceptionHandler:
                 ui.error("Max recursion limit reached. Operation cannot continue.")
                 return None
 
-            except openai.RateLimitError:
+            except openai.RateLimitError as e:
                 if propagate:
                     raise
 
+                logger.error("OpenAI rate limit exceeded", exc_info=e)
                 ui.error("Rate limit exceeded. Please try again later")
                 return None
 
@@ -72,5 +79,6 @@ class AgentExceptionHandler:
                 if propagate:
                     raise
 
-                ui.error(f"An unexpected error occurred: {e}")
+                logger.exception("Unexpected error in agent operation")
+                ui.error("An unexpected error occurred")
                 return None

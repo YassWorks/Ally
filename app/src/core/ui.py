@@ -1,137 +1,255 @@
-import os
+import sys
+import time
 from rich.console import Console
-from app.utils.constants import CONSOLE_WIDTH
-from prompt_toolkit.shortcuts import prompt
-from prompt_toolkit.key_binding import KeyBindings
 from rich.markdown import Markdown
-from rich.prompt import Confirm
 from rich.panel import Panel
 from rich.text import Text
+from rich import box
+from prompt_toolkit.shortcuts import prompt, choice
+from prompt_toolkit.key_binding import KeyBindings
+from rich.prompt import Confirm
 from typing import Any
-from app.utils.constants import THEME
+
+from app.utils.constants import CONSOLE_WIDTH, THEME
 from app.utils.ui_messages import UI_MESSAGES
-import time
-import sys
-
-
-if os.name == "nt":
-    import msvcrt
-else:
-    import tty
-    import termios
 
 
 class AgentUI:
+    """Minimal, modern CLI interface for Ally."""
 
     def __init__(self, console: Console):
         self.console = console
+        self._tool_start_time: float | None = None
 
     def _style(self, color_key: str) -> str:
         return THEME.get(color_key, THEME["text"])
 
+    def _format_duration(self, seconds: float) -> str:
+        """Format duration in human-readable form."""
+        if seconds < 1:
+            return f"{seconds * 1000:.0f}ms"
+        elif seconds < 60:
+            return f"{seconds:.1f}s"
+        else:
+            mins = int(seconds // 60)
+            secs = seconds % 60
+            return f"{mins}m {secs:.0f}s"
+
+    # ─────────────────────────────────────────────────────────────
+    # Branding
+    # ─────────────────────────────────────────────────────────────
+
     def logo(self, ascii_art: str):
+        """Display ASCII logo with simple styling for terminal compatibility."""
         lines = ascii_art.split("\n")
-        n = max(len(lines) - 1, 1)
+        # Use theme colors that fallback gracefully on limited color terminals
+        styles = [
+            f"bold {self._style('primary')}",
+            f"bold {self._style('secondary')}",
+        ]
+
         for i, line in enumerate(lines):
-            progress = max(0.0, (i - 1) / n)
-
-            red = int(139 + (239 - 139) * progress)
-            green = int(92 + (68 - 92) * progress)
-            blue = int(246 + (68 - 246) * progress)
-
-            color = f"#{red:02x}{green:02x}{blue:02x}"
-            text = Text(line, style=f"bold {color}")
-            self.console.print(text)
+            # Alternate between two theme colors for visual interest
+            style = styles[i % 2] if i > 0 else f"bold {self._style('primary')}"
+            self.console.print(Text(line, style=style))
 
     def help(self, model_name: str = None):
+        """Display help information."""
         help_content = UI_MESSAGES["help"]["content"].copy()
-
         if model_name:
             help_content.append("")
             help_content.append(UI_MESSAGES["help"]["model_suffix"].format(model_name))
 
-        help_content.append(UI_MESSAGES["help"]["footer"])
         markdown_content = Markdown("\n".join(help_content))
-
         panel = Panel(
             markdown_content,
-            title=f"[bold]{UI_MESSAGES['titles']['help']}[/bold]",
-            border_style=self._style("muted"),
-            padding=(1, 2),
-        )
-        self.console.print(panel)
-
-    def tool_call(self, tool_name: str, args: dict[str, Any]):
-        tool_name = UI_MESSAGES["tool"]["title"].format(tool_name)
-        content_parts = [tool_name]
-        if args:
-            content_parts.append(UI_MESSAGES["tool"]["arguments_header"])
-            for k, v in args.items():
-
-                value_str = str(v)
-                if len(value_str) > 100 or "\n" in value_str:
-                    content_parts.append(
-                        f"- **{k}:**\n```\n{value_str[:500]}{'...' if len(value_str) > 500 else ''}\n```"
-                    )
-                else:
-                    content_parts.append(f"- **{k}:** `{value_str}`")
-
-        markdown_content = "\n".join(content_parts)
-
-        try:
-            rendered_content = Markdown(markdown_content)
-        except:
-            rendered_content = markdown_content
-
-        panel = Panel(
-            rendered_content,
-            title=f"[bold]{UI_MESSAGES['titles']['tool_executing']}[/bold]",
-            border_style=self._style("accent"),
-            padding=(1, 2),
-        )
-        self.console.print(panel)
-
-    def tool_output(self, tool_name: str, content: str):
-        tool_name = f"{tool_name}"
-        if len(content) > 1000:
-            content = content[:1000] + UI_MESSAGES["tool"]["truncated"]
-
-        markdown_content = (
-            f"{UI_MESSAGES['tool']['output_header']}\n```\n{content}\n```"
-        )
-
-        try:
-            rendered_content = Markdown(markdown_content)
-        except:
-            rendered_content = markdown_content
-
-        self.console.print(
-            f"[{self._style('secondary')}]{UI_MESSAGES['tool']['tool_complete'].format(tool_name)}[/{self._style('secondary')}]"
-        )
-        self.console.print(rendered_content)
-
-    def ai_response(self, content: str):
-        try:
-            rendered_content = Markdown(content)
-        except:
-            rendered_content = content
-
-        panel = Panel(
-            rendered_content,
-            title=f"[bold]{UI_MESSAGES['titles']['assistant']}[/bold]",
+            title=f"[bold]Help[/bold]",
             border_style=self._style("primary"),
-            padding=(1, 2),
-        )
-        self.console.print(panel)
-
-    def status_message(self, title: str, message: str, style: str = "primary"):
-        panel = Panel(
-            message,
-            title=f"[bold]{title}[/bold]",
-            border_style=self._style(style),
             padding=(0, 1),
         )
+        self.console.print()
         self.console.print(panel)
+        self.console.print()
+
+    def welcome(self):
+        """Display a brief welcome message."""
+        parts = UI_MESSAGES["messages"]["welcome"].split("Ally")
+        welcome_text = Text()
+        welcome_text.append(parts[0], style=self._style("text"))
+        welcome_text.append("Ally", style=f"bold {self._style('primary')}")
+        welcome_text.append(parts[1] + "\n", style=self._style("text"))
+
+        help_msg = UI_MESSAGES["messages"]["welcome_help_hint"].split("/help")
+        welcome_text.append(help_msg[0], style=self._style("muted"))
+        welcome_text.append("/help", style=f"bold {self._style('accent')}")
+        welcome_text.append(help_msg[1], style=self._style("muted"))
+        self.console.print(welcome_text)
+        self.console.print()
+
+    # ─────────────────────────────────────────────────────────────
+    # Tool Execution Display
+    # ─────────────────────────────────────────────────────────────
+
+    def tool_call(self, tool_name: str, args: dict[str, Any]):
+        """Display tool being executed with minimal chrome."""
+        self._tool_start_time = time.time()
+
+        self.console.print()
+        self.console.print(
+            f"[{self._style('dim')}]>[/{self._style('dim')}] "
+            f"[bold {self._style('accent')}]{tool_name}[/bold {self._style('accent')}]"
+        )
+
+        if args:
+            for k, v in args.items():
+                value_str = str(v)
+                # Truncate long values
+                if len(value_str) > 80:
+                    value_str = value_str[:77] + "..."
+                elif "\n" in value_str:
+                    value_str = value_str.split("\n")[0][:60] + "..."
+                self.console.print(
+                    f"[{self._style('dim')}]{k}:[/{self._style('dim')}]\n"
+                    f"[{self._style('muted')}]{value_str}[/{self._style('muted')}]"
+                )
+
+    def tool_output(self, tool_name: str, content: str):
+        """Display tool completion with elapsed time."""
+        elapsed = ""
+        if self._tool_start_time:
+            duration = time.time() - self._tool_start_time
+            elapsed = f" [{self._style('dim')}]{self._format_duration(duration)}[/{self._style('dim')}]"
+            self._tool_start_time = None
+
+        # Truncate long output
+        if len(content) > 800:
+            content = content[:800] + "\n..."
+
+        self.blank()
+        self.console.print(
+            f"  [{self._style('success')}]Done[/{self._style('success')}]{elapsed}"
+        )
+
+        # Only show output if there's meaningful content
+        if content.strip() and content.strip() not in ["None", "null", ""]:
+            # Show output in a subtle code block style
+            for line in content.strip().split("\n")[:10]:  # Max 10 lines
+                self.console.print(
+                    f"[{self._style('muted')}]{line}[/{self._style('muted')}]"
+                )
+            if content.strip().count("\n") > 10:
+                self.console.print(f"[{self._style('dim')}]...[/{self._style('dim')}]")
+
+    # ─────────────────────────────────────────────────────────────
+    # AI Response
+    # ─────────────────────────────────────────────────────────────
+
+    def ai_response(self, content: str):
+        """Display AI response with minimal framing."""
+        self.console.print()
+
+        try:
+            rendered = Markdown(content)
+        except Exception:
+            rendered = content
+
+        panel = Panel(
+            rendered,
+            box=box.ROUNDED,
+            border_style=self._style("border"),
+            padding=(1, 2),
+            title=f"[{self._style('primary')}]Ally[/{self._style('primary')}]",
+            title_align="left",
+        )
+        self.console.print(panel)
+
+    # ─────────────────────────────────────────────────────────────
+    # Status & Messages
+    # ─────────────────────────────────────────────────────────────
+
+    def status_message(self, title: str, message: str, style: str = "primary"):
+        """Display a simple inline status message."""
+        prefix_map = {
+            "primary": ".",
+            "success": "+",
+            "warning": "!",
+            "error": "x",
+        }
+        prefix = prefix_map.get(style, ".")
+        self.console.print(
+            f"[{self._style(style)}]{prefix}[/{self._style(style)}] "
+            f"[bold]{title}[/bold] "
+            f"[{self._style('muted')}]{message}[/{self._style('muted')}]"
+        )
+
+    def info(self, message: str):
+        """Display informational message."""
+        self.console.print(f"[{self._style('dim')}].[/{self._style('dim')}] {message}")
+
+    def thinking(self, message: str = "Thinking"):
+        """Display a thinking/processing indicator."""
+        self.console.print(
+            f"[{self._style('dim')}]...[/{self._style('dim')}] [{self._style('muted')}]{message}[/{self._style('muted')}]"
+        )
+
+    def goodbye(self):
+        """Display goodbye message."""
+        self.console.print()
+        self.console.print(
+            f"[{self._style('dim')}].[/{self._style('dim')}] {UI_MESSAGES['messages']['goodbye']}"
+        )
+        self.console.print()
+
+    def history_cleared(self):
+        """Display history cleared confirmation."""
+        self.status_message(
+            "Cleared", UI_MESSAGES["messages"]["history_cleared"], "success"
+        )
+
+    def session_interrupted(self):
+        """Display session interrupted message."""
+        self.console.print()
+        self.status_message(
+            "Interrupted", UI_MESSAGES["messages"]["session_interrupted"], "warning"
+        )
+
+    def recursion_warning(self):
+        """Display warning about extended processing."""
+        self.console.print()
+        self.console.print(
+            f"[{self._style('warning')}]![/{self._style('warning')}] "
+            f"[bold]Extended Session[/bold]"
+        )
+        self.console.print(
+            f"  [{self._style('muted')}]{UI_MESSAGES['messages']['recursion_warning']}[/{self._style('muted')}]"
+        )
+        self.console.print()
+
+    def warning(self, warning_msg: str):
+        """Display warning message."""
+        self.status_message("Warning", warning_msg, "warning")
+
+    def error(self, error_msg: str):
+        """Display error message."""
+        self.status_message("Error", error_msg, "error")
+
+    def pending_tools(self, count: int):
+        """Display pending tool count."""
+        self.blank()
+        self.info(f"{count} tool(s) queued")
+
+    def processing_tool(
+        self, current: int, total: int, tool_name: str, tool_args: dict
+    ):
+        """Display tool processing progress."""
+        self.console.print()
+        self.console.print(
+            f"[{self._style('dim')}][{current}/{total}][/{self._style('dim')}]"
+        )
+
+    # ─────────────────────────────────────────────────────────────
+    # User Input
+    # ─────────────────────────────────────────────────────────────
 
     def get_input(
         self,
@@ -140,30 +258,31 @@ class AgentUI:
         cwd: str | None = None,
         model: str | None = None,
     ) -> str:
+        """Get user input with terminal-style prompt."""
         try:
-            info_parts = []
-            if cwd:
-                info_parts.append(f"[dim]{cwd}[/dim]")
-            if model:
-                info_parts.append(f"[dim]{model}[/dim]")
-
-            info_line = " • ".join(info_parts) if info_parts else ""
-
-            prompt_content = message or ""
-            if default:
-                prompt_content += f" [dim](default: {default})[/dim]"
-
-            if info_line:
-                prompt_content += (
-                    f"\n{info_line}" if prompt_content.strip() else info_line
+            if message:
+                self.console.print(
+                    f"[{self._style('muted')}]{message}[/{self._style('muted')}]"
                 )
 
-            panel = Panel(
-                prompt_content, border_style=self._style("border"), padding=(0, 1)
-            )
-            self.console.print(panel)
+            # Extract just the folder name from cwd
+            import os
 
-            # using prompt-toolkit for multiline support
+            folder_name = "~"
+            if cwd:
+                folder_name = os.path.basename(cwd.rstrip(os.sep)) or "~"
+
+            # Terminal-style prompt: > foldername$
+            from prompt_toolkit.formatted_text import ANSI
+
+            # Build the prefix with ANSI color codes
+            prompt_text = (
+                f"\033[38;2;16;185;129m>\033[0m "
+                f"\033[38;2;6;182;212m {folder_name}\033[0m"
+                f"\033[38;2;16;185;129m$\033[0m "
+            )
+
+            # Multiline key bindings
             key_binds = KeyBindings()
 
             @key_binds.add("c-n")
@@ -174,7 +293,7 @@ class AgentUI:
             def _(event):
                 event.current_buffer.validate_and_handle()
 
-            result = prompt(">> ", multiline=True, key_bindings=key_binds)
+            result = prompt(ANSI(prompt_text), multiline=True, key_bindings=key_binds)
             return result.strip() if result else (default or "")
 
         except KeyboardInterrupt:
@@ -185,121 +304,53 @@ class AgentUI:
             return default or ""
 
     def confirm(self, message: str, default: bool = True) -> bool:
+        """Get yes/no confirmation."""
         try:
-            panel = Panel(message, border_style=self._style("warning"), padding=(0, 1))
-            self.console.print(panel)
+            self.console.print()
+            self.console.print(
+                f"[{self._style('warning')}]?[/{self._style('warning')}] {message}"
+            )
             return Confirm.ask(
-                ">>", default=default, console=self.console, show_default=False
+                ">", default=default, console=self.console, show_default=True
             )
         except KeyboardInterrupt:
             self.session_interrupted()
             sys.exit(0)
         except Exception:
             self.warning(
-                UI_MESSAGES["warnings"]["failed_confirm"].format(
-                    "y" if default else "n"
-                )
+                f"Confirmation failed, using default: {'yes' if default else 'no'}"
             )
             return default
 
-    def get_key(self):
-        """Read a single key press and return a string identifier."""
-        if os.name == "nt":
-            key = msvcrt.getch()
-            if key == b"\xe0":  # Special keys (arrows, F keys, etc.)
-                key = msvcrt.getch()
-                return {
-                    b"H": "UP",
-                    b"P": "DOWN",
-                }.get(key, None)
-            elif key in (b"\r", b"\n"):
-                return "ENTER"
-        else:
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(fd)
-                ch1 = sys.stdin.read(1)
-                if ch1 == "\x1b":  # Escape sequence
-                    ch2 = sys.stdin.read(1)
-                    if ch2 == "[":
-                        ch3 = sys.stdin.read(1)
-                        return {
-                            "A": "UP",
-                            "B": "DOWN",
-                        }.get(ch3, None)
-                elif ch1 in ("\r", "\n"):
-                    return "ENTER"
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return None
-
     def select_option(self, message: str, options: list[str]) -> int:
-        idx = 0
-        self.console.print(f"\n{message}")
-        for i, opt in enumerate(options):
-            prefix = "▶ " if i == idx else "  "
-            print(f"{prefix}{opt}")
+        """Display selection menu."""
+        values = [(i, opt) for i, opt in enumerate(options)]
+        try:
+            self.console.print()
+            result = choice(message=message, options=values)
+            return result
+        except KeyboardInterrupt:
+            self.session_interrupted()
+            sys.exit(0)
+        except Exception:
+            return 0
 
-        while True:
-            key = self.get_key()
-            if key == "UP" and idx > 0:
-                idx -= 1
-            elif key == "DOWN" and idx < len(options) - 1:
-                idx += 1
-            elif key == "ENTER":
-                return idx
+    # ─────────────────────────────────────────────────────────────
+    # Utility
+    # ─────────────────────────────────────────────────────────────
 
-            # Move cursor up to menu start
-            sys.stdout.write(f"\033[{len(options)}A")
-            for i, opt in enumerate(options):
-                prefix = "▶ " if i == idx else "  "
-                sys.stdout.write(f"{prefix}{opt}\033[K\n")
-            sys.stdout.flush()
+    def divider(self, title: str = None):
+        """Print a subtle divider line."""
+        if title:
+            self.console.rule(
+                f"[{self._style('dim')}]{title}[/{self._style('dim')}]", style="dim"
+            )
+        else:
+            self.console.rule(style="dim")
 
-    def goodbye(self):
-        self.status_message(
-            title=UI_MESSAGES["titles"]["goodbye"],
-            message=UI_MESSAGES["messages"]["goodbye"],
-            style="primary",
-        )
-
-    def history_cleared(self):
-        self.status_message(
-            title=UI_MESSAGES["titles"]["history_cleared"],
-            message=UI_MESSAGES["messages"]["history_cleared"],
-            style="success",
-        )
-
-    def session_interrupted(self):
-        self.status_message(
-            title=UI_MESSAGES["titles"]["interrupted"],
-            message=UI_MESSAGES["messages"]["session_interrupted"],
-            style="warning",
-        )
-
-    def recursion_warning(self):
-        panel = Panel(
-            UI_MESSAGES["messages"]["recursion_warning"],
-            title=f"[bold]{UI_MESSAGES['titles']['extended_session']}[/bold]",
-            border_style=self._style("warning"),
-            padding=(1, 2),
-        )
-        self.console.print(panel)
-
-    def warning(self, warning_msg: str):
-        self.status_message(
-            title=UI_MESSAGES["titles"]["warning"],
-            message=f"{warning_msg}",
-            style="warning",
-        )
-
-    def error(self, error_msg: str):
-        self.status_message(
-            title=UI_MESSAGES["titles"]["error"],
-            message=f"{error_msg}",
-            style="error",
-        )
+    def blank(self):
+        """Print a blank line."""
+        self.console.print()
 
 
 default_ui = AgentUI(Console(width=CONSOLE_WIDTH))

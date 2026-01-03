@@ -3,6 +3,7 @@ from app.src.embeddings.scrapers.abstract_scraper import Scraper
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
 from app.src.core.ui import default_ui
+from app.utils.logger import logger
 from app.utils.ui_messages import UI_MESSAGES
 from typing import Callable, Any
 from pathlib import Path
@@ -44,26 +45,9 @@ class DataBaseClient:
             import chromadb
             from chromadb.config import Settings
         except ImportError:
-            with default_ui.console.status(
-                "Embedding config found. Installing additional required packages: ChromaDB"
-            ):
-                try:
-                    import subprocess
-                    import sys
-
-                    # in case the user didn't setup RAG from the beginning
-                    # we lazy-install chromadb when needed
-                    subprocess.check_call(
-                        [sys.executable, "-m", "pip", "install", "chromadb", "-qqq"]
-                    )
-
-                except Exception as e:
-                    default_ui.error(
-                        UI_MESSAGES["errors"]["failed_install_packages"].format(e)
-                    )
-                    raise DBAccessError()
-            import chromadb
-            from chromadb.config import Settings
+            raise ImportError(
+                "ChromaDB is not installed. Please run 'pip install chromadb' to use the database features."
+            )
 
         os.makedirs(DB_PATH, exist_ok=True)
 
@@ -94,8 +78,9 @@ class DataBaseClient:
         try:
             DB_PATH.mkdir(parents=True, exist_ok=True)
         except Exception as e:
+            logger.error(f"Failed to create database directory: {DB_PATH}", exc_info=e)
             default_ui.error(
-                UI_MESSAGES["errors"]["failed_create_db_directory"].format(e)
+                UI_MESSAGES["errors"]["failed_create_db_directory"]
             )
             raise
 
@@ -115,7 +100,8 @@ class DataBaseClient:
             with open(self.indexed_collections_path, "w") as f:
                 json.dump(self.indexed_collections, f, indent=2)
         except Exception as e:
-            default_ui.error(UI_MESSAGES["errors"]["failed_save_indexed"].format(e))
+            logger.error(f"Failed to save indexed collections", exc_info=e)
+            default_ui.error(UI_MESSAGES["errors"]["failed_save_indexed"])
 
     def index_collection(self, collection_name: str) -> None:
         """Mark a collection as indexed."""
@@ -236,8 +222,9 @@ class DataBaseClient:
         """Store all documents from a directory into the database."""
 
         if not validate_dir_name(directory_path):
+            logger.error(f"Invalid directory path: {directory_path}")
             default_ui.error(
-                UI_MESSAGES["errors"]["invalid_directory_path"].format(directory_path)
+                UI_MESSAGES["errors"]["invalid_directory_path"]
             )
             return
 
@@ -258,17 +245,19 @@ class DataBaseClient:
                 if self.was_modified(directory_path, collection_name):
                     self.store_document(directory_path, collection_name)
 
-            except ScrapingFailedError:
+            except ScrapingFailedError as e:
+                logger.error(f"Failed to scrape file: {directory_path}", exc_info=e)
                 default_ui.error(
-                    UI_MESSAGES["errors"]["failed_scrape"].format(directory_path)
+                    UI_MESSAGES["errors"]["failed_scrape"]
                 )
 
             except:
                 raise
 
         if not os.path.exists(directory_path):
+            logger.error(f"Directory does not exist: {directory_path}")
             default_ui.error(
-                UI_MESSAGES["errors"]["directory_not_exist"].format(directory_path)
+                UI_MESSAGES["errors"]["directory_not_exist"]
             )
             return
 
@@ -279,9 +268,10 @@ class DataBaseClient:
                     if self.was_modified(file_path, collection_name):
                         self.store_document(file_path, collection_name)
 
-                except ScrapingFailedError:
+                except ScrapingFailedError as e:
+                    logger.error(f"Failed to scrape file: {file_path}", exc_info=e)
                     default_ui.error(
-                        UI_MESSAGES["errors"]["failed_scrape"].format(file_path)
+                        UI_MESSAGES["errors"]["failed_scrape"]
                     )
 
                 except:
@@ -320,9 +310,10 @@ class DataBaseClient:
                     style="success",
                 )
 
-        except chromadb_errors.NotFoundError:
+        except chromadb_errors.NotFoundError as e:
+            logger.warning(f"Collection not found: {collection_name}", exc_info=e)
             default_ui.error(
-                UI_MESSAGES["errors"]["collection_not_exist"].format(collection_name)
+                UI_MESSAGES["errors"]["collection_not_exist"]
             )
 
         except Exception:

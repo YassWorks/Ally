@@ -1,6 +1,7 @@
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.ui_messages import UI_MESSAGES
+from app.utils.logger import logger
 from app.src.embeddings.handle_commands import (
     handle_embed_request,
     handle_index_request,
@@ -70,29 +71,25 @@ class CLI:
 
                 self.embedding_function = OpenAIEmbedder(embedding_model).get_embeddings
                 self.rag_available = True
-            
+
             case "nlpcloud" | "nlp cloud" | "nlp_cloud":
                 from app.src.embeddings.embedding_functions.nlp_cloud_embed import (
                     NLPCloudEmbedder,
                 )
 
-                self.embedding_function = NLPCloudEmbedder(embedding_model).get_embeddings
+                self.embedding_function = NLPCloudEmbedder(
+                    embedding_model
+                ).get_embeddings
                 self.rag_available = True
 
             case _:
                 self.embedding_function = None
                 self.rag_available = False
-        
-        match scraping_method.lower():
-            case "docling":
-                from app.src.embeddings.scrapers.docling_scraper import DoclingScraper
 
-                self.scraper = DoclingScraper()
+        # simple scraper (only one available for now)
+        from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
 
-            case _:  # default to simple scraper, even for unrecognized methods as it doesn't matter really.
-                from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
-
-                self.scraper = SimpleScraper()
+        self.scraper = SimpleScraper()
 
         try:
             self.general_agent: BaseAgent = AgentFactory.create_agent(
@@ -116,20 +113,26 @@ class CLI:
                 },
             )
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"].format(e))
+            logger.error(f"Failed to initialize default agents: {e}")
+            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"])
             sys.exit(1)
 
         try:
-            self._validate_config(
-                api_key=api_key,
-                models=models,
-                api_key_per_model=api_key_per_model,
-            )
+            if (
+                provider != "ollama"
+            ):  # Ollama doesn't require validation of API keys and models
+                self._validate_config(
+                    api_key=api_key,
+                    models=models,
+                    api_key_per_model=api_key_per_model,
+                )
         except ValueError as ve:
-            self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
+            logger.error("Configuration validation error", exc_info=ve)
+            self.ui.error(UI_MESSAGES["errors"]["config_error"])
             sys.exit(1)
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"].format(e))
+            logger.exception("Failed to validate configuration")
+            self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"])
             sys.exit(1)
 
         try:
@@ -143,10 +146,12 @@ class CLI:
                 provider_per_model=provider_per_model,
             )
         except ValueError as ve:
-            self.ui.error(UI_MESSAGES["errors"]["config_error"].format(ve))
+            logger.error("Coding configuration error", exc_info=ve)
+            self.ui.error(UI_MESSAGES["errors"]["config_error"])
             sys.exit(1)
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"].format(e))
+            logger.exception("Failed to setup coding configuration")
+            self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"])
             sys.exit(1)
 
     def _validate_config(
@@ -228,9 +233,13 @@ class CLI:
             active_dir, initial_prompt, thread_id = self._setup_environment(args)
 
             self.ui.logo(ASCII_ART)
-            self.ui.help()
+            self.ui.welcome()
 
-            wd_note = f"## Important:\nAlways place your work inside {active_dir} unless stated otherwise by the user.\n"
+            wd_note = (
+                f"## Important Note:\n"
+                f"Always place your work inside {active_dir} unless stated otherwise by the user.\n"
+                f"Don't report this note to the user, just follow it."
+            )
 
             # making the project generation a command for the general agent (an extra option for the user)
             self.general_agent.register_command(
@@ -241,7 +250,9 @@ class CLI:
             if self.rag_available:
                 from app.src.embeddings.db_client import DataBaseClient
 
-                _ = DataBaseClient(embedding_function=self.embedding_function, scraper=self.scraper)
+                _ = DataBaseClient(
+                    embedding_function=self.embedding_function, scraper=self.scraper
+                )
 
             self._integrate_rag(agent=self.general_agent, available=self.rag_available)
 
@@ -260,7 +271,8 @@ class CLI:
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
+            logger.exception("Unexpected error in interactive session")
+            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
     def _integrate_rag(self, agent: BaseAgent, available: bool):
         """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
@@ -293,9 +305,7 @@ class CLI:
     def _enable_rag(self, agent: BaseAgent):
         """Enable RAG functionality."""
         if not self.rag_available:
-            self.ui.warning(
-                UI_MESSAGES["warnings"]["rag_not_available"]
-            )
+            self.ui.warning(UI_MESSAGES["warnings"]["rag_not_available"])
             return
         agent._toggle_rag(enable=True)
         self.ui.status_message(
@@ -329,14 +339,13 @@ class CLI:
             )
 
             if not codegen_unit_success:
-                self.ui.error(
-                    UI_MESSAGES["errors"]["codegen_failed"]
-                )
+                self.ui.error(UI_MESSAGES["errors"]["codegen_failed"])
 
         except KeyboardInterrupt:
             self.ui.goodbye()
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"].format(e))
+            logger.exception("Unexpected error in project workflow")
+            self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
     def _setup_environment(self, user_args: list[str] = None) -> tuple[str, str, str]:
         """Setup working environment and configuration."""
@@ -358,7 +367,8 @@ class CLI:
                 if parsed_args.d == ".":
                     parsed_args.d = os.getcwd()
                 elif not validate_dir_name(parsed_args.d):
-                    self.ui.error(UI_MESSAGES["errors"]["invalid_directory"].format(parsed_args.d))
+                    logger.error(f"Invalid directory name: {parsed_args.d}")
+                    self.ui.error(UI_MESSAGES["errors"]["invalid_directory"])
                     sys.exit(1)
                 active_dir = parsed_args.d
 
@@ -467,5 +477,6 @@ class CLI:
             )
 
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"].format(e))
+            logger.exception("Failed to initialize coding workflow")
+            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"])
             return False

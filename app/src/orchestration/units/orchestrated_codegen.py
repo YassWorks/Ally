@@ -1,6 +1,7 @@
 from app.src.orchestration.units.base_unit import BaseUnit
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.orchestration.integrate_web_search import integrate_web_search
+from app.utils.logger import logger
 from app.utils.constants import PROMPTS, RECURSION_LIMIT
 from app.utils.ui_messages import UI_MESSAGES
 from app.utils.ascii_art import ASCII_ART
@@ -50,6 +51,7 @@ class CodeGenUnit(BaseUnit):
 
             working_dir = working_dir or self._setup_working_directory()
 
+            self.ui.blank()  # Add a blank line for better readability
             user_input = (
                 prompt
                 or self.ui.get_input(
@@ -67,7 +69,8 @@ class CodeGenUnit(BaseUnit):
             return True
 
         except Exception as e:
-            self.ui.error(UI_MESSAGES["errors"]["workflow_execution_failed"].format(e))
+            logger.exception("Workflow execution failed")
+            self.ui.error(UI_MESSAGES["errors"]["workflow_execution_failed"])
             return False
 
     def _execute_generation_workflow(
@@ -316,6 +319,7 @@ class CodeGenUnit(BaseUnit):
                 web_searcher=self.agents["web_searcher"],
             )
         except Exception as e:
-            error_msg = UI_MESSAGES["errors"]["failed_integrate_web_search"].format(e)
+            logger.exception("Failed to integrate web search capabilities")
+            error_msg = UI_MESSAGES["errors"]["failed_integrate_web_search"]
             self.ui.error(error_msg)
             raise RuntimeError(error_msg)

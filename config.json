@@ -1,5 +1,5 @@
 {
-    "provider": "google",
+    "provider": "openai",
     "provider_per_model": {
         "general": null,
         "code_gen": null,
@@ -7,7 +7,7 @@
         "web_searcher": null
     },
 
-    "model": "gemini-2.5-flash",
+    "model": "gpt-5",
     "models": {
         "general": null,
         "code_gen": null,
@@ -16,10 +16,10 @@
     },
 
     "temperatures": {
-        "general": 0,
-        "code_gen": 0,
-        "brainstormer": 0,
-        "web_searcher": 0
+        "general": 1,
+        "code_gen": 1,
+        "brainstormer": 1,
+        "web_searcher": 1
     },
     "system_prompts": {
         "general": null,
