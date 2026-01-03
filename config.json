@@ -1,5 +1,5 @@
 {
-    "provider": "ollama",
+    "provider": "openai",
     "provider_per_model": {
         "general": null,
         "code_gen": null,
@@ -7,7 +7,7 @@
         "web_searcher": null
     },
 
-    "model": "devstral-small-2:24b-cloud",
+    "model": "gpt-5",
     "models": {
         "general": null,
         "code_gen": null,

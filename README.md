@@ -183,22 +183,32 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
 
 -   The model name depends on your chosen provider (often found within the provider's dashboard or models tab).
 
+-   **`provider_per_model` and `models` with `null` values**: These fields will be automatically filled with the default provider and model specified above. For example, if you set `"brainstormer": null`, it will use the main `"provider"` and `"model"` values.
+
+-   **`system_prompts`**: Leave these as `null` to use Ally's built-in default prompts (recommended). You can override individual prompts by providing custom prompt text.
+
+-   **`embedding_provider`**: Options include `"hf"` (Hugging Face - runs locally) or `"ollama"` (for locally running embedding models).
+
+-   **`embedding_model`**: Examples: `"sentence-transformers/all-MiniLM-L6-v2"` (Hugging Face) or `"all-minilm"` (Ollama).
+
+-   **`scraping_method`**: Use `"simple"` (lightweight) or `"docling"` (more powerful but requires additional dependencies).
+
 ```json
 {
     "provider": "openai",
     "provider_per_model": {
         "general": "ollama",
         "code_gen": "anthropic",
-        "brainstormer": null, // autofilled with 'openai'
-        "web_searcher": null // autofilled with 'openai'
+        "brainstormer": null,
+        "web_searcher": null
     },
 
     "model": "gpt-4o",
     "models": {
         "general": "gpt-oss:20b",
         "code_gen": "claude-sonnet-3.5",
-        "brainstormer": null, // autofilled with 'gpt-4o'
-        "web_searcher": null // autofilled with 'gpt-4o'
+        "brainstormer": null,
+        "web_searcher": null
     },
 
     "temperatures": {
@@ -208,17 +218,16 @@ This file (located at `Ally/`) controls Ally's main settings and integrations.
         "web_searcher": 1
     },
     "system_prompts": {
-        // (recommended) leave as-is to use Ally's defaults
         "general": null,
         "code_gen": null,
         "brainstormer": null,
         "web_searcher": null
     },
 
-    "embedding_provider": null, // example: "hf" or "ollama"
-    "embedding_model": null, // example: "sentence-transformers/all-MiniLM-L6-v2" or "all-minilm"
+    "embedding_provider": null,
+    "embedding_model": null,
 
-    "scraping_method": "simple" // or "docling"
+    "scraping_method": "simple"
 }
 ```
 
