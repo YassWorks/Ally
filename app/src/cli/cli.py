@@ -113,7 +113,7 @@ class CLI:
                 },
             )
         except Exception as e:
-            logger.error(f"Failed to initialize default agents: {e}")
+            logger.error(f"Failed to initialize default agents: {e}", exc_info=e)
             self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"])
             sys.exit(1)
 

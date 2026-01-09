@@ -12,6 +12,7 @@ from langgraph.graph import StateGraph
 from app.src.core.ui import AgentUI
 import langgraph.errors as lg_errors
 from app.utils.ui_messages import UI_MESSAGES
+import subprocess
 import uuid
 import os
 import re
@@ -122,6 +123,10 @@ class BaseAgent:
                 if self._handle_command(user_input, self.configuration):
                     continue
 
+                if user_input.startswith("!"):
+                    self._handle_shell_command(user_input[1:].strip())
+                    continue
+
                 if first_msg and initial_prompt_suffix:
                     user_input += f"\n\n{initial_prompt_suffix}"
                 if recurring_prompt_suffix:
@@ -190,9 +195,7 @@ class BaseAgent:
 
             except openai.NotFoundError as e:
                 logger.error(f"Model not found: {self.model_name}", exc_info=e)
-                self.ui.error(
-                    UI_MESSAGES["errors"]["model_not_found"]
-                )
+                self.ui.error(UI_MESSAGES["errors"]["model_not_found"])
                 if self.prev_model_name:
                     self.ui.status_message(
                         title=UI_MESSAGES["titles"]["reverting_model"],
@@ -252,6 +255,65 @@ class BaseAgent:
 
             finally:
                 first_msg = False
+
+    def _handle_shell_command(self, command: str):
+        """Handle execution of shell commands."""
+        import shutil
+
+        logger.debug(f"Executing shell command: {command}")
+
+        shell_name = None
+
+        if os.name == "nt":
+            # check for powershell first, if it exists use it
+            if shutil.which("pwsh") or shutil.which("pwsh.exe"):  # Powershell 7
+                shell_name = "pwsh.exe"
+            elif shutil.which("powershell") or shutil.which("powershell.exe"):  # Powershell 5
+                shell_name = "powershell.exe"
+            else:
+                shell_name = "cmd.exe"
+        else:
+            # for UNIX-like it's straightforward, use the default shell or sh
+            shell_name = os.environ.get("SHELL", "/bin/sh")
+
+        # all standard shells use -c to execute commands
+        # except for cmd.exe which uses /c without opening a new terminal
+        flag = "/c" if shell_name == "cmd.exe" else "-c"
+        full_command = f'{shell_name} {flag} "{command}"'
+
+        try:
+            result = self._execute_shell_command(full_command)
+            logger.info(f"Command executed successfully: {command}")
+            if str(result.stdout).strip():
+                print(str(result.stdout).strip())
+            else:
+                self.ui.print("No output returned from the command.", color="dim")
+        except subprocess.CalledProcessError as e:
+            logger.error(
+                f"Shell command failed with exit code {e.returncode}: {command}",
+                exc_info=e,
+            )
+            error_msg = e.stderr.strip() if e.stderr else str(e)
+            self.ui.error(f"An error occurred: {error_msg}")
+        except Exception as e:
+            logger.exception(f"Unexpected error executing shell command: {command}")
+            self.ui.error(f"An unexpected error occurred: {str(e)}")
+
+        return True
+
+    def _execute_shell_command(self, command: str) -> subprocess.CompletedProcess:
+        """Execute a shell command and display the output."""
+        logger.debug(f"Full command to execute: {command}")
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            check=True,
+            shell=True,  # full freedom
+            cwd=os.getcwd(),
+        )
+        return result
 
     def _get_user_input(
         self, continue_flag: bool = False, active_dir: str = None
@@ -335,9 +397,7 @@ class BaseAgent:
 
                 except Exception as e:
                     logger.exception(f"Command failed: {cmd}")
-                    self.ui.error(
-                        UI_MESSAGES["errors"]["command_failed"]
-                    )
+                    self.ui.error(UI_MESSAGES["errors"]["command_failed"])
 
                 finally:
                     return True

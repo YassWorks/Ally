@@ -1,6 +1,7 @@
 from app.src.core.create_base_agent import create_base_agent
 from app.src.tools.file_tools import FILE_TOOLS
 from datetime import datetime
+from pathlib import Path
 import os
 
 
@@ -31,8 +32,10 @@ def get_agent(
         tools.extend(extra_tools)
 
     if system_prompt is None or system_prompt.strip() == "":
-        dir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(dir, "system_prompt.md"), "r", encoding="utf-8") as file:
+        prompt_dir = Path(__file__).parent.parent.parent.parent.parent / "prompts"
+        with open(
+            prompt_dir / "brainstormer_system_prompt.md", "r", encoding="utf-8"
+        ) as file:
             system_prompt = (
                 file.read()
                 .strip()

@@ -182,6 +182,15 @@ class AgentUI:
             f"[{self._style('muted')}]{message}[/{self._style('muted')}]"
         )
 
+    def print(self, message: str, color: str = None):
+        """Print a custom message with specified color."""
+        if color is None:
+            self.console.print(message)
+        else:
+            self.console.print(
+                f"[{self._style(color)}]{message}[/{self._style(color)}]"
+            )
+
     def info(self, message: str):
         """Display informational message."""
         self.console.print(f"[{self._style('dim')}].[/{self._style('dim')}] {message}")

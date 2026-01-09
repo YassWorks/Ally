@@ -147,6 +147,7 @@ UI_MESSAGES = {
             "| /id | Show current session ID |",
             "| /id `<session_id>` | Change to specific session ID |",
             "| /project | Start project generation workflow |",
+            "| !`<command>` | Execute shell command directly |",
             "",
             "**RAG** (Retrieval-Augmented Generation) Commands (requires RAG to be setup and enabled)",
             "",

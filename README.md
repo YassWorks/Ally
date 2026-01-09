@@ -39,8 +39,9 @@ A general-purpose agent that can:
 -   Read, write, modify, and delete files and directories.
 -   Access the internet.
 -   Execute commands and code.
+-   Execute shell commands directly using `!<command>` syntax.
 
-    **_Note:_** Tools always ask for your permission before executing. Multiple tool calls are processed sequentially to ensure clear approval flow.
+    **_Note:_** Tools always ask for your permission before executing. Multiple tool calls are processed sequentially to ensure clear approval flow. Shell commands executed with `!` run directly without requiring approval.
 
 ### RAG
 
