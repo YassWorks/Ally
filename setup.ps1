@@ -17,10 +17,11 @@ if (-not (Get-Command "uv" -ErrorAction SilentlyContinue)) {
 Set-Location -Path $InstallDir
 
 if (-not (Test-Path "pyproject.toml")) {
-    uv init | Out-Null
+    uv init -p 3.13 | Out-Null
+    uv venv | Out-Null
 }
 
-cmd /c "uv add -q -r requirements.txt"
+cmd /c "uv pip install -q --no-cache --index-strategy unsafe-best-match -r requirements.txt"
 
 # =========================== Step 2: Create wrapper (ally.cmd) ============================
 
