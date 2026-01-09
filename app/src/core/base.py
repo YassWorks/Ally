@@ -195,9 +195,7 @@ class BaseAgent:
 
             except openai.NotFoundError as e:
                 logger.error(f"Model not found: {self.model_name}", exc_info=e)
-                self.ui.error(
-                    UI_MESSAGES["errors"]["model_not_found"]
-                )
+                self.ui.error(UI_MESSAGES["errors"]["model_not_found"])
                 if self.prev_model_name:
                     self.ui.status_message(
                         title=UI_MESSAGES["titles"]["reverting_model"],
@@ -399,9 +397,7 @@ class BaseAgent:
 
                 except Exception as e:
                     logger.exception(f"Command failed: {cmd}")
-                    self.ui.error(
-                        UI_MESSAGES["errors"]["command_failed"]
-                    )
+                    self.ui.error(UI_MESSAGES["errors"]["command_failed"])
 
                 finally:
                     return True

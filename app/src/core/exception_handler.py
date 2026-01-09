@@ -49,7 +49,7 @@ class AgentExceptionHandler:
                         "Agent processing took longer than expected (Max recursion limit reached)"
                     )
                     if retries >= AgentExceptionHandler.MAX_RETRIES:
-                        logger.error(f"Max retries ({AgentExceptionHandler.MAX_RETRIES}) reached")
+                        logger.error(f"Max retries ({AgentExceptionHandler.MAX_RETRIES}) reached", exc_info=e)
                         ui.status_message(
                             title="Max Retries Reached",
                             message="Agent has been running for a while now. Please make the necessary adjustments to your prompt.",

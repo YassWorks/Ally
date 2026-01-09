@@ -76,7 +76,9 @@ def find_references(dir_path: str, query: str) -> str:
         return "\n".join(out_lines)
 
     except Exception as e:
-        logger.error(f"Error searching for references: {query} in {dir_path}", exc_info=e)
+        logger.error(
+            f"Error searching for references: {query} in {dir_path}", exc_info=e
+        )
         return f"Search error: {str(e)}"
 
 
@@ -114,7 +116,9 @@ def find_declaration(dir_path: str, symbol: str) -> str:
 
         return "\n".join(out_lines)
     except Exception as e:
-        logger.error(f"Error searching for declaration: {symbol} in {dir_path}", exc_info=e)
+        logger.error(
+            f"Error searching for declaration: {symbol} in {dir_path}", exc_info=e
+        )
         return f"Search error: {str(e)}"
 
 
