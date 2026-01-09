@@ -2,6 +2,7 @@ from app.src.core.create_base_agent import create_base_agent
 from app.src.agents.general.config.tools import ALL_TOOLS
 from app.src.tools.web_tools import fetch_tool
 from datetime import datetime
+from pathlib import Path
 import os
 
 
@@ -15,7 +16,7 @@ def get_agent(
     provider: str = None,
 ):
     """Create a general agent.
-    
+
     Args:
         model_name: LLM model identifier
         api_key: API key for model provider
@@ -23,21 +24,31 @@ def get_agent(
         extra_tools: Additional tools to include
         temperature: Model temperature for creativity
         include_graph: Whether to return the graph along with agent
-        
+
     Returns:
         Agent instance or tuple of (graph, agent) if include_graph is True
     """
     tools = ALL_TOOLS.copy()
     if extra_tools:
         tools.extend(extra_tools)
-    
+
     # Giving the general agent the ability to access URLs without the need for the WebSearcher agent.
     tools.append(fetch_tool)
 
     if system_prompt is None or system_prompt.strip() == "":
-        dir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(dir, "system_prompt.md"), "r", encoding="utf-8") as file:
-            system_prompt = file.read().strip().format(date=datetime.today().strftime("%-d %B %Y" if os.name != "nt" else "%d %B %Y").lstrip("0"))
+        prompt_dir = Path(__file__).parent.parent.parent.parent.parent / "prompts"
+        with open(
+            prompt_dir / "general_system_prompt.md", "r", encoding="utf-8"
+        ) as file:
+            system_prompt = (
+                file.read()
+                .strip()
+                .format(
+                    date=datetime.today()
+                    .strftime("%-d %B %Y" if os.name != "nt" else "%d %B %Y")
+                    .lstrip("0")
+                )
+            )
 
     return create_base_agent(
         model_name=model_name,
