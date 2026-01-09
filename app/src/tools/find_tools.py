@@ -31,7 +31,7 @@ IGNORED_DIRS = {
     ".env",
     ".env.local",
 }
-MAX_FILE_SIZE_BYTES = 1_000_000  # 1 mb
+MAX_FILE_SIZE_BYTES = 10_000_000  # 10 mb
 MAX_RESULTS = 30
 
 
@@ -152,8 +152,11 @@ def _collect_files(root: str) -> list[str]:
     for dirpath, dirnames, filenames in os.walk(root):
         # prune ignored dirs immediately
         dirnames[:] = [
-            d for d in dirnames 
-            if not any(re.search(rf'^{re.escape(pattern)}', d) for pattern in IGNORED_DIRS)
+            d
+            for d in dirnames
+            if not any(
+                re.search(rf"^{re.escape(pattern)}", d) for pattern in IGNORED_DIRS
+            )
         ]
 
         for entry in filenames:
