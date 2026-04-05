@@ -6,8 +6,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, END, START
-from typing import TypedDict, Annotated, Callable
-from langgraph.prebuilt import tools_condition
+from typing import TypedDict, Annotated, Callable, Literal
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langchain_core.prompts import ChatPromptTemplate
 from pathlib import Path
@@ -19,6 +18,25 @@ class State(TypedDict):
     """Common state structure for all agents."""
 
     messages: Annotated[list[BaseMessage], add_messages]
+
+
+def tools_condition(
+    state: State,
+    messages_key: str = "messages",
+) -> Literal["tools", "__end__"]:
+    """Determine whether to call tools based on the presence of tool calls in the last AI message."""
+    if isinstance(state, list):
+        ai_message = state[-1]
+    elif (isinstance(state, dict) and (messages := state.get(messages_key, []))) or (
+        messages := getattr(state, messages_key, [])
+    ):
+        ai_message = messages[-1]
+    else:
+        msg = f"No messages found in input state to tool_edge: {state}"
+        raise ValueError(msg)
+    if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
+        return "tools"
+    return "__end__"
 
 
 class SequentialToolNode:

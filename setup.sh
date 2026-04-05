@@ -17,11 +17,11 @@ command -v uv >/dev/null 2>&1 || {
 cd "$INSTALL_DIR"
 
 if [ ! -f "pyproject.toml" ]; then
-    uv -p 3.13 init >/dev/null 2>&1
-    uv venv >/dev/null 2>&1
+    uv init -p 3.13 2>&1
+    uv venv 2>&1
 fi
 
-uv pip install -q --no-cache --index-strategy unsafe-best-match -r requirements.txt
+uv pip install --no-cache --index-strategy unsafe-best-match -r requirements.txt
 
 # =========================== Step 2: Create bin/ally launcher =============================
 

@@ -16,7 +16,7 @@ transformers==4.57.3
 chromadb==1.4.0
 
 # LangChain Framework
-langgraph==1.0.5
+langgraph==1.0.9
 langgraph-checkpoint-sqlite==3.0.1
 
 # Web Scraping & Parsing

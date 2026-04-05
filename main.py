@@ -8,6 +8,9 @@ try:
 
 except Exception as e:
     print("Unexpected error happened...")
+    import sys
+    sys.exit(1)
+
 
 from warnings import filterwarnings
 import os
@@ -120,6 +123,7 @@ def main():
         default_ui.error(
             "An unexpected error occurred. Please check the logs for details."
         )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
