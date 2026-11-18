@@ -105,7 +105,6 @@ Ally loads `.env` from the folder you cloned it into. Variables already set in y
 | `CEREBRAS_API_KEY` | The `cerebras` provider. |
 | `OPENROUTER_API_KEY` | The `openrouter` provider. |
 | `NLP_CLOUD_API_KEY` | NLP Cloud embeddings. |
-| `GOOGLE_SEARCH_API_KEY`, `SEARCH_ENGINE_ID` | Web search. See [below](#web-search). |
 | `OLLAMA_HOST` | Address of the Ollama server, if it is not `http://localhost:11434`. |
 | `ALLY_CONFIG` | Path to the config file to use instead of `config.json`. |
 | `ALLY_HISTORY_DIR`, `ALLY_DATABASE_DIR`, `ALLY_EMBEDDING_MODELS_DIR` | Where Ally stores its data. See [below](#where-ally-keeps-its-data). |
@@ -114,18 +113,11 @@ Only the keys for the providers you actually use are needed.
 
 ## Web search
 
-The web searcher uses Google's Custom Search JSON API. Without it, everything else still works and the search tool tells the model that search is not configured.
+Web search needs no setup. The web searcher looks queries up with [ddgs](https://pypi.org/project/ddgs/), a metasearch library that sends each query to a few public search engines without an API key, then reads the top five pages itself.
 
-1. Create a search engine in the [Programmable Search Engine control panel](https://programmablesearchengine.google.com/controlpanel/all) and turn on **Search the entire web**. Copy its **Search engine ID**.
-2. Create an API key for the [Custom Search JSON API](https://developers.google.com/custom-search/v1/overview) in the same Google Cloud project.
-3. Add both to `.env`:
+Searches are anonymous but not private: the engines see the query text and your IP address. Search engines also rate limit automated queries now and then. When that happens, the tool tells the model the search failed and the model can try again or answer without it.
 
-   ```text
-   GOOGLE_SEARCH_API_KEY=your-api-key
-   SEARCH_ENGINE_ID=your-search-engine-id
-   ```
-
-Fetching a page from a known URL does not need these keys.
+Earlier versions used Google's Custom Search JSON API. Google closed it to new customers and shuts it down on January 1, 2027, so `GOOGLE_SEARCH_API_KEY` and `SEARCH_ENGINE_ID` are no longer read and can be removed from `.env`.
 
 ## Where Ally keeps its data
 

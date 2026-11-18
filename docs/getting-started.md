@@ -92,7 +92,7 @@ ollama pull qwen3
 
 Ally works best with models that support tool calling. Small local models may skip tools or misuse them.
 
-To let Ally search the web, add a Google Programmable Search Engine key and engine ID to `.env`. The [configuration guide](configuration.md#web-search) explains how to get them. Everything else works without them.
+Web search works out of the box, without a key. See [Web search](configuration.md#web-search) for how it works.
 
 [Configuration](configuration.md) covers every setting, including using a different provider or model for each agent.
 
