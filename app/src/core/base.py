@@ -149,15 +149,7 @@ class BaseAgent:
                 if rag_message:
                     messages.append(rag_message)
 
-                last = None
-                for chunk in self.agent.stream(
-                    {"messages": messages}, config=self.configuration
-                ):
-                    if stream:
-                        self._display_chunk(chunk)
-                    last = chunk
-                if not stream and last:
-                    self._display_chunk(last)
+                self._run_turn(messages, stream)
 
             except KeyboardInterrupt:
                 self.ui.goodbye()
@@ -177,6 +169,50 @@ class BaseAgent:
 
             finally:
                 first_msg = False
+
+    def _run_turn(self, messages: list, stream: bool) -> None:
+        """Send one user turn through the graph and show the reply as it arrives.
+
+        Tokens from the model are streamed into a live view. Tokens produced while the
+        tools node runs are ignored, since they come from nested agents such as the
+        web searcher.
+        """
+        reply = self.ui.response_stream()
+        running_tools = False
+        last_update = None
+        try:
+            if stream:
+                reply.wait()
+            for mode, payload in self.agent.stream(
+                {"messages": messages},
+                config=self.configuration,
+                stream_mode=["messages", "updates"],
+            ):
+                if mode == "messages":
+                    chunk, metadata = payload
+                    if (
+                        stream
+                        and not running_tools
+                        and metadata.get("langgraph_node") == "llm"
+                    ):
+                        reply.add(content_text(chunk.content))
+                    continue
+
+                last_update = payload
+                reply.close()
+                if stream:
+                    self._display_chunk(payload)
+                if "llm" in payload:
+                    running_tools = True
+                elif "tools" in payload:
+                    running_tools = False
+                    if stream:
+                        reply.wait()
+        finally:
+            reply.close()
+
+        if not stream and last_update:
+            self._display_chunk(last_update)
 
     def _rag_context(self, user_input: str) -> HumanMessage | None:
         """Look up ``user_input`` in the knowledge base when RAG is on."""

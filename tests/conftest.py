@@ -1,9 +1,12 @@
+import json
+import re
 from collections.abc import Iterator
 from typing import Any
 
 import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, AIMessageChunk
+from langchain_core.outputs import ChatGenerationChunk
 from pydantic import Field
 
 from app.config import AgentSettings
@@ -20,6 +23,34 @@ class FakeChatModel(GenericFakeChatModel):
     def bind_tools(self, tools, **kwargs):
         self.bound_tools[:] = [tool.name for tool in tools]
         return self
+
+    def _stream(self, messages, stop=None, run_manager=None, **kwargs):
+        message = self._generate(messages, stop=stop, **kwargs).generations[0].message
+        if message.tool_calls:
+            chunks = [
+                AIMessageChunk(
+                    content=message.content,
+                    tool_call_chunks=[
+                        {
+                            "name": call["name"],
+                            "args": json.dumps(call["args"]),
+                            "id": call["id"],
+                            "index": index,
+                        }
+                        for index, call in enumerate(message.tool_calls)
+                    ],
+                )
+            ]
+        elif isinstance(message.content, str):
+            chunks = [
+                AIMessageChunk(content=part)
+                for part in re.split(r"(\s+)", message.content)
+            ]
+        else:
+            chunks = [AIMessageChunk(content=message.content)]
+
+        for chunk in chunks:
+            yield ChatGenerationChunk(message=chunk)
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
         self.received.append(messages)

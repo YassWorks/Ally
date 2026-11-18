@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 from typing import Any
@@ -8,6 +9,7 @@ from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import choice, prompt
 from rich import box
 from rich.console import Console
+from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Confirm
@@ -156,15 +158,22 @@ class AgentUI:
         except Exception:
             rendered = content
 
-        panel = Panel(
-            rendered,
+        self.console.print(self.response_panel(rendered))
+
+    def response_panel(self, renderable) -> Panel:
+        """Wrap ``renderable`` in the panel used for Ally's replies."""
+        return Panel(
+            renderable,
             box=box.ROUNDED,
             border_style=self._style("border"),
             padding=(1, 2),
             title=f"[{self._style('primary')}]Ally[/{self._style('primary')}]",
             title_align="left",
         )
-        self.console.print(panel)
+
+    def response_stream(self) -> "ResponseStream":
+        """Return a live view for a reply that is still being generated."""
+        return ResponseStream(self)
 
     # ─────────────────────────────────────────────────────────────
     # Status & Messages
@@ -367,6 +376,78 @@ class AgentUI:
     def blank(self):
         """Print a blank line."""
         self.console.print()
+
+
+THINK_BLOCK = re.compile(r"<think>.*?(</think>\s*|$)", re.DOTALL)
+
+
+class ResponseStream:
+    """Shows a spinner, then the tail of a reply while its tokens arrive.
+
+    The live view is transient: once the reply is complete it is cleared, and the
+    caller prints the fully rendered reply. Nothing is drawn unless the console is an
+    interactive terminal.
+    """
+
+    def __init__(self, ui: AgentUI):
+        self.ui = ui
+        self.enabled = ui.console.is_terminal
+        self.text = ""
+        self._status = None
+        self._live: Live | None = None
+
+    def wait(self) -> None:
+        """Show a spinner until the first token arrives."""
+        if not self.enabled or self._status or self._live:
+            return
+        self._status = self.ui.console.status(
+            f"[{self.ui._style('muted')}]Thinking...[/{self.ui._style('muted')}]"
+        )
+        self._status.start()
+
+    def add(self, token: str) -> None:
+        """Append ``token`` to the reply and redraw it."""
+        if not self.enabled or not token:
+            return
+        self.text += token
+        visible = THINK_BLOCK.sub("", self.text).strip()
+        if not visible:
+            return
+
+        self._stop_status()
+        if self._live is None:
+            self._live = Live(
+                self._render(visible),
+                console=self.ui.console,
+                transient=True,
+                auto_refresh=False,
+            )
+            self._live.start()
+        self._live.update(self._render(visible), refresh=True)
+
+    def close(self) -> None:
+        """Clear the live view and the spinner, and forget the text."""
+        self._stop_status()
+        if self._live is not None:
+            self._live.stop()
+            self._live = None
+        self.text = ""
+
+    def _stop_status(self) -> None:
+        if self._status is not None:
+            self._status.stop()
+            self._status = None
+
+    def _render(self, text: str) -> Panel:
+        width = max(self.ui.console.width - 6, 20)
+        height = max(self.ui.console.size.height - 6, 5)
+        lines: list[str] = []
+        for line in text.splitlines():
+            lines.extend(
+                line[i : i + width] for i in range(0, max(len(line), 1), width)
+            )
+        tail = "\n".join(lines[-height:])
+        return self.ui.response_panel(Text(tail, style=self.ui._style("text")))
 
 
 default_ui = AgentUI(Console(width=CONSOLE_WIDTH))
