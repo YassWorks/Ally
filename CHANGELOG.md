@@ -2,6 +2,12 @@
 
 Notable changes to Ally are listed here, newest first. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## 0.8.1 (2026-11-18)
+
+### Fixed
+
+- The Docker image kept uv's download cache, which doubled its size. The image is now about 2 GB smaller unpacked.
+
 ## 0.8.0 (2026-11-18)
 
 A maintenance release. Ally now installs as a regular command line tool, starts about twice as fast, streams its replies and fixes a long list of bugs, several of which made RAG and non-OpenAI providers unreliable.

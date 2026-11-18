@@ -1,6 +1,6 @@
 [project]
 name = "ally"
-version = "0.8.0"
+version = "0.8.1"
 description = "A private, provider-agnostic AI agent for your terminal: chat with tools, local RAG, and project generation."
 readme = "README.md"
 license = "Apache-2.0"
