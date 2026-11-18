@@ -89,7 +89,7 @@ These tools fetch public pages and do not ask for approval.
 | Tool | What it does |
 | --- | --- |
 | `fetch_tool` | Downloads a page and returns its readable text, up to 10,000 characters. |
-| `search_and_scrape` | Searches the web and returns the title, URL and text of the top five results. See [web search](configuration.md#web-search). |
+| `search_and_scrape` | Searches the web and returns the title, URL and first 4,000 characters of the top five results. See [web search](configuration.md#web-search). |
 | `call_searcher` | Hands a question to the web searcher agent, which searches, reads and returns a summary with sources. |
 
 ## Which agent has which tools

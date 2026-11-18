@@ -71,6 +71,7 @@ def fetch_tool(url: str) -> str:
 
 SEARCH_RESULTS = 5
 SEARCH_TIMEOUT = 10
+SEARCH_PAGE_CHARS = 4000
 
 
 def web_search(query: str, n: int = SEARCH_RESULTS) -> list[dict[str, str]]:
@@ -91,9 +92,9 @@ def web_search(query: str, n: int = SEARCH_RESULTS) -> list[dict[str, str]]:
 def search_and_scrape(query: str) -> str:
     """Search the web and return the text of the top 5 results.
 
-    Each result starts with its title and URL, and each page is cut at 10,000
-    characters. If the results miss the point, search again with different
-    terms.
+    Each result starts with its title and URL, followed by the first 4,000
+    characters of the page. Use fetch_tool on a result's URL to read more of
+    it. If the results miss the point, search again with different terms.
 
     Args:
         query: Search terms.
@@ -109,7 +110,7 @@ def search_and_scrape(query: str) -> str:
         pages = list(pool.map(fetch, [r["link"] for r in results]))
 
     sections = [
-        f"# {r['title']}\nSource: {r['link']}\n\n{text}"
+        f"# {r['title']}\nSource: {r['link']}\n\n{text[:SEARCH_PAGE_CHARS]}"
         for r, text in zip(results, pages, strict=True)
     ]
     return "\n\n".join(sections)

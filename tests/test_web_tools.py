@@ -48,3 +48,12 @@ def test_search_failures_are_reported_to_the_model(search):
     result = web_tools.search_and_scrape.invoke({"query": "zzzz"})
 
     assert result == "Web search failed: No results found. Try different search terms."
+
+
+def test_each_result_page_is_kept_short(search, monkeypatch):
+    search.results = [{"title": "Long", "href": "https://long.example", "body": ""}]
+    monkeypatch.setattr(web_tools, "fetch", lambda url: "z" * 9000)
+
+    result = web_tools.search_and_scrape.invoke({"query": "long"})
+
+    assert result.count("z") == web_tools.SEARCH_PAGE_CHARS
