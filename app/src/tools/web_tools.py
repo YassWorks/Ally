@@ -1,4 +1,3 @@
-import os
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -70,72 +69,47 @@ def fetch_tool(url: str) -> str:
     return fetch(url)
 
 
-SEARCH_ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
+SEARCH_RESULTS = 5
 SEARCH_TIMEOUT = 10
 
 
-def google_search(query: str, n: int = 5) -> list[dict[str, str]]:
-    """Return up to ``n`` Google results for ``query`` as ``{"title", "link"}`` dicts.
+def web_search(query: str, n: int = SEARCH_RESULTS) -> list[dict[str, str]]:
+    """Return up to ``n`` web results for ``query`` as ``{"title", "link"}`` dicts.
+
+    Uses the ddgs metasearch library, which needs no API key.
 
     Raises:
-        ValueError: If ``GOOGLE_SEARCH_API_KEY`` or ``SEARCH_ENGINE_ID`` is not set.
-        requests.HTTPError: If the search request fails.
+        ddgs.exceptions.DDGSException: If the search fails or finds nothing.
     """
-    api_key = os.getenv("GOOGLE_SEARCH_API_KEY")
-    engine_id = os.getenv("SEARCH_ENGINE_ID")
-    if not api_key or not engine_id:
-        raise ValueError(
-            "Set GOOGLE_SEARCH_API_KEY and SEARCH_ENGINE_ID in .env to enable web search."
-        )
+    from ddgs import DDGS
 
-    results, start = [], 1
-    while len(results) < n:
-        batch = min(10, n - len(results))
-        params = {
-            "key": api_key,
-            "cx": engine_id,
-            "q": query,
-            "num": batch,
-            "start": start,
-        }
-        resp = requests.get(SEARCH_ENDPOINT, params=params, timeout=SEARCH_TIMEOUT)
-        resp.raise_for_status()
-        data = resp.json()
-
-        for item in data.get("items", []):
-            results.append({"title": item["title"], "link": item["link"]})
-            if len(results) == n:
-                break
-
-        start += batch
-        if "nextPage" not in data.get("queries", {}):
-            break
-
-    return results
+    results = DDGS(timeout=SEARCH_TIMEOUT).text(query, max_results=n)
+    return [{"title": r["title"], "link": r["href"]} for r in results[:n]]
 
 
 @tool(parse_docstring=True)
 def search_and_scrape(query: str) -> str:
-    """Search Google and return the text of the top 5 results.
+    """Search the web and return the text of the top 5 results.
 
-    Each page is cut at 10,000 characters. If the results miss the point,
-    search again with different terms.
+    Each result starts with its title and URL, and each page is cut at 10,000
+    characters. If the results miss the point, search again with different
+    terms.
 
     Args:
         query: Search terms.
     """
     try:
-        search_results = google_search(query, 5)
-        with ThreadPoolExecutor(max_workers=max(len(search_results), 1)) as pool:
-            pages = pool.map(fetch, [r["link"] for r in search_results])
-            for r, text in zip(search_results, pages, strict=True):
-                r["full_text"] = text
-
-        formatted_results = "This answer is **possibly incomplete**. Consider refining search terms as needed.\n\n"
-        for r in search_results:
-            formatted_results += f"# Title: \n{r['title']}\n\n"
-            formatted_results += f"# Content: \n{r['full_text']}\n\n"
-
-        return formatted_results
+        results = web_search(query)
     except Exception as e:
-        return f"[ERROR] Failed to perform web search: {e}"
+        logger.warning(f"Web search failed: {query}", exc_info=e)
+        reason = str(e).rstrip(".") or type(e).__name__
+        return f"Web search failed: {reason}. Try different search terms."
+
+    with ThreadPoolExecutor(max_workers=len(results) or 1) as pool:
+        pages = list(pool.map(fetch, [r["link"] for r in results]))
+
+    sections = [
+        f"# {r['title']}\nSource: {r['link']}\n\n{text}"
+        for r, text in zip(results, pages, strict=True)
+    ]
+    return "\n\n".join(sections)
