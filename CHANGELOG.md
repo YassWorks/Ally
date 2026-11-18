@@ -2,16 +2,17 @@
 
 Notable changes to Ally are listed here, newest first. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## 0.8.0 (unreleased)
+## 0.8.0 (2026-11-18)
 
 A maintenance release. Ally now installs as a regular command line tool, starts about twice as fast, streams its replies and fixes a long list of bugs, several of which made RAG and non-OpenAI providers unreliable.
 
 ### Upgrading from 0.7
 
 1. **Remove the old launcher.** Version 0.7 linked `ally` into your system rather than installing it.
-   - Linux and macOS: `sudo rm /usr/local/bin/ally`
-   - Windows: remove the Ally folder from your user `Path` environment variable, then delete `ally.bat` from that folder.
-2. **Reinstall.** Pull the latest code and run `./setup.sh` or `.\setup.ps1` again. If you use Hugging Face embeddings (`"embedding_provider": "hf"`), add `--hf` or `-HF`, since PyTorch is now optional.
+   - Linux and macOS: `sudo rm /usr/local/bin/ally`, then delete the `ally` script in the Ally folder. If your shell profile adds an Ally `bin` folder to `PATH`, remove that line too.
+   - Windows: remove the Ally folder, or its `bin` folder, from your user `Path` environment variable, then delete the `ally.bat` it contains.
+   - Optionally, delete the `.venv` folder inside the Ally folder. The new install keeps its own environment.
+2. **Reinstall.** Pull the latest code and run `./setup.sh` or `.\setup.ps1` again. If you use Hugging Face embeddings (`"embedding_provider": "hf"`), add `--hf` or `-HF`, since PyTorch is now optional. Older setup scripts generated `pyproject.toml`, `uv.lock` and `.python-version` locally. If `git pull` refuses to overwrite them, delete them and pull again.
 3. **Rebuild your RAG collections** with `/delete <collection>` and `/embed <path> <collection>`. Version 0.7 stored 50-character chunks, which retrieve poorly.
 4. **Check your keys.** Each agent now uses only its own provider's API key. In 0.7, a missing key could be silently replaced by another provider's key. Ally now lists any missing keys when it starts.
 5. **Clean up `.env`.** `GOOGLE_SEARCH_API_KEY`, `SEARCH_ENGINE_ID` and `GITHUB_AI_API_KEY` are no longer used. If `config.json` uses the `github` provider, switch to another one.
@@ -38,6 +39,7 @@ Python 3.11 or newer is required. The setup script installs it for you if needed
 - All dependencies are updated, including LangChain 1.7, LangGraph 1.2, the OpenAI SDK 3, Rich 15 and Transformers 5. Python 3.14 is supported.
 - `pyproject.toml` and `uv.lock` define the dependencies, and the Docker image is built from the lockfile with CPU-only PyTorch.
 - Tool descriptions are rewritten, and every tool argument is now described to the model.
+- Web search returns the first 4,000 characters of each result instead of up to 10,000, which keeps requests within small rate limits. The model can fetch a whole page when it needs more.
 - `list_directory` no longer expands `.git`, `node_modules` and virtual environments, which could flood the model's context.
 - The four agents are built from one registry instead of four copies of the same code.
 
