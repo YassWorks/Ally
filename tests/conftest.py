@@ -67,9 +67,12 @@ class FakeProvider:
         self.failures: list[Exception] = []
         self.models: list[FakeChatModel] = []
         self.calls: list[tuple] = []
+        self.unavailable: set[str] = set()
 
     def __call__(self, provider, model_name, api_key, temperature=None):
         self.calls.append((provider, model_name, api_key, temperature))
+        if model_name in self.unavailable:
+            raise ValueError(f"Unknown model {model_name}")
         model = FakeChatModel(messages=self._replies(), provider=self)
         self.models.append(model)
         return model

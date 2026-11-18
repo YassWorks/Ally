@@ -2,6 +2,7 @@ import pytest
 from langchain_core.messages import AIMessage
 
 from app.src.core.agent_factory import AgentFactory
+from app.src.core.ui import default_ui
 
 
 class ProviderError(Exception):
@@ -57,3 +58,40 @@ def test_rate_limit_from_any_provider_offers_a_model_change(chat, fake_llm):
     assert run("first", "other-model", "second", "/q") is True
     assert fake_llm.calls[-1][1] == "other-model"
     assert shown == ["From the new model."]
+
+
+def test_declining_a_model_change_keeps_the_session_open(chat, fake_llm):
+    run, shown, errors = chat
+    fake_llm.failures.append(ProviderError(429))
+    fake_llm.replies.append("Worth the wait.")
+
+    assert run("first", "second", "/q", confirm=False) is True
+    assert shown == ["Worth the wait."]
+
+
+def test_a_failed_model_change_keeps_the_current_model(chat, fake_llm, monkeypatch):
+    run, shown, errors = chat
+    statuses = []
+    monkeypatch.setattr(
+        default_ui,
+        "status_message",
+        lambda title, message, **k: statuses.append(message),
+    )
+    fake_llm.unavailable.add("broken-model")
+    fake_llm.replies.append("Still here.")
+
+    assert run("/model change broken-model", "/model", "hello", "/q") is True
+    assert "Unknown model broken-model" in errors[0]
+    assert statuses[-1] == "gpt-test"
+    assert len(fake_llm.models) == 1
+    assert shown == ["Still here."]
+
+
+def test_a_missing_model_reverts_to_the_previous_one(chat, fake_llm):
+    run, shown, errors = chat
+    fake_llm.failures.append(ProviderError(404))
+    fake_llm.replies.append("Back on the old model.")
+
+    assert run("/model change gpt-typo", "first", "second", "/q") is True
+    assert [call[1] for call in fake_llm.calls[-2:]] == ["gpt-typo", "gpt-test"]
+    assert shown == ["Back on the old model."]

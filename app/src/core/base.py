@@ -163,9 +163,7 @@ class BaseAgent:
                 )
 
             except Exception as e:
-                if not self._recover_from_error(e):
-                    self.ui.goodbye()
-                    return True
+                self._recover_from_error(e)
 
             finally:
                 first_msg = False
@@ -240,8 +238,8 @@ class BaseAgent:
         )
         return HumanMessage(content=context, additional_kwargs={"RAG": True})
 
-    def _recover_from_error(self, error: Exception) -> bool:
-        """Report a failed turn. Returns ``False`` if the session should end."""
+    def _recover_from_error(self, error: Exception) -> None:
+        """Report a failed turn and offer a way forward. The session stays open."""
         status = http_status(error)
 
         if status == 404:
@@ -253,37 +251,48 @@ class BaseAgent:
                     title=UI_MESSAGES["titles"]["reverting_model"],
                     message=f"Reverting to previous model: {previous}",
                 )
-                return self._switch_model(previous)
-            return self._offer_model_change()
+                self._switch_model(previous, remember=False)
+            else:
+                self._offer_model_change()
+            return
 
         if status == 429:
             logger.error("Rate limit exceeded", exc_info=error)
             self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
-            return self._offer_model_change()
+            self._offer_model_change()
+            return
 
         logger.error("Chat turn failed", exc_info=error)
         self.ui.error(
             f"{UI_MESSAGES['errors']['turn_failed']}\n{describe_error(error)}"
         )
-        return True
 
-    def _offer_model_change(self) -> bool:
+    def _offer_model_change(self) -> None:
         if not self.ui.confirm(
             UI_MESSAGES["confirmations"]["change_model"], default=True
         ):
-            return False
+            return
         new_model = self.ui.get_input(message="Enter new model name: ").strip()
         if new_model:
-            self.prev_model_name = self.model_name
-            return self._switch_model(new_model)
-        return True
+            self._switch_model(new_model)
 
-    def _switch_model(self, new_model: str) -> bool:
+    def _switch_model(self, new_model: str, remember: bool = True) -> bool:
+        """Switch to ``new_model`` and return whether it worked.
+
+        Args:
+            new_model: Name of the model to use from now on.
+            remember: Keep the current model so a 404 from the new one can
+                switch back to it.
+        """
+        previous = self.model_name
         try:
             self._handle_model_change(new_model)
         except Exception as e:
             logger.error(f"Could not switch to model {new_model}", exc_info=e)
             self.ui.error(describe_error(e))
+            return False
+        if remember:
+            self.prev_model_name = previous
         return True
 
     def _handle_shell_command(self, command: str) -> None:
@@ -436,10 +445,7 @@ class BaseAgent:
                 message=f"Changing model to {new_model}",
             )
 
-            self.prev_model_name = self.model_name
-            self.model_name = new_model
-
-            self._handle_model_change(self.model_name)
+            self._switch_model(new_model)
             return
 
         self.ui.error(UI_MESSAGES["errors"]["unknown_model_command"])

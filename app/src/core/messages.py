@@ -1,3 +1,18 @@
+from langchain_core.exceptions import (
+    ModelAuthenticationError,
+    ModelNotFoundError,
+    ModelPermissionDeniedError,
+    ModelRateLimitError,
+)
+
+STANDARD_ERROR_STATUS = {
+    ModelAuthenticationError: 401,
+    ModelPermissionDeniedError: 403,
+    ModelNotFoundError: 404,
+    ModelRateLimitError: 429,
+}
+
+
 def content_text(content: object) -> str:
     """Return the plain text of a message's content.
 
@@ -20,12 +35,24 @@ def content_text(content: object) -> str:
 
 
 def http_status(error: BaseException) -> int | None:
-    """Return the HTTP status code carried by a provider SDK error, if any."""
-    for candidate in (error, getattr(error, "response", None)):
-        for attribute in ("status_code", "code"):
-            value = getattr(candidate, attribute, None)
-            if isinstance(value, int) and 400 <= value < 600:
-                return value
+    """Return the HTTP status code behind a provider error, if there is one.
+
+    LangChain's standard model errors are mapped to their status. Otherwise the
+    error, its ``response`` and then the errors it was raised from are searched
+    for a ``status_code`` or ``code`` attribute.
+    """
+    seen: set[int] = set()
+    while error is not None and id(error) not in seen:
+        seen.add(id(error))
+        for kind, status in STANDARD_ERROR_STATUS.items():
+            if isinstance(error, kind):
+                return status
+        for candidate in (error, getattr(error, "response", None)):
+            for attribute in ("status_code", "code"):
+                value = getattr(candidate, attribute, None)
+                if isinstance(value, int) and 400 <= value < 600:
+                    return value
+        error = error.__cause__ or error.__context__
     return None
 
 
