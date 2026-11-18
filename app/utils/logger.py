@@ -1,9 +1,7 @@
 import logging
-import os
 from datetime import datetime
-from pathlib import Path
 
-from app.utils.constants import DEFAULT_PATHS
+from app.utils.paths import data_dir
 
 
 class AllyLogger:
@@ -20,16 +18,7 @@ class AllyLogger:
 
     def _initialize_logger(self):
         """Initialize the logger with file and console handlers."""
-        # Expand environment variables and user home directory
-        log_dir = os.path.expandvars(DEFAULT_PATHS["logs"])
-        log_dir = os.path.expanduser(log_dir)
-
-        # Create log directory if it doesn't exist
-        Path(log_dir).mkdir(parents=True, exist_ok=True)
-
-        # Create log filename with timestamp
-        log_filename = f"ally_{datetime.now().strftime('%Y%m%d')}.log"
-        log_path = os.path.join(log_dir, log_filename)
+        log_path = data_dir("logs") / f"ally_{datetime.now().strftime('%Y%m%d')}.log"
 
         # Create logger
         self._logger = logging.getLogger("ally")

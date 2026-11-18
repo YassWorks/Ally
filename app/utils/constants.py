@@ -1,5 +1,3 @@
-import os
-
 CONSOLE_WIDTH = 100
 EXEC_TIMEOUT = 3600
 RECURSION_LIMIT = 100
@@ -29,35 +27,6 @@ PROMPTS = {
     "rag_results": "\n\nAnswer only from these documents. If irrelevant, say 'I don't know' unless user allows outside knowledge.\n",
     "continue": "Continue where you left off. Don't repeat anything already done.",
 }
-
-DEFAULT_PATHS = {
-    "history": (
-        "%LOCALAPPDATA%\\Ally\\history\\"
-        if os.name == "nt"
-        else "~/.local/share/Ally/history/"
-    ),
-    "database": (
-        "%LOCALAPPDATA%\\Ally\\database\\"
-        if os.name == "nt"
-        else "~/.local/share/Ally/database/"
-    ),
-    "embedding_models": (
-        "%LOCALAPPDATA%\\Ally\\embedding_models\\"
-        if os.name == "nt"
-        else "~/.local/share/Ally/embedding_models/"
-    ),
-    "parsing_models": (
-        "%LOCALAPPDATA%\\Ally\\parsing_models\\"
-        if os.name == "nt"
-        else "~/.local/share/Ally/parsing_models/"
-    ),
-    "logs": (
-        "%LOCALAPPDATA%\\Ally\\logs\\"
-        if os.name == "nt"
-        else "~/.local/share/Ally/logs/"
-    ),
-}
-
 
 REGULAR_FILE_EXTENSIONS = [
     ".txt",

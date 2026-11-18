@@ -1,29 +1,7 @@
-import os
-from pathlib import Path
-
 from app.src.core.ui import default_ui
-from app.src.helpers.valid_dir import validate_dir_name
-from app.utils.constants import DEFAULT_PATHS
+from app.utils.paths import data_dir
 
 _DISPLAYED_DOWNLOADING_MESSAGE = False
-
-
-# configure embedding models path
-EMBEDDING_MODEL_PATH = ""
-if "ALLY_EMBEDDING_MODELS_DIR" in os.environ:
-    EMBEDDING_MODEL_PATH = Path(os.getenv("ALLY_EMBEDDING_MODELS_DIR"))
-    if not validate_dir_name(str(EMBEDDING_MODEL_PATH)):
-        EMBEDDING_MODEL_PATH = ""
-        default_ui.warning(
-            "Invalid directory path found in $ALLY_EMBEDDING_MODELS_DIR. Reverting to default path."
-        )
-
-if not EMBEDDING_MODEL_PATH:
-    EMBEDDING_MODEL_PATH = DEFAULT_PATHS["embedding_models"]
-    if os.name == "nt":
-        EMBEDDING_MODEL_PATH = Path(os.path.expandvars(EMBEDDING_MODEL_PATH))
-    else:
-        EMBEDDING_MODEL_PATH = Path(os.path.expanduser(EMBEDDING_MODEL_PATH))
 
 
 class HFEmbedder:
@@ -63,24 +41,20 @@ class HFEmbedder:
         from transformers import AutoModel, AutoTokenizer
 
         hf_logging.set_verbosity_error()
-        os.makedirs(EMBEDDING_MODEL_PATH, exist_ok=True)
+        models_dir = data_dir("embedding_models", "ALLY_EMBEDDING_MODELS_DIR")
 
-        if not _DISPLAYED_DOWNLOADING_MESSAGE and not EMBEDDING_MODEL_PATH.exists():
+        if not _DISPLAYED_DOWNLOADING_MESSAGE and not any(models_dir.iterdir()):
             with default_ui.console.status("Downloading embedding model..."):
                 tokenizer = AutoTokenizer.from_pretrained(
-                    self.model_name, cache_dir=EMBEDDING_MODEL_PATH
+                    self.model_name, cache_dir=models_dir
                 )
-                model = AutoModel.from_pretrained(
-                    self.model_name, cache_dir=EMBEDDING_MODEL_PATH
-                )
+                model = AutoModel.from_pretrained(self.model_name, cache_dir=models_dir)
             _DISPLAYED_DOWNLOADING_MESSAGE = True
         else:
             tokenizer = AutoTokenizer.from_pretrained(
-                self.model_name, cache_dir=EMBEDDING_MODEL_PATH
+                self.model_name, cache_dir=models_dir
             )
-            model = AutoModel.from_pretrained(
-                self.model_name, cache_dir=EMBEDDING_MODEL_PATH
-            )
+            model = AutoModel.from_pretrained(self.model_name, cache_dir=models_dir)
 
         encoded_input = tokenizer(
             sentences, padding=True, truncation=True, return_tensors="pt"
