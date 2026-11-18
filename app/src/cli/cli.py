@@ -1,9 +1,11 @@
+import argparse
 import os
 import sys
-import textwrap
+from collections.abc import Callable
+from dataclasses import replace
 
-from app.src.cli.flags import ArgsParser
-from app.src.core.agent_factory import AgentFactory
+from app.config import AllyConfig
+from app.src.core.agent_factory import CODING_AGENTS, AgentFactory
 from app.src.core.base import BaseAgent
 from app.src.core.permissions import permission_manager
 from app.src.core.ui import default_ui
@@ -22,215 +24,52 @@ from app.utils.ascii_art import ASCII_ART
 from app.utils.logger import logger
 from app.utils.ui_messages import UI_MESSAGES
 
+AGENT_DISPLAY_NAMES = {
+    "brainstormer": "Brainstormer",
+    "web_searcher": "Web Searcher",
+    "code_gen": "Coding",
+}
+
 
 class CLI:
-    """Command-line interface for the project generation system."""
+    """Interactive session that wires the agents, RAG and chat commands together."""
 
-    def __init__(
-        self,
-        provider: str = None,
-        provider_per_model: dict[str, str] = None,
-        models: dict[str, str] = None,
-        api_key: str = None,
-        api_key_per_model: dict[str, str] = None,
-        embedding_provider: str = None,
-        embedding_model: str = None,
-        temperatures: dict[str, float] = None,
-        system_prompts: dict[str, str] = None,
-        scraping_method: str = "simple",
-        stream: bool = True,
-    ):
+    def __init__(self, config: AllyConfig, stream: bool = True):
         self.stream = stream
         self.ui = default_ui
 
-        models = models or {}
-        api_key_per_model = api_key_per_model or {}
-        temperatures = temperatures or {}
-        system_prompts = system_prompts or {}
-        provider_per_model = provider_per_model or {}
+        self.embedding_function = _create_embedding_function(
+            config.embedding_provider, config.embedding_model
+        )
+        self.rag_available = self.embedding_function is not None
 
-        match embedding_provider.lower():
-            case "ollama":
-                from app.src.embeddings.embedding_functions.ollama_embed import (
-                    OllamaEmbedder,
-                )
-
-                self.embedding_function = OllamaEmbedder(embedding_model).get_embeddings
-                self.rag_available = True
-
-            case "hf" | "huggingface" | "hugging face" | "hugging_face":
-                from app.src.embeddings.embedding_functions.hf_embed import HFEmbedder
-
-                self.embedding_function = HFEmbedder(embedding_model).get_embeddings
-                self.rag_available = True
-
-            case "openai":
-                from app.src.embeddings.embedding_functions.openai_embed import (
-                    OpenAIEmbedder,
-                )
-
-                self.embedding_function = OpenAIEmbedder(embedding_model).get_embeddings
-                self.rag_available = True
-
-            case "nlpcloud" | "nlp cloud" | "nlp_cloud":
-                from app.src.embeddings.embedding_functions.nlp_cloud_embed import (
-                    NLPCloudEmbedder,
-                )
-
-                self.embedding_function = NLPCloudEmbedder(
-                    embedding_model
-                ).get_embeddings
-                self.rag_available = True
-
-            case _:
-                self.embedding_function = None
-                self.rag_available = False
-
-        # simple scraper (only one available for now)
         from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
 
         self.scraper = SimpleScraper()
 
+        self.coding_settings = {name: config.agents[name] for name in CODING_AGENTS}
+        self.general_agent = AgentFactory.create_agent(
+            "general", config.agents["general"]
+        )
+        self.default_web_searcher_agent = AgentFactory.create_agent(
+            "web_searcher", config.agents["web_searcher"]
+        )
+
+    def start_chat(self, args: argparse.Namespace) -> None:
+        """Start the main chat, or the project workflow when ``--create-project`` is set."""
         try:
-            self.general_agent: BaseAgent = AgentFactory.create_agent(
-                agent_type="general",
-                config={
-                    "model_name": models.get("general"),
-                    "api_key": api_key_per_model.get("general") or api_key,
-                    "temperature": temperatures.get("general"),
-                    "system_prompt": system_prompts.get("general"),
-                    "provider": provider_per_model.get("general") or provider,
-                },
-            )
-            self.default_web_searcher_agent: BaseAgent = AgentFactory.create_agent(
-                agent_type="web_searcher",
-                config={
-                    "model_name": models.get("web_searcher"),
-                    "api_key": api_key_per_model.get("web_searcher") or api_key,
-                    "temperature": temperatures.get("web_searcher"),
-                    "system_prompt": system_prompts.get("web_searcher"),
-                    "provider": provider_per_model.get("web_searcher") or provider,
-                },
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize default agents: {e}", exc_info=e)
-            self.ui.error(UI_MESSAGES["errors"]["failed_initialize_agents"])
-            sys.exit(1)
+            active_dir = self._resolve_working_dir(args.d)
 
-        try:
-            if (
-                provider != "ollama"
-            ):  # Ollama doesn't require validation of API keys and models
-                self._validate_config(
-                    api_key=api_key,
-                    models=models,
-                    api_key_per_model=api_key_per_model,
-                )
-        except ValueError as ve:
-            logger.error("Configuration validation error", exc_info=ve)
-            self.ui.error(UI_MESSAGES["errors"]["config_error"])
-            sys.exit(1)
-        except Exception:
-            logger.exception("Failed to validate configuration")
-            self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"])
-            sys.exit(1)
+            if args.allow_all_tools:
+                permission_manager.always_allow = True
 
-        try:
-            self._setup_coding_config(
-                api_key=api_key,
-                models=models,
-                api_key_per_model=api_key_per_model,
-                temperatures=temperatures,
-                system_prompts=system_prompts,
-                provider=provider,
-                provider_per_model=provider_per_model,
-            )
-        except ValueError as ve:
-            logger.error("Coding configuration error", exc_info=ve)
-            self.ui.error(UI_MESSAGES["errors"]["config_error"])
-            sys.exit(1)
-        except Exception:
-            logger.exception("Failed to setup coding configuration")
-            self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"])
-            sys.exit(1)
+            if args.create_project:
+                self.ui.logo(ASCII_ART)
+                self.launch_coding_units(initial_prompt=args.p, active_dir=active_dir)
+                return
 
-    def _validate_config(
-        self,
-        api_key,
-        models,
-        api_key_per_model,
-    ):
-        """Validate required configuration for coding."""
-
-        if not api_key and not all(
-            [
-                api_key_per_model.get("code_gen"),
-                api_key_per_model.get("brainstormer"),
-                api_key_per_model.get("web_searcher"),
-                api_key_per_model.get("general"),
-            ]
-        ):
-            raise ValueError(
-                "API key must be provided either as 'api_key' or individual agent API keys"
-            )
-
-        if not all(
-            [
-                models.get("code_gen"),
-                models.get("brainstormer"),
-                models.get("web_searcher"),
-                models.get("general"),
-            ]
-        ):
-            raise ValueError("Model names must be provided for all agents in coding")
-
-    def _setup_coding_config(
-        self,
-        api_key,
-        models,
-        api_key_per_model,
-        temperatures,
-        system_prompts,
-        provider,
-        provider_per_model,
-    ):
-        """Setup configuration for coding."""
-
-        self.model_names = {
-            "code_gen": models.get("code_gen"),
-            "brainstormer": models.get("brainstormer"),
-            "web_searcher": models.get("web_searcher"),
-        }
-
-        self.api_keys = {
-            "code_gen": api_key_per_model.get("code_gen") or api_key,
-            "brainstormer": api_key_per_model.get("brainstormer") or api_key,
-            "web_searcher": api_key_per_model.get("web_searcher") or api_key,
-        }
-
-        self.temperatures = {
-            "code_gen": temperatures.get("code_gen") or 0,
-            "brainstormer": temperatures.get("brainstormer") or 0.7,
-            "web_searcher": temperatures.get("web_searcher") or 0,
-        }
-
-        self.system_prompts = {
-            "code_gen": system_prompts.get("code_gen"),
-            "brainstormer": system_prompts.get("brainstormer"),
-            "web_searcher": system_prompts.get("web_searcher"),
-        }
-
-        self.providers = {
-            "code_gen": provider_per_model.get("code_gen") or provider,
-            "brainstormer": provider_per_model.get("brainstormer") or provider,
-            "web_searcher": provider_per_model.get("web_searcher") or provider,
-        }
-
-    def start_chat(self, *args):
-        """Start the main chat interface."""
-
-        try:
-            active_dir, initial_prompt, thread_id = self._setup_environment(args)
+            if active_dir is None:
+                active_dir = self._setup_directory()
 
             self.ui.logo(ASCII_ART)
             self.ui.welcome()
@@ -241,31 +80,27 @@ class CLI:
                 f"Don't report this note to the user, just follow it."
             )
 
-            # making the project generation a command for the general agent (an extra option for the user)
             self.general_agent.register_command(
                 "/project", lambda *args: self.launch_coding_units()
             )
 
-            # integrating RAG capabilities if an embedding function is configured by the user in config.json
             if self.rag_available:
                 from app.src.embeddings.db_client import DataBaseClient
 
-                _ = DataBaseClient(
+                DataBaseClient(
                     embedding_function=self.embedding_function, scraper=self.scraper
                 )
 
             self._integrate_rag(agent=self.general_agent, available=self.rag_available)
-
-            # giving the general agent access to the web with a separate web searcher agent
             integrate_web_search(self.general_agent, self.default_web_searcher_agent)
 
             self.general_agent.start_chat(
-                starting_msg=initial_prompt,
+                starting_msg=args.p,
                 recurring_prompt_suffix=wd_note,
                 show_welcome=False,
                 active_dir=active_dir,
                 stream=self.stream,
-                thread_id=thread_id,
+                thread_id=args.i,
             )
 
         except KeyboardInterrupt:
@@ -274,8 +109,19 @@ class CLI:
             logger.exception("Unexpected error in interactive session")
             self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
+    def _resolve_working_dir(self, path: str | None) -> str | None:
+        if not path:
+            return None
+        if path == ".":
+            return os.getcwd()
+        if not validate_dir_name(path):
+            logger.error(f"Invalid directory name: {path}")
+            self.ui.error(UI_MESSAGES["errors"]["invalid_directory"])
+            sys.exit(1)
+        return os.path.abspath(path)
+
     def _integrate_rag(self, agent: BaseAgent, available: bool):
-        """Integrate Retrieval-Augmented Generation (RAG) into the agent."""
+        """Register the RAG chat commands on ``agent``."""
         if not available:
             for command in ["/embed", "/start_rag", "/stop_rag", "/index", "/unindex"]:
                 agent.register_command(
@@ -287,23 +133,16 @@ class CLI:
             return
 
         agent.register_command("/embed", lambda *args: handle_embed_request(*args))
-        # If extra arguments are passed by the user, they will be ignored
-        # This is to ensure a frictionless experience for the user as the command is pretty straightforward
         agent.register_command("/start_rag", lambda *args: self._enable_rag(agent))
         agent.register_command("/stop_rag", lambda *args: self._disable_rag(agent))
-
         agent.register_command("/index", lambda *args: handle_index_request(*args))
         agent.register_command("/unindex", lambda *args: handle_unindex_request(*args))
-
-        # DB management commands
         agent.register_command("/list", lambda *args: handle_list_command())
         agent.register_command("/purge", lambda *args: handle_purge_command())
-        agent.register_command(
-            "/delete", lambda *args: handle_delete_command(*args)
-        )  # followed by <collection_name>
+        agent.register_command("/delete", lambda *args: handle_delete_command(*args))
 
     def _enable_rag(self, agent: BaseAgent):
-        """Enable RAG functionality."""
+        """Answer from the indexed collections until RAG is disabled."""
         if not self.rag_available:
             self.ui.warning(UI_MESSAGES["warnings"]["rag_not_available"])
             return
@@ -315,7 +154,7 @@ class CLI:
         )
 
     def _disable_rag(self, agent: BaseAgent):
-        """Disable RAG functionality."""
+        """Stop using the indexed collections."""
         agent._toggle_rag(enable=False)
         self.ui.status_message(
             title=UI_MESSAGES["titles"]["rag_disabled"],
@@ -323,9 +162,10 @@ class CLI:
             style="primary",
         )
 
-    def launch_coding_units(self, initial_prompt: str = None, active_dir: str = None):
-        """Start the agent units that create full projects from scratch."""
-
+    def launch_coding_units(
+        self, initial_prompt: str | None = None, active_dir: str | None = None
+    ):
+        """Run the brainstorm, generate and refine project workflow."""
         self._display_model_config()
         if self.ui.confirm(UI_MESSAGES["change_models"], default=False):
             self._update_models()
@@ -334,11 +174,9 @@ class CLI:
             if active_dir is None:
                 active_dir = self._setup_directory()
 
-            codegen_unit_success = self._run_codegen_unit(
+            if not self._run_codegen_unit(
                 initial_prompt=initial_prompt, working_dir=active_dir
-            )
-
-            if not codegen_unit_success:
+            ):
                 self.ui.error(UI_MESSAGES["errors"]["codegen_failed"])
 
         except KeyboardInterrupt:
@@ -347,52 +185,8 @@ class CLI:
             logger.exception("Unexpected error in project workflow")
             self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
-    def _setup_environment(self, user_args: list[str] = None) -> tuple[str, str, str]:
-        """Setup working environment and configuration."""
-
-        active_dir = None
-        initial_prompt = None
-        thread_id = None
-
-        if user_args:
-            parsed_args = ArgsParser.get_args(
-                ui=self.ui,
-                user_args=list(user_args),
-            )
-
-            if parsed_args.i:
-                thread_id = parsed_args.i
-
-            if parsed_args.d:
-                if parsed_args.d == ".":
-                    parsed_args.d = os.getcwd()
-                elif not validate_dir_name(parsed_args.d):
-                    logger.error(f"Invalid directory name: {parsed_args.d}")
-                    self.ui.error(UI_MESSAGES["errors"]["invalid_directory"])
-                    sys.exit(1)
-                active_dir = parsed_args.d
-
-            if parsed_args.allow_all_tools:
-                permission_manager.always_allow = True
-
-            if parsed_args.p:
-                initial_prompt = parsed_args.p
-
-            if parsed_args.create_project:
-                self.ui.logo(ASCII_ART)
-                self.launch_coding_units(
-                    initial_prompt=initial_prompt, active_dir=active_dir
-                )
-                sys.exit(0)
-
-        if active_dir is None:
-            active_dir = self._setup_directory()
-
-        return active_dir, initial_prompt, thread_id
-
     def _setup_directory(self) -> str:
-        """Setup working directory with user interaction."""
-
+        """Confirm the working directory with the user, creating a new one if asked."""
         active_dir = os.getcwd()
         self.ui.status_message(
             title=UI_MESSAGES["titles"]["current_directory"],
@@ -423,60 +217,76 @@ class CLI:
         return active_dir
 
     def _display_model_config(self):
-        """Display current model configuration."""
-
-        models_msg = f"""
-            Brainstormer: [{self.ui._style("secondary")}]{self.model_names["brainstormer"]}[/{self.ui._style("secondary")}]
-            Web Searcher: [{self.ui._style("secondary")}]{self.model_names["web_searcher"]}[/{self.ui._style("secondary")}]
-            Coding:       [{self.ui._style("secondary")}]{self.model_names["code_gen"]}[/{self.ui._style("secondary")}]
-        """
-        models_msg = textwrap.dedent(models_msg)
-
+        """Show the models the project workflow will use."""
+        style = self.ui._style("secondary")
+        lines = [
+            f"{AGENT_DISPLAY_NAMES[name] + ':':<14}[{style}]{self.coding_settings[name].model}[/{style}]"
+            for name in CODING_AGENTS
+        ]
         self.ui.status_message(
             title=UI_MESSAGES["titles"]["current_models"],
-            message=models_msg,
+            message="\n" + "\n".join(lines) + "\n",
             style="primary",
         )
 
     def _update_models(self):
-        """Update model configuration based on user input."""
-
-        agent_types = ["brainstormer", "web_searcher", "code_gen"]
-        display_names = ["Brainstormer", "Web Searcher", "Coding"]
-
-        for agent_type, display_name in zip(agent_types, display_names, strict=True):
+        """Ask for a new model name for each agent of the project workflow."""
+        for name in CODING_AGENTS:
+            settings = self.coding_settings[name]
             new_model = self.ui.get_input(
-                message=UI_MESSAGES["model_change_prompt"].format(display_name),
-                default=self.model_names[agent_type],
+                message=UI_MESSAGES["model_change_prompt"].format(
+                    AGENT_DISPLAY_NAMES[name]
+                ),
+                default=settings.model,
             )
-            self.model_names[agent_type] = new_model
+            self.coding_settings[name] = replace(settings, model=new_model)
 
-    def _run_codegen_unit(self, working_dir: str, initial_prompt: str = None) -> bool:
-        """Execute the coding workflow with proper error handling."""
-
+    def _run_codegen_unit(
+        self, working_dir: str, initial_prompt: str | None = None
+    ) -> bool:
+        """Create the project workflow agents and run them."""
         try:
-            agents = AgentFactory.create_coding_agents(
-                model_names=self.model_names,
-                api_keys=self.api_keys,
-                temperatures=self.temperatures,
-                system_prompts=self.system_prompts,
-                providers=self.providers,
-            )
-
+            agents = AgentFactory.create_coding_agents(self.coding_settings)
             codegen_unit = CodeGenUnit(
                 code_gen_agent=agents["code_gen"],
                 web_searcher_agent=agents["web_searcher"],
                 brainstormer_agent=agents["brainstormer"],
             )
-
             return codegen_unit.run(
                 prompt=initial_prompt,
                 stream=self.stream,
                 show_welcome=False,
                 working_dir=working_dir,
             )
-
         except Exception:
             logger.exception("Failed to initialize coding workflow")
             self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"])
             return False
+
+
+def _create_embedding_function(provider: str, model: str) -> Callable | None:
+    match provider:
+        case "ollama":
+            from app.src.embeddings.embedding_functions.ollama_embed import (
+                OllamaEmbedder,
+            )
+
+            return OllamaEmbedder(model).get_embeddings
+        case "hf" | "huggingface" | "hugging face" | "hugging_face":
+            from app.src.embeddings.embedding_functions.hf_embed import HFEmbedder
+
+            return HFEmbedder(model).get_embeddings
+        case "openai":
+            from app.src.embeddings.embedding_functions.openai_embed import (
+                OpenAIEmbedder,
+            )
+
+            return OpenAIEmbedder(model).get_embeddings
+        case "nlpcloud" | "nlp cloud" | "nlp_cloud":
+            from app.src.embeddings.embedding_functions.nlp_cloud_embed import (
+                NLPCloudEmbedder,
+            )
+
+            return NLPCloudEmbedder(model).get_embeddings
+        case _:
+            return None

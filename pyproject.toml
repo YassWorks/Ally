@@ -52,11 +52,13 @@ hf = [
     "transformers==4.57.3",
 ]
 
-
 [project.urls]
 Homepage = "https://github.com/YassWorks/Ally"
 Issues = "https://github.com/YassWorks/Ally/issues"
 Docker = "https://hub.docker.com/r/yassw0rks/ally"
+
+[project.scripts]
+ally = "app.main:main"
 
 [dependency-groups]
 dev = [
