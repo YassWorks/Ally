@@ -1,30 +1,20 @@
-from typing import Any
+from app.config import AgentSettings
+from app.src.core.base import BaseAgent
+
+CODING_AGENTS = ("brainstormer", "web_searcher", "code_gen")
 
 
 class AgentFactory:
-    """Factory for creating and managing agent instances."""
+    """Builds agents from their resolved settings."""
 
     @staticmethod
-    def create_agent(agent_type: str, config: dict[str, Any]) -> Any:
-        """Create an agent instance based on type and configuration.
-
-        Args:
-            agent_type: Type of agent to create ('brainstormer', 'web_searcher', 'code_gen')
-            config: Configuration dictionary with required parameters
-
-        Returns:
-            Agent instance
+    def create_agent(agent_type: str, settings: AgentSettings) -> BaseAgent:
+        """Create the agent called ``agent_type``.
 
         Raises:
-            ValueError: If agent type is unknown or required config is missing
-            RuntimeError: If agent initialization fails
+            ValueError: If ``agent_type`` is unknown.
+            RuntimeError: If the agent's model cannot be initialized.
         """
-
-        required_fields = ["model_name", "api_key"]
-        for field in required_fields:
-            if field not in config:
-                raise ValueError(f"Missing required config field: {field}")
-
         from app.src.agents.brainstormer.brainstormer import BrainstormerAgent
         from app.src.agents.code_gen.code_gen import CodeGenAgent
         from app.src.agents.general.general import GeneralAgent
@@ -42,47 +32,21 @@ class AgentFactory:
 
         try:
             return agent_classes[agent_type](
-                model_name=config["model_name"],
-                api_key=config["api_key"],
-                system_prompt=config.get("system_prompt"),
-                temperature=config.get("temperature", 0),
-                provider=config.get("provider"),
+                model_name=settings.model,
+                api_key=settings.api_key,
+                system_prompt=settings.system_prompt,
+                temperature=settings.temperature,
+                provider=settings.provider,
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize {agent_type} agent: {e}") from e
 
     @staticmethod
     def create_coding_agents(
-        model_names: dict[str, str],
-        api_keys: dict[str, str],
-        temperatures: dict[str, float] | None = None,
-        system_prompts: dict[str, str] | None = None,
-        providers: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
-        """Create all agents needed for coding.
-
-        Args:
-            model_names: Dictionary mapping agent names to model names
-            api_keys: Dictionary mapping agent names to API keys
-            temperatures: Optional temperature settings for each agent
-            system_prompts: Optional system prompts for each agent
-            providers: Optional provider settings for each agent
-
-        Returns:
-            Dictionary of initialized agents
-        """
-
-        agents = {}
-        agent_types = ["brainstormer", "web_searcher", "code_gen"]
-
-        for agent_type in agent_types:
-            config = {
-                "model_name": model_names[agent_type],
-                "api_key": api_keys[agent_type],
-                "temperature": (temperatures or {}).get(agent_type, 0),
-                "system_prompt": (system_prompts or {}).get(agent_type),
-                "provider": (providers or {}).get(agent_type),
-            }
-            agents[agent_type] = AgentFactory.create_agent(agent_type, config)
-
-        return agents
+        settings: dict[str, AgentSettings],
+    ) -> dict[str, BaseAgent]:
+        """Create the brainstormer, web searcher and code generation agents."""
+        return {
+            name: AgentFactory.create_agent(name, settings[name])
+            for name in CODING_AGENTS
+        }

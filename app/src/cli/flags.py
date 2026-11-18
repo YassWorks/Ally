@@ -1,41 +1,61 @@
 import argparse
 import sys
+from importlib.metadata import PackageNotFoundError, version
 
 from app.src.core.ui import AgentUI
 from app.utils.logger import logger
 
 
 class ArgsParser(argparse.ArgumentParser):
-    """Parses CLI flags with custom UI error reporting"""
+    """Command-line flags for ``ally``, with errors reported through the UI."""
 
     def __init__(self, ui: AgentUI):
-        super().__init__(prog="ally", description="Ally CLI flags")
+        super().__init__(
+            prog="ally", description="Ally: an AI agent for your terminal."
+        )
         self.ui = ui
+        self.add_argument(
+            "--version", action="version", version=f"%(prog)s {_installed_version()}"
+        )
         self.add_argument(
             "--create-project",
             action="store_true",
-            help="Initialize a new project generation workflow",
+            help="start the project generation workflow",
         )
         self.add_argument(
             "--allow-all-tools",
             action="store_true",
-            help="Enable unrestricted tool execution for the session (WARNING: bypasses security)",
+            help="run every tool without asking for permission (use with care)",
         )
-        self.add_argument("-d", help="Specify working directory path")
-        self.add_argument("-p", help="Initial message/prompt for Ally")
+        self.add_argument(
+            "-d", "--dir", dest="d", metavar="DIR", help="working directory"
+        )
+        self.add_argument(
+            "-p", "--prompt", dest="p", metavar="PROMPT", help="first message to send"
+        )
         self.add_argument(
             "-i",
-            help="Thread ID to continue of an existing old session. To view the current session ID, use the /id command within the chat.",
+            "--id",
+            dest="i",
+            metavar="ID",
+            help="session ID to resume (see /id inside a chat)",
         )
 
     def error(self, message):
         logger.error(f"Argument parsing error: {message}")
-        usage = self.format_help()
-        self.ui.error(f"{message}\n{usage}")
+        self.ui.error(f"{message}\n{self.format_usage()}")
         sys.exit(2)
 
     @classmethod
-    def get_args(cls, ui: AgentUI, user_args: list[str] = None) -> argparse.Namespace:
-        """Return parsed args using this parser subclass"""
-        parser = cls(ui)
-        return parser.parse_args(user_args)
+    def get_args(
+        cls, ui: AgentUI, user_args: list[str] | None = None
+    ) -> argparse.Namespace:
+        """Parse ``user_args`` with this parser."""
+        return cls(ui).parse_args(user_args)
+
+
+def _installed_version() -> str:
+    try:
+        return version("ally")
+    except PackageNotFoundError:
+        return "unknown"

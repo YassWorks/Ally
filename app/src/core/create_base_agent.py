@@ -3,8 +3,14 @@ import sqlite3
 from collections.abc import Callable
 from typing import Annotated, Literal, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
@@ -147,109 +153,103 @@ def get_checkpointer() -> SqliteSaver:
     return _checkpointer
 
 
-def create_base_agent(
+OPENAI_COMPATIBLE_URLS = {
+    "openai": None,
+    "openrouter": "https://openrouter.ai/api/v1",
+    "github": "https://models.github.ai/inference",
+}
+
+
+def create_chat_model(
+    provider: str,
     model_name: str,
-    api_key: str,
-    tools: list,
-    system_prompt: str,
-    temperature: float = 0,
-    include_graph: bool = False,
-    provider: str = None,
-) -> CompiledStateGraph | tuple[StateGraph, CompiledStateGraph]:
-    """Create a base agent with common configuration and error handling.
+    api_key: str | None,
+    temperature: float | None = None,
+):
+    """Return a LangChain chat model for ``provider``.
 
-    Args:
-        model_name: The name of the model to use
-        api_key: The API key for the model
-        tools: List of tools to be used by the agent
-        system_prompt: System prompt for the agent
-        temperature: Temperature for the model
-        include_graph: Whether to include the graph in the response
-
-    Returns:
-        Compiled state graph agent or tuple of (graph, compiled_graph)
+    Raises:
+        ValueError: If the provider is not supported.
     """
-    llm = None
+    provider = provider.lower()
+    options = {} if temperature is None else {"temperature": temperature}
 
-    match provider.lower():
-        case "groq":
-            from langchain_groq import ChatGroq
-
-            llm = ChatGroq(
-                model=model_name,
-                temperature=temperature,
-                timeout=None,
-                max_retries=5,
-                api_key=api_key,
-            )
-        case "cerebras":
-            from langchain_cerebras import ChatCerebras
-
-            llm = ChatCerebras(
-                model=model_name,
-                temperature=temperature,
-                timeout=None,
-                max_retries=5,
-                api_key=api_key,
-            )
-        case "ollama":
-            from langchain_ollama import ChatOllama
-
-            llm = ChatOllama(
-                model=model_name,
-                temperature=temperature,
-                validate_model_on_init=True,
-                reasoning=False,
-            )
-        case "google":
-            os.environ["GRPC_VERBOSITY"] = "NONE"
-            os.environ["GRPC_CPP_VERBOSITY"] = "NONE"
-
-            from langchain_google_genai import ChatGoogleGenerativeAI
-
-            llm = ChatGoogleGenerativeAI(
-                model=model_name,
-                temperature=temperature,
-                timeout=None,
-                max_retries=5,
-                google_api_key=api_key,
-            )
+    match provider:
         case "openai" | "openrouter" | "github":
             from langchain_openai import ChatOpenAI
 
-            if provider.lower() == "openai":
-                base_url = None
-            elif provider.lower() == "openrouter":
-                base_url = "https://openrouter.ai/api/v1"
-            else:  # github
-                base_url = "https://models.github.ai/inference"
-
-            llm = ChatOpenAI(
+            return ChatOpenAI(
                 model=model_name,
-                temperature=temperature,
-                timeout=None,
-                max_retries=5,
                 api_key=api_key,
-                base_url=base_url,
+                base_url=OPENAI_COMPATIBLE_URLS[provider],
+                max_retries=5,
+                **options,
             )
         case "anthropic":
             from langchain_anthropic import ChatAnthropic
 
-            llm = ChatAnthropic(
+            return ChatAnthropic(
+                model=model_name, api_key=api_key, max_retries=5, **options
+            )
+        case "google":
+            os.environ.setdefault("GRPC_VERBOSITY", "NONE")
+            os.environ.setdefault("GRPC_CPP_VERBOSITY", "NONE")
+
+            from langchain_google_genai import ChatGoogleGenerativeAI
+
+            return ChatGoogleGenerativeAI(
+                model=model_name, google_api_key=api_key, max_retries=5, **options
+            )
+        case "groq":
+            from langchain_groq import ChatGroq
+
+            return ChatGroq(model=model_name, api_key=api_key, max_retries=5, **options)
+        case "cerebras":
+            from langchain_cerebras import ChatCerebras
+
+            return ChatCerebras(
+                model=model_name, api_key=api_key, max_retries=5, **options
+            )
+        case "ollama":
+            from langchain_ollama import ChatOllama
+
+            return ChatOllama(
                 model=model_name,
-                temperature=temperature,
-                timeout=None,
-                max_retries=5,
-                api_key=api_key,
+                validate_model_on_init=True,
+                reasoning=False,
+                **options,
             )
         case _:
             raise ValueError(f"Unsupported inference provider: {provider}")
 
+
+def create_base_agent(
+    model_name: str,
+    api_key: str | None,
+    tools: list,
+    system_prompt: str,
+    temperature: float | None = None,
+    include_graph: bool = False,
+    provider: str = "openai",
+) -> CompiledStateGraph | tuple[StateGraph, CompiledStateGraph]:
+    """Build an agent graph that loops between the model and its tools.
+
+    Args:
+        model_name: Model identifier understood by the provider.
+        api_key: API key for the provider, if it needs one.
+        tools: Tools the model may call.
+        system_prompt: System prompt sent with every request.
+        temperature: Sampling temperature, or ``None`` for the provider's default.
+        include_graph: Also return the uncompiled graph.
+        provider: Inference provider name, such as ``"openai"`` or ``"ollama"``.
+
+    Returns:
+        The compiled graph, or ``(graph, compiled_graph)`` when ``include_graph`` is set.
+    """
+    llm = create_chat_model(provider, model_name, api_key, temperature)
+
     template = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_prompt),
-            ("placeholder", "{messages}"),
-        ]
+        [SystemMessage(content=system_prompt), MessagesPlaceholder("messages")]
     )
 
     llm_with_tools = llm.bind_tools(tools) if tools else llm
