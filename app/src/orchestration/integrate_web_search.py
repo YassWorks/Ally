@@ -1,7 +1,8 @@
+from langchain_core.tools import tool
+
 from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
 from app.src.core.base import BaseAgent
 from app.utils.constants import RECURSION_LIMIT
-from langchain_core.tools import tool
 
 
 def integrate_web_search(agent: BaseAgent, web_searcher: WebSearcherAgent) -> None:

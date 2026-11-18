@@ -1,11 +1,12 @@
-from app.src.embeddings.rag_errors import ScrapingFailedError
-from charset_normalizer import from_path
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from charset_normalizer import from_path
+
+from app.src.embeddings.rag_errors import ScrapingFailedError
+
 
 class Scraper(ABC):
-
     @abstractmethod
     def scrape(self, path: str | Path) -> dict:
         """Scrape content from the given file path.
@@ -15,7 +16,7 @@ class Scraper(ABC):
 
         Returns:
             dict: The scraped content and metadata.
-            
+
             **format**:
             {
                 "content": str,
@@ -45,7 +46,7 @@ class Scraper(ABC):
         import json
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
                 return json.dumps(data, indent=2, ensure_ascii=False)
         except (json.JSONDecodeError, UnicodeDecodeError):
@@ -92,7 +93,7 @@ class Scraper(ABC):
         import yaml
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 return yaml.dump(
                     data, default_flow_style=False, allow_unicode=True, sort_keys=False
@@ -116,11 +117,11 @@ class Scraper(ABC):
                 return Scraper._read_yaml_file(file_path)
 
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     return f.read()
-            
+
             except UnicodeDecodeError:
                 return str(from_path(file_path).best())
-        
+
         except Exception as e:
-            raise ScrapingFailedError(f"Failed to read file: {e}")
+            raise ScrapingFailedError(f"Failed to read file: {e}") from e

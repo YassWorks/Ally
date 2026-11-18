@@ -2,7 +2,6 @@ from app.src.core.ui import default_ui
 
 
 class PermissionManager:
-
     def __init__(self):
         self.ui = default_ui
         self.always_allow = False

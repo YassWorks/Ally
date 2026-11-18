@@ -1,7 +1,8 @@
-from app.src.embeddings.db_client import DataBaseClient
-from app.src.core.ui import default_ui
-from app.utils.ui_messages import UI_MESSAGES
 import os
+
+from app.src.core.ui import default_ui
+from app.src.embeddings.db_client import DataBaseClient
+from app.utils.ui_messages import UI_MESSAGES
 
 
 def handle_embed_request(*args):
@@ -9,9 +10,7 @@ def handle_embed_request(*args):
     db_client = DataBaseClient.get_instance()
 
     if db_client is None:
-        default_ui.error(
-            UI_MESSAGES["errors"]["db_not_initialized"]
-        )
+        default_ui.error(UI_MESSAGES["errors"]["db_not_initialized"])
         return
 
     if len(args) < 2:
@@ -20,7 +19,7 @@ def handle_embed_request(*args):
 
     directory_path = args[0]
     collection_name = args[1]
-    
+
     if len(collection_name) < 3:
         default_ui.error(UI_MESSAGES["errors"]["collection_name_too_short"])
         return
@@ -37,9 +36,7 @@ def handle_index_request(*args):
     db_client = DataBaseClient.get_instance()
 
     if db_client is None:
-        default_ui.error(
-            UI_MESSAGES["errors"]["db_not_initialized"]
-        )
+        default_ui.error(UI_MESSAGES["errors"]["db_not_initialized"])
         return
 
     if len(args) < 1:
@@ -61,9 +58,7 @@ def handle_unindex_request(*args):
     db_client = DataBaseClient.get_instance()
 
     if db_client is None:
-        default_ui.error(
-            UI_MESSAGES["errors"]["db_not_initialized"]
-        )
+        default_ui.error(UI_MESSAGES["errors"]["db_not_initialized"])
         return
 
     if len(args) < 1:
@@ -86,43 +81,37 @@ def handle_list_command(*args):
     whether they are indexed or not.
     """
     db_client = DataBaseClient.get_instance()
-    
+
     if db_client is None:
-        default_ui.error(
-            UI_MESSAGES["errors"]["db_not_initialized"]
-        )
+        default_ui.error(UI_MESSAGES["errors"]["db_not_initialized"])
         return
-    
+
     db_client.list_collections()
 
 
 def handle_delete_command(*args):
     """Handles the deletion of a collection from the database by its name."""
     db_client = DataBaseClient.get_instance()
-    
+
     if len(args) < 1:
         default_ui.error(UI_MESSAGES["usage"]["delete"])
         return
-    
+
     collection_name = args[0]
-    
+
     if db_client is None:
-        default_ui.error(
-            UI_MESSAGES["errors"]["db_not_initialized"]
-        )
+        default_ui.error(UI_MESSAGES["errors"]["db_not_initialized"])
         return
-    
+
     db_client.delete_collection(collection_name=collection_name)
-    
+
 
 def handle_purge_command():
     """Handles the purging of all collections from the database."""
     db_client = DataBaseClient.get_instance()
-    
+
     if db_client is None:
-        default_ui.error(
-            UI_MESSAGES["errors"]["db_not_initialized"]
-        )
+        default_ui.error(UI_MESSAGES["errors"]["db_not_initialized"])
         return
-    
+
     db_client.reset_database()

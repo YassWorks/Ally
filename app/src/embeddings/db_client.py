@@ -1,18 +1,24 @@
-from app.utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_PATHS, MAX_RESULTS, BATCH_SIZE
-from app.src.embeddings.scrapers.abstract_scraper import Scraper
-from app.src.helpers.valid_dir import validate_dir_name
-from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
-from app.src.core.ui import default_ui
-from app.utils.logger import logger
-from app.utils.ui_messages import UI_MESSAGES
-from typing import Callable, Any
-from pathlib import Path
-from datetime import datetime
 import json
 import os
 import time
-from requests.exceptions import HTTPError
+from collections.abc import Callable
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
+from app.src.core.ui import default_ui
+from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
+from app.src.embeddings.scrapers.abstract_scraper import Scraper
+from app.src.helpers.valid_dir import validate_dir_name
+from app.utils.constants import (
+    BATCH_SIZE,
+    CHUNK_OVERLAP,
+    CHUNK_SIZE,
+    DEFAULT_PATHS,
+    MAX_RESULTS,
+)
+from app.utils.logger import logger
+from app.utils.ui_messages import UI_MESSAGES
 
 # configure database path
 DB_PATH = ""
@@ -44,10 +50,10 @@ class DataBaseClient:
         try:
             import chromadb
             from chromadb.config import Settings
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "ChromaDB is not installed. Please run 'pip install chromadb' to use the database features."
-            )
+            ) from e
 
         os.makedirs(DB_PATH, exist_ok=True)
 
@@ -79,15 +85,13 @@ class DataBaseClient:
             DB_PATH.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             logger.error(f"Failed to create database directory: {DB_PATH}", exc_info=e)
-            default_ui.error(
-                UI_MESSAGES["errors"]["failed_create_db_directory"]
-            )
+            default_ui.error(UI_MESSAGES["errors"]["failed_create_db_directory"])
             raise
 
     def _load_indexed_collections(self) -> dict[str, bool]:
         """Load indexed collections from the JSON file."""
         try:
-            with open(self.indexed_collections_path, "r") as f:
+            with open(self.indexed_collections_path) as f:
                 return json.load(f)
         except (json.JSONDecodeError, FileNotFoundError):
             return {}
@@ -100,7 +104,7 @@ class DataBaseClient:
             with open(self.indexed_collections_path, "w") as f:
                 json.dump(self.indexed_collections, f, indent=2)
         except Exception as e:
-            logger.error(f"Failed to save indexed collections", exc_info=e)
+            logger.error("Failed to save indexed collections", exc_info=e)
             default_ui.error(UI_MESSAGES["errors"]["failed_save_indexed"])
 
     def index_collection(self, collection_name: str) -> None:
@@ -124,8 +128,8 @@ class DataBaseClient:
         except chromadb_errors.NotFoundError:
             return False
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
         try:
             results = collection.get(
@@ -134,8 +138,8 @@ class DataBaseClient:
             )
             return bool(results["metadatas"])
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
     def store_document(self, file_path: str, collection_name: str) -> None:
         """Store document content and metadata in ChromaDB."""
@@ -160,7 +164,7 @@ class DataBaseClient:
         )
 
         embeddings = []
-        
+
         for i in range(0, len(chunks), BATCH_SIZE):
             time.sleep(5)  # TODO: adjust delay based on rate limits
             embeddings.extend(self.embedding_function(chunks[i : i + BATCH_SIZE]))
@@ -187,8 +191,8 @@ class DataBaseClient:
         except chromadb_errors.NotFoundError:
             return True
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
         try:
             # get documents by metadata hash to find any document with the same file path
@@ -213,8 +217,8 @@ class DataBaseClient:
             if stored_hash is None or stored_mod_date is None:
                 return True
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
         return last_hash != stored_hash or last_mod_date != stored_mod_date
 
@@ -223,9 +227,7 @@ class DataBaseClient:
 
         if not validate_dir_name(directory_path):
             logger.error(f"Invalid directory path: {directory_path}")
-            default_ui.error(
-                UI_MESSAGES["errors"]["invalid_directory_path"]
-            )
+            default_ui.error(UI_MESSAGES["errors"]["invalid_directory_path"])
             return
 
         # Normalize the path
@@ -247,18 +249,14 @@ class DataBaseClient:
 
             except ScrapingFailedError as e:
                 logger.error(f"Failed to scrape file: {directory_path}", exc_info=e)
-                default_ui.error(
-                    UI_MESSAGES["errors"]["failed_scrape"]
-                )
+                default_ui.error(UI_MESSAGES["errors"]["failed_scrape"])
 
             except:
                 raise
 
         if not os.path.exists(directory_path):
             logger.error(f"Directory does not exist: {directory_path}")
-            default_ui.error(
-                UI_MESSAGES["errors"]["directory_not_exist"]
-            )
+            default_ui.error(UI_MESSAGES["errors"]["directory_not_exist"])
             return
 
         for root, _, files in os.walk(directory_path):
@@ -270,9 +268,7 @@ class DataBaseClient:
 
                 except ScrapingFailedError as e:
                     logger.error(f"Failed to scrape file: {file_path}", exc_info=e)
-                    default_ui.error(
-                        UI_MESSAGES["errors"]["failed_scrape"]
-                    )
+                    default_ui.error(UI_MESSAGES["errors"]["failed_scrape"])
 
                 except:
                     raise
@@ -312,12 +308,10 @@ class DataBaseClient:
 
         except chromadb_errors.NotFoundError as e:
             logger.warning(f"Collection not found: {collection_name}", exc_info=e)
-            default_ui.error(
-                UI_MESSAGES["errors"]["collection_not_exist"]
-            )
+            default_ui.error(UI_MESSAGES["errors"]["collection_not_exist"])
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
     def list_collections(self) -> list:
         """List all collections in the database."""
@@ -336,8 +330,8 @@ class DataBaseClient:
                 style="success",
             )
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
     def reset_database(self) -> None:
         """Reset the entire database by deleting all collections."""
@@ -361,8 +355,8 @@ class DataBaseClient:
                 style="success",
             )
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
     def get_query_results(
         self, query: str, n_results: int = MAX_RESULTS
@@ -370,7 +364,7 @@ class DataBaseClient:
         """Query the database and return relevant documents."""
         candidates = []
         # getting the closest documents across the given collections
-        for collection_name in self.indexed_collections.keys():
+        for collection_name in self.indexed_collections:
             if not self.indexed_collections[collection_name]:
                 continue
 
@@ -404,8 +398,8 @@ class DataBaseClient:
         except chromadb_errors.NotFoundError:
             return []
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e
 
         try:
             results = collection.query(
@@ -418,8 +412,9 @@ class DataBaseClient:
                     results.get("documents", [[]])[0],
                     results.get("metadatas", [[]])[0],
                     results.get("distances", [[]])[0],
+                    strict=False,
                 )
             )
 
-        except Exception:
-            raise DBAccessError()
+        except Exception as e:
+            raise DBAccessError() from e

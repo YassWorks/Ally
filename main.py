@@ -6,18 +6,18 @@ try:
     from app import CLI, default_ui
     from app.utils.logger import logger
 
-except Exception as e:
+except Exception:
     print("Unexpected error happened...")
     import sys
+
     sys.exit(1)
 
 
-from warnings import filterwarnings
-import os
-import sys
 import json
 import logging
-
+import os
+import sys
+from warnings import filterwarnings
 
 logging.basicConfig(level=logging.CRITICAL)
 filterwarnings("ignore", category=Warning, module="torch")
@@ -51,7 +51,7 @@ except json.JSONDecodeError as e:
     logger.error("Configuration file 'config.json' is not valid JSON", exc_info=e)
     default_ui.error("Configuration file 'config.json' is not a valid JSON.")
     sys.exit(1)
-except Exception as e:
+except Exception:
     logger.exception("Unexpected error loading configuration")
     default_ui.error("An unexpected error occurred")
     sys.exit(1)

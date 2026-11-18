@@ -1,25 +1,26 @@
-from app.src.orchestration.integrate_web_search import integrate_web_search
-from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
-from app.utils.ui_messages import UI_MESSAGES
-from app.utils.logger import logger
+import os
+import sys
+import textwrap
+
+from app.src.cli.flags import ArgsParser
+from app.src.core.agent_factory import AgentFactory
+from app.src.core.base import BaseAgent
+from app.src.core.permissions import permission_manager
+from app.src.core.ui import default_ui
 from app.src.embeddings.handle_commands import (
+    handle_delete_command,
     handle_embed_request,
     handle_index_request,
-    handle_unindex_request,
-    handle_delete_command,
-    handle_purge_command,
     handle_list_command,
+    handle_purge_command,
+    handle_unindex_request,
 )
-from app.src.core.permissions import permission_manager
-from app.src.core.agent_factory import AgentFactory
 from app.src.helpers.valid_dir import validate_dir_name
+from app.src.orchestration.integrate_web_search import integrate_web_search
+from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
 from app.utils.ascii_art import ASCII_ART
-from app.src.core.base import BaseAgent
-from app.src.cli.flags import ArgsParser
-from app.src.core.ui import default_ui
-import textwrap
-import sys
-import os
+from app.utils.logger import logger
+from app.utils.ui_messages import UI_MESSAGES
 
 
 class CLI:
@@ -49,7 +50,6 @@ class CLI:
         provider_per_model = provider_per_model or {}
 
         match embedding_provider.lower():
-
             case "ollama":
                 from app.src.embeddings.embedding_functions.ollama_embed import (
                     OllamaEmbedder,
@@ -130,7 +130,7 @@ class CLI:
             logger.error("Configuration validation error", exc_info=ve)
             self.ui.error(UI_MESSAGES["errors"]["config_error"])
             sys.exit(1)
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to validate configuration")
             self.ui.error(UI_MESSAGES["errors"]["failed_validate_config"])
             sys.exit(1)
@@ -149,7 +149,7 @@ class CLI:
             logger.error("Coding configuration error", exc_info=ve)
             self.ui.error(UI_MESSAGES["errors"]["config_error"])
             sys.exit(1)
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to setup coding configuration")
             self.ui.error(UI_MESSAGES["errors"]["failed_setup_coding"])
             sys.exit(1)
@@ -270,7 +270,7 @@ class CLI:
 
         except KeyboardInterrupt:
             self.ui.goodbye()
-        except Exception as e:
+        except Exception:
             logger.exception("Unexpected error in interactive session")
             self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
@@ -343,7 +343,7 @@ class CLI:
 
         except KeyboardInterrupt:
             self.ui.goodbye()
-        except Exception as e:
+        except Exception:
             logger.exception("Unexpected error in project workflow")
             self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
 
@@ -444,7 +444,7 @@ class CLI:
         agent_types = ["brainstormer", "web_searcher", "code_gen"]
         display_names = ["Brainstormer", "Web Searcher", "Coding"]
 
-        for agent_type, display_name in zip(agent_types, display_names):
+        for agent_type, display_name in zip(agent_types, display_names, strict=True):
             new_model = self.ui.get_input(
                 message=UI_MESSAGES["model_change_prompt"].format(display_name),
                 default=self.model_names[agent_type],
@@ -476,7 +476,7 @@ class CLI:
                 working_dir=working_dir,
             )
 
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to initialize coding workflow")
             self.ui.error(UI_MESSAGES["errors"]["failed_initialize_coding"])
             return False

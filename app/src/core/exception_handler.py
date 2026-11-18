@@ -1,9 +1,12 @@
+from collections.abc import Callable
+from typing import Any
+
+import langgraph.errors as lg_errors
+import openai
+
 from app.src.core.permissions import PermissionDeniedException
 from app.src.core.ui import AgentUI
 from app.utils.logger import logger
-from typing import Callable, Any
-import langgraph.errors as lg_errors
-import openai
 
 
 class AgentExceptionHandler:
@@ -28,9 +31,9 @@ class AgentExceptionHandler:
             except PermissionDeniedException as e:
                 if propagate:
                     raise
-                
+
                 logger.warning("Permission denied for operation", exc_info=e)
-                
+
                 if reject_operation:
                     operation = reject_operation
                     continue
@@ -41,15 +44,18 @@ class AgentExceptionHandler:
             except lg_errors.GraphRecursionError as e:
                 if propagate:
                     raise
-                
+
                 logger.warning(f"Graph recursion error, retries: {retries}", exc_info=e)
-                
+
                 if retry_operation:
                     ui.warning(
                         "Agent processing took longer than expected (Max recursion limit reached)"
                     )
                     if retries >= AgentExceptionHandler.MAX_RETRIES:
-                        logger.error(f"Max retries ({AgentExceptionHandler.MAX_RETRIES}) reached", exc_info=e)
+                        logger.error(
+                            f"Max retries ({AgentExceptionHandler.MAX_RETRIES}) reached",
+                            exc_info=e,
+                        )
                         ui.status_message(
                             title="Max Retries Reached",
                             message="Agent has been running for a while now. Please make the necessary adjustments to your prompt.",
@@ -63,7 +69,7 @@ class AgentExceptionHandler:
                         operation = retry_operation
                         retries += 1
                         continue
-                
+
                 ui.error("Max recursion limit reached. Operation cannot continue.")
                 return None
 
@@ -75,7 +81,7 @@ class AgentExceptionHandler:
                 ui.error("Rate limit exceeded. Please try again later")
                 return None
 
-            except Exception as e:
+            except Exception:
                 if propagate:
                     raise
 

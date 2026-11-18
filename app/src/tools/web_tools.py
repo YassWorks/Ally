@@ -1,8 +1,9 @@
-from app.utils.logger import logger
-from langchain_core.tools import tool
-from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter, Retry
 import requests
+from bs4 import BeautifulSoup
+from langchain_core.tools import tool
+from requests.adapters import HTTPAdapter, Retry
+
+from app.utils.logger import logger
 
 
 def fetch(url: str) -> str:

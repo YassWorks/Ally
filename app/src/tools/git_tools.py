@@ -1,7 +1,9 @@
-from app.utils.logger import logger
-from langchain_core.tools import tool
-import subprocess
 import os
+import subprocess
+
+from langchain_core.tools import tool
+
+from app.utils.logger import logger
 
 
 @tool
@@ -105,7 +107,10 @@ def blame(file_path: str, cwd: str | None = None) -> str:
                 parts = line.split(" ", 3)
                 if len(parts) >= 3:
                     commit_hash = parts[0][:8]
-                    if current_commit is None or current_commit.get("hash", "") != commit_hash:
+                    if (
+                        current_commit is None
+                        or current_commit.get("hash", "") != commit_hash
+                    ):
                         current_commit = {"hash": commit_hash}
 
                     j = i + 1

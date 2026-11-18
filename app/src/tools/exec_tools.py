@@ -1,12 +1,13 @@
-from app.src.core.permissions import permission_manager, PermissionDeniedException
-from langchain_core.tools import tool
-from app.utils.constants import EXEC_TIMEOUT
+import os
+import re
+import shlex
 import subprocess
 import tempfile
-import shlex
-import re
-import os
 
+from langchain_core.tools import tool
+
+from app.src.core.permissions import PermissionDeniedException, permission_manager
+from app.utils.constants import EXEC_TIMEOUT
 
 EXTREMEMLY_DANGEROUS_PATTERNS = [
     r"^rm\s+-rf\s+/$",  # Wipe root
@@ -34,12 +35,12 @@ EXTREMEMLY_DANGEROUS_PATTERNS = [
 @tool
 def execute_code(code: str, cwd: str | None) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Execute Python code scripts in isolated temporary files.
 
     ## WHEN TO USE:
     - Scripting and automation tasks
-    - Validate logic before implementing in files  
+    - Validate logic before implementing in files
     - Run data analysis, processing, or computational tasks
     - Test code snippets or plot/visualize data
 
@@ -93,7 +94,7 @@ def execute_code(code: str, cwd: str | None) -> str:
 @tool
 def execute_command(command: str, cwd: str | None) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Execute shell commands with comprehensive system access and security filtering.
 
     ## WHEN TO USE:
@@ -157,7 +158,9 @@ def execute_command(command: str, cwd: str | None) -> str:
     except subprocess.TimeoutExpired:
         return "Command execution timed out (300 second limit exceeded)"
     except FileNotFoundError:
-        return f"Command not found: {parsed_command[0] if parsed_command else 'unknown'}"
+        return (
+            f"Command not found: {parsed_command[0] if parsed_command else 'unknown'}"
+        )
     except PermissionError:
         return f"Permission denied executing: {command}"
     except Exception as e:

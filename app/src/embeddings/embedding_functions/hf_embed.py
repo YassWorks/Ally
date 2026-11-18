@@ -1,9 +1,9 @@
-from app.utils.constants import DEFAULT_PATHS
-from app.src.core.ui import default_ui
-from app.src.helpers.valid_dir import validate_dir_name
 import os
 from pathlib import Path
 
+from app.src.core.ui import default_ui
+from app.src.helpers.valid_dir import validate_dir_name
+from app.utils.constants import DEFAULT_PATHS
 
 _DISPLAYED_DOWNLOADING_MESSAGE = False
 
@@ -27,7 +27,6 @@ if not EMBEDDING_MODEL_PATH:
 
 
 class HFEmbedder:
-
     def __init__(self, model_name: str):
         self.model_name = model_name
 
@@ -58,10 +57,10 @@ class HFEmbedder:
         """
         global _DISPLAYED_DOWNLOADING_MESSAGE
 
-        from transformers import AutoTokenizer, AutoModel
-        import torch.nn.functional as F
         import torch
+        import torch.nn.functional as F
         import transformers.utils.logging as hf_logging
+        from transformers import AutoModel, AutoTokenizer
 
         hf_logging.set_verbosity_error()
         os.makedirs(EMBEDDING_MODEL_PATH, exist_ok=True)

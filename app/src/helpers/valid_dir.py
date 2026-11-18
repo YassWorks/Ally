@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-
 WINDOWS_INVALID_CHARS = '<>:"/\\|?*'
 WINDOWS_RESERVED_NAMES = {
     "CON",
@@ -24,13 +23,11 @@ def validate_dir_name(path: str) -> bool:
         return False
 
     for part in p.parts:
-
         if part in (p.anchor, os.sep, os.altsep) or not part:
             continue
 
         # Windows-specific checks
         if os.name == "nt":
-
             if part.upper().split(".")[0] in WINDOWS_RESERVED_NAMES:
                 return False
 
