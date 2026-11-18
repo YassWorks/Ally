@@ -17,6 +17,7 @@ from app.src.embeddings.handle_commands import (
     handle_purge_command,
     handle_unindex_request,
 )
+from app.src.embeddings.rag_errors import SetupFailedError
 from app.src.helpers.valid_dir import validate_dir_name
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.orchestration.units.orchestrated_codegen import CodeGenUnit
@@ -38,9 +39,14 @@ class CLI:
         self.stream = stream
         self.ui = default_ui
 
-        self.embedding_function = _create_embedding_function(
-            config.embedding_provider, config.embedding_model
-        )
+        try:
+            self.embedding_function = _create_embedding_function(
+                config.embedding_provider, config.embedding_model or None
+            )
+        except SetupFailedError as e:
+            logger.warning(str(e))
+            self.ui.warning(str(e))
+            self.embedding_function = None
         self.rag_available = self.embedding_function is not None
 
         from app.src.embeddings.scrapers.simple_scraper import SimpleScraper
@@ -264,7 +270,7 @@ class CLI:
             return False
 
 
-def _create_embedding_function(provider: str, model: str) -> Callable | None:
+def _create_embedding_function(provider: str, model: str | None) -> Callable | None:
     match provider:
         case "ollama":
             from app.src.embeddings.embedding_functions.ollama_embed import (

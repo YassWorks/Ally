@@ -1,71 +1,74 @@
+import importlib.util
+
 from app.src.core.ui import default_ui
+from app.src.embeddings.rag_errors import SetupFailedError
 from app.utils.paths import data_dir
 
-_DISPLAYED_DOWNLOADING_MESSAGE = False
+DEFAULT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 class HFEmbedder:
-    def __init__(self, model_name: str):
-        self.model_name = model_name
+    """Embeds text locally with a Hugging Face model, using mean pooling.
 
-    # Mean Pooling - Take attention mask into account for correct averaging
-    @staticmethod
-    def _mean_pooling(model_output, attention_mask):
-        import torch
+    The model is downloaded on first use and kept in memory afterwards.
 
-        token_embeddings = model_output[
-            0
-        ]  # First element of model_output contains all token embeddings
-        input_mask_expanded = (
-            attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        )
-        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(
-            input_mask_expanded.sum(1), min=1e-9
-        )
+    Raises:
+        SetupFailedError: If the optional ``hf`` dependencies are not installed.
+    """
 
-    def get_embeddings(self, sentences: list[str] | str) -> list[list[float]]:
-        """
-        Get embeddings for a list of sentences using a Hugging Face model.
+    def __init__(self, model_name: str | None = None):
+        missing = [
+            name
+            for name in ("torch", "transformers")
+            if not importlib.util.find_spec(name)
+        ]
+        if missing:
+            raise SetupFailedError(
+                "Hugging Face embeddings need the optional 'hf' extra "
+                f"(missing: {', '.join(missing)}). Reinstall with ./setup.sh --hf "
+                "or .\\setup.ps1 -HF."
+            )
+        self.model_name = model_name or DEFAULT_MODEL
+        self._tokenizer = None
+        self._model = None
 
-        Args:
-            sentences (list[str] | str): List of sentences to embed or a single sentence.
-
-        Returns:
-            list[list[float]]: List of embeddings for each sentence.
-        """
-        global _DISPLAYED_DOWNLOADING_MESSAGE
-
-        import torch
-        import torch.nn.functional as F
+    def _load(self) -> None:
         import transformers.utils.logging as hf_logging
         from transformers import AutoModel, AutoTokenizer
 
         hf_logging.set_verbosity_error()
-        models_dir = data_dir("embedding_models", "ALLY_EMBEDDING_MODELS_DIR")
-
-        if not _DISPLAYED_DOWNLOADING_MESSAGE and not any(models_dir.iterdir()):
-            with default_ui.console.status("Downloading embedding model..."):
-                tokenizer = AutoTokenizer.from_pretrained(
-                    self.model_name, cache_dir=models_dir
-                )
-                model = AutoModel.from_pretrained(self.model_name, cache_dir=models_dir)
-            _DISPLAYED_DOWNLOADING_MESSAGE = True
-        else:
-            tokenizer = AutoTokenizer.from_pretrained(
-                self.model_name, cache_dir=models_dir
+        cache_dir = data_dir("embedding_models", "ALLY_EMBEDDING_MODELS_DIR")
+        with default_ui.console.status(f"Loading embedding model {self.model_name}..."):
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                self.model_name, cache_dir=cache_dir
             )
-            model = AutoModel.from_pretrained(self.model_name, cache_dir=models_dir)
+            self._model = AutoModel.from_pretrained(
+                self.model_name, cache_dir=cache_dir
+            )
+            self._model.eval()
 
-        encoded_input = tokenizer(
+    def get_embeddings(self, sentences: list[str] | str) -> list[list[float]]:
+        """Return one normalized embedding per sentence."""
+        import torch
+        import torch.nn.functional as F
+
+        if self._model is None:
+            self._load()
+
+        encoded = self._tokenizer(
             sentences, padding=True, truncation=True, return_tensors="pt"
         )
-
         with torch.no_grad():
-            model_output = model(**encoded_input)
+            output = self._model(**encoded)
 
-        sentence_embeddings = self._mean_pooling(
-            model_output, encoded_input["attention_mask"]
+        token_embeddings = output[0]
+        mask = (
+            encoded["attention_mask"]
+            .unsqueeze(-1)
+            .expand(token_embeddings.size())
+            .float()
         )
-        sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
-
-        return sentence_embeddings.tolist()
+        pooled = torch.sum(token_embeddings * mask, 1) / torch.clamp(
+            mask.sum(1), min=1e-9
+        )
+        return F.normalize(pooled, p=2, dim=1).tolist()

@@ -1,8 +1,7 @@
+import hashlib
 import json
 import os
-import time
 from collections.abc import Callable
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -10,18 +9,34 @@ from app.src.core.ui import default_ui
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
 from app.src.embeddings.scrapers.abstract_scraper import Scraper
 from app.src.helpers.valid_dir import validate_dir_name
-from app.utils.constants import (
-    BATCH_SIZE,
-    CHUNK_OVERLAP,
-    CHUNK_SIZE,
-    MAX_RESULTS,
-)
+from app.src.tools.find_tools import IGNORED_DIRS
+from app.utils.constants import BATCH_SIZE, CHUNK_OVERLAP, CHUNK_SIZE, MAX_RESULTS
 from app.utils.logger import logger
 from app.utils.paths import data_dir
 from app.utils.ui_messages import UI_MESSAGES
 
 
+def path_key(file_path: str | Path) -> str:
+    """Return the form of ``file_path`` stored in chunk metadata."""
+    return Path(file_path).as_posix()
+
+
+def split_into_chunks(
+    text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP
+) -> list[str]:
+    """Split ``text`` into chunks of ``size`` characters that overlap by ``overlap``."""
+    step = max(size - overlap, 1)
+    return [text[i : i + size] for i in range(0, len(text), step)]
+
+
 class DataBaseClient:
+    """Process-wide ChromaDB store for RAG collections.
+
+    Args:
+        embedding_function: Turns a list of texts into a list of vectors.
+        scraper: Extracts text and metadata from files.
+    """
+
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -30,245 +45,149 @@ class DataBaseClient:
         return cls._instance
 
     def __init__(
-        self, embedding_function: Callable = None, scraper: Scraper = None
-    ) -> None:
-        try:
-            import chromadb
-            from chromadb.config import Settings
-        except ImportError as e:
-            raise ImportError(
-                "ChromaDB is not installed. Please run 'pip install chromadb' to use the database features."
-            ) from e
+        self, embedding_function: Callable | None = None, scraper: Scraper | None = None
+    ):
+        import chromadb
+        from chromadb.config import Settings
 
         self.db_path = data_dir("database", "ALLY_DATABASE_DIR")
-
         self.db_client = chromadb.PersistentClient(
             path=self.db_path, settings=Settings(anonymized_telemetry=False)
         )
         self.embedding_function = embedding_function
-
         self.scraper = scraper
 
         self.indexed_collections_path = self.db_path / "indexed_collections.json"
-        self._ensure_db_directory_exists()
         if not self.indexed_collections_path.exists():
-            self.indexed_collections_path.write_text("{}")
-
+            self.indexed_collections_path.write_text("{}", encoding="utf-8")
         self.indexed_collections: dict[str, bool] = self._load_indexed_collections()
 
     @staticmethod
-    def get_instance() -> "DataBaseClient":
-        """Get the singleton instance of DataBaseClient."""
-        if DataBaseClient._instance is None:
-            return None
+    def get_instance() -> "DataBaseClient | None":
+        """Return the client created at startup, or ``None`` if RAG is not configured."""
         return DataBaseClient._instance
 
-    def _ensure_db_directory_exists(self) -> None:
-        """Ensure the database directory exists."""
-        try:
-            self.db_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            logger.error(
-                f"Failed to create database directory: {self.db_path}", exc_info=e
-            )
-            default_ui.error(UI_MESSAGES["errors"]["failed_create_db_directory"])
-            raise
-
     def _load_indexed_collections(self) -> dict[str, bool]:
-        """Load indexed collections from the JSON file."""
         try:
-            with open(self.indexed_collections_path) as f:
-                return json.load(f)
+            return json.loads(self.indexed_collections_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, FileNotFoundError):
             return {}
 
     def _save_indexed_collections(self) -> None:
-        """Save indexed collections to the JSON file."""
         try:
-            # Ensure the database directory exists before writing
-            self._ensure_db_directory_exists()
-            with open(self.indexed_collections_path, "w") as f:
-                json.dump(self.indexed_collections, f, indent=2)
+            self.indexed_collections_path.write_text(
+                json.dumps(self.indexed_collections, indent=2), encoding="utf-8"
+            )
         except Exception as e:
             logger.error("Failed to save indexed collections", exc_info=e)
             default_ui.error(UI_MESSAGES["errors"]["failed_save_indexed"])
 
+    def _get_collection(self, collection_name: str):
+        import chromadb.errors as chromadb_errors
+
+        try:
+            return self.db_client.get_collection(name=collection_name)
+        except chromadb_errors.NotFoundError:
+            return None
+        except Exception as e:
+            raise DBAccessError() from e
+
     def index_collection(self, collection_name: str) -> None:
-        """Mark a collection as indexed."""
+        """Include ``collection_name`` in RAG lookups."""
         self.indexed_collections[collection_name] = True
         self._save_indexed_collections()
 
     def unindex_collection(self, collection_name: str) -> None:
-        """Mark a collection as unindexed."""
+        """Leave ``collection_name`` out of RAG lookups without deleting it."""
         if collection_name in self.indexed_collections:
             self.indexed_collections[collection_name] = False
             self._save_indexed_collections()
 
-    def already_stored(self, file_path: str, collection_name: str) -> bool:
-        """Check if a document is already stored in the database."""
-        import chromadb.errors as chromadb_errors
+    def was_modified(self, file_path: str, collection_name: str) -> bool:
+        """Return whether ``file_path`` is new or changed since it was last embedded."""
+        collection = self._get_collection(collection_name)
+        if collection is None:
+            return True
 
         try:
-            collection = self.db_client.get_collection(name=collection_name)
-
-        except chromadb_errors.NotFoundError:
-            return False
-
+            stored = collection.get(where={"file_path": path_key(file_path)}, limit=1)
         except Exception as e:
             raise DBAccessError() from e
 
-        try:
-            results = collection.get(
-                where={"file_path": file_path},
-                limit=1,
-            )
-            return bool(results["metadatas"])
-
-        except Exception as e:
-            raise DBAccessError() from e
+        if not stored["metadatas"]:
+            return True
+        return stored["metadatas"][0].get("hash") != self.scraper.get_hash(file_path)
 
     def store_document(self, file_path: str, collection_name: str) -> None:
-        """Store document content and metadata in ChromaDB."""
-        if self.already_stored(file_path, collection_name):
-            return
-
+        """Embed ``file_path`` into ``collection_name``, replacing any older version of it."""
         response = self.scraper.scrape(file_path)
-        content = response["content"]
-        metadata = response["metadata"]
-
-        chunks = [
-            content[i : i + CHUNK_SIZE]
-            for i in range(0, len(content), CHUNK_SIZE - CHUNK_OVERLAP)
-        ]
+        metadata = {**response["metadata"], "file_path": path_key(file_path)}
+        chunks = split_into_chunks(response["content"])
 
         if collection_name not in self.indexed_collections:
-            self.indexed_collections[collection_name] = True  # default to indexed
-            self._save_indexed_collections()
+            self.index_collection(collection_name)
 
-        collection = self.db_client.get_or_create_collection(
-            name=collection_name,
-        )
+        collection = self.db_client.get_or_create_collection(name=collection_name)
+        collection.delete(where={"file_path": metadata["file_path"]})
+
+        if not chunks:
+            logger.info(f"Skipping empty file: {file_path}")
+            return
 
         embeddings = []
-
         for i in range(0, len(chunks), BATCH_SIZE):
-            time.sleep(5)  # TODO: adjust delay based on rate limits
             embeddings.extend(self.embedding_function(chunks[i : i + BATCH_SIZE]))
 
+        prefix = hashlib.sha1(metadata["file_path"].encode("utf-8")).hexdigest()[:16]
         collection.add(
             documents=chunks,
             metadatas=[metadata] * len(chunks),
             embeddings=embeddings,
-            ids=[f"{metadata['hash']}_{i}" for i in range(len(chunks))],
+            ids=[f"{prefix}_{i}" for i in range(len(chunks))],
         )
 
-    def was_modified(self, file_path: str, collection_name: str) -> bool:
-        """Check if the file has been modified by comparing hashes and modification dates."""
-        import chromadb.errors as chromadb_errors
-
-        last_hash = self.scraper.get_hash(file_path)
-        last_mod_date = datetime.fromtimestamp(
-            Path(file_path).stat().st_mtime
-        ).isoformat()
-
-        try:
-            collection = self.db_client.get_collection(name=collection_name)
-
-        except chromadb_errors.NotFoundError:
-            return True
-
-        except Exception as e:
-            raise DBAccessError() from e
-
-        try:
-            # get documents by metadata hash to find any document with the same file path
-            results = collection.get(
-                where={"file_path": file_path},
-                limit=1,
-            )
-            if not results[
-                "metadatas"
-            ]:  # File not found in collection, consider it as modified (new file)
-                return True
-
-            stored_hash, stored_mod_date = (
-                results["metadatas"][0].get("hash") if results["metadatas"] else None,
-                (
-                    results["metadatas"][0].get("mod_date")
-                    if results["metadatas"]
-                    else None
-                ),
-            )
-
-            if stored_hash is None or stored_mod_date is None:
-                return True
-
-        except Exception as e:
-            raise DBAccessError() from e
-
-        return last_hash != stored_hash or last_mod_date != stored_mod_date
-
     def store_documents(self, directory_path: str, collection_name: str) -> None:
-        """Store all documents from a directory into the database."""
-
+        """Embed a file, or every file under a directory, skipping unchanged ones."""
         if not validate_dir_name(directory_path):
             logger.error(f"Invalid directory path: {directory_path}")
             default_ui.error(UI_MESSAGES["errors"]["invalid_directory_path"])
             return
 
-        # Normalize the path
-        directory_path = Path(directory_path)
-
-        if os.name == "nt":
-            directory_path = Path(os.path.expandvars(str(directory_path)))
-        else:
-            directory_path = Path(os.path.expanduser(str(directory_path)))
-
-        directory_path = directory_path.resolve()
-        directory_path = str(directory_path)
-
-        # If it's a file, just process that single file
-        if os.path.isfile(directory_path):
-            try:
-                if self.was_modified(directory_path, collection_name):
-                    self.store_document(directory_path, collection_name)
-
-            except ScrapingFailedError as e:
-                logger.error(f"Failed to scrape file: {directory_path}", exc_info=e)
-                default_ui.error(UI_MESSAGES["errors"]["failed_scrape"])
-
-            except:
-                raise
-
-        if not os.path.exists(directory_path):
-            logger.error(f"Directory does not exist: {directory_path}")
+        root = Path(os.path.expanduser(os.path.expandvars(directory_path))).resolve()
+        if not root.exists():
+            logger.error(f"Directory does not exist: {root}")
             default_ui.error(UI_MESSAGES["errors"]["directory_not_exist"])
             return
 
-        for root, _, files in os.walk(directory_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                try:
-                    if self.was_modified(file_path, collection_name):
-                        self.store_document(file_path, collection_name)
-
-                except ScrapingFailedError as e:
-                    logger.error(f"Failed to scrape file: {file_path}", exc_info=e)
-                    default_ui.error(UI_MESSAGES["errors"]["failed_scrape"])
-
-                except:
-                    raise
+        if root.is_file():
+            files = [root]
+        else:
+            files = sorted(
+                p
+                for p in root.rglob("*")
+                if p.is_file()
+                and not IGNORED_DIRS.intersection(p.relative_to(root).parts[:-1])
+            )
+        for file_path in files:
+            try:
+                if self.was_modified(str(file_path), collection_name):
+                    self.store_document(str(file_path), collection_name)
+            except ScrapingFailedError as e:
+                logger.error(f"Failed to scrape file: {file_path}", exc_info=e)
+                default_ui.error(
+                    f"{UI_MESSAGES['errors']['failed_scrape']} ({file_path.name})"
+                )
 
         default_ui.status_message(
             title=UI_MESSAGES["titles"]["info"],
             message=UI_MESSAGES["success"]["documents_embedded"].format(
-                directory_path, collection_name
+                root, collection_name
             ),
             style="success",
         )
 
     def delete_collection(self, collection_name: str) -> None:
-        """Delete a collection from the database."""
+        """Delete ``collection_name`` after asking the user to confirm."""
         import chromadb.errors as chromadb_errors
 
         if not default_ui.confirm(
@@ -279,128 +198,115 @@ class DataBaseClient:
 
         try:
             self.db_client.delete_collection(name=collection_name)
-            # Remove from indexed collections and save
-            if collection_name in self.indexed_collections:
-                del self.indexed_collections[collection_name]
-                self._save_indexed_collections()
-
-                default_ui.status_message(
-                    title=UI_MESSAGES["titles"]["collection_deleted"],
-                    message=UI_MESSAGES["messages"]["collection_deleted"].format(
-                        collection_name
-                    ),
-                    style="success",
-                )
-
         except chromadb_errors.NotFoundError as e:
             logger.warning(f"Collection not found: {collection_name}", exc_info=e)
             default_ui.error(UI_MESSAGES["errors"]["collection_not_exist"])
-
+            return
         except Exception as e:
             raise DBAccessError() from e
 
-    def list_collections(self) -> list:
-        """List all collections in the database."""
+        if self.indexed_collections.pop(collection_name, None) is not None:
+            self._save_indexed_collections()
+
+        default_ui.status_message(
+            title=UI_MESSAGES["titles"]["collection_deleted"],
+            message=UI_MESSAGES["messages"]["collection_deleted"].format(
+                collection_name
+            ),
+            style="success",
+        )
+
+    def list_collections(self) -> None:
+        """Show every collection and whether it is indexed."""
         try:
             collections = self.db_client.list_collections()
-            # answer in the format "- collection_name: is_indexed"
-            lines = [
-                f"• {col.name}: {'Indexed' if self.indexed_collections.get(col.name, False) else 'Unindexed'}"
-                for col in collections
-            ]
-            listed_collections = "\n".join(lines) if lines else "No collections found."
-
-            default_ui.status_message(
-                title=UI_MESSAGES["titles"]["collections"],
-                message=listed_collections,
-                style="success",
-            )
-
         except Exception as e:
             raise DBAccessError() from e
 
+        lines = [
+            f"- {col.name}: "
+            f"{'Indexed' if self.indexed_collections.get(col.name, False) else 'Unindexed'}"
+            for col in collections
+        ]
+        default_ui.status_message(
+            title=UI_MESSAGES["titles"]["collections"],
+            message="\n".join(lines) if lines else "No collections found.",
+            style="success",
+        )
+
     def reset_database(self) -> None:
-        """Reset the entire database by deleting all collections."""
+        """Delete every collection after asking the user to confirm."""
         if not default_ui.confirm(
-            UI_MESSAGES["confirmations"]["reset_database"],
-            default=False,
+            UI_MESSAGES["confirmations"]["reset_database"], default=False
         ):
             return
 
         try:
-            collections = self.db_client.list_collections()
-            for col in collections:
+            for col in self.db_client.list_collections():
                 self.db_client.delete_collection(name=col.name)
-            # Clear indexed collections and save
-            self.indexed_collections.clear()
-            self._save_indexed_collections()
-
-            default_ui.status_message(
-                title=UI_MESSAGES["titles"]["database_reset"],
-                message=UI_MESSAGES["messages"]["all_collections_deleted"],
-                style="success",
-            )
-
         except Exception as e:
             raise DBAccessError() from e
+
+        self.indexed_collections.clear()
+        self._save_indexed_collections()
+        default_ui.status_message(
+            title=UI_MESSAGES["titles"]["database_reset"],
+            message=UI_MESSAGES["messages"]["all_collections_deleted"],
+            style="success",
+        )
 
     def get_query_results(
         self, query: str, n_results: int = MAX_RESULTS
     ) -> list[tuple[str, dict[str, Any]]]:
-        """Query the database and return relevant documents."""
-        candidates = []
-        # getting the closest documents across the given collections
-        for collection_name in self.indexed_collections:
-            if not self.indexed_collections[collection_name]:
-                continue
+        """Return the ``n_results`` chunks closest to ``query`` across indexed collections."""
+        names = [name for name, indexed in self.indexed_collections.items() if indexed]
+        if not names:
+            return []
 
+        query_embedding = self.embedding_function([query])
+        candidates = []
+        for name in names:
             candidates.extend(
                 self.get_query_results_from_collection(
-                    query, collection_name.strip(), n_results
+                    query_embedding, name.strip(), n_results
                 )
             )
 
-        # merging and sorting the results by distance
-        candidates.sort(key=lambda x: x[2])
-        # deduplicate by file hash
-        seen = set()
-        query_results = [
-            (doc, meta)
-            for doc, meta, _ in candidates
-            if meta.get("hash") not in seen and not seen.add(meta.get("hash"))
-        ][:n_results]
-
-        return query_results
+        candidates.sort(key=lambda candidate: candidate[2])
+        seen: set[str] = set()
+        results = []
+        for doc, meta, _ in candidates:
+            if doc in seen:
+                continue
+            seen.add(doc)
+            results.append((doc, meta))
+        return results[:n_results]
 
     def get_query_results_from_collection(
-        self, query: str, collection_name: str, n_results: int = MAX_RESULTS
+        self,
+        query_embedding: list[list[float]],
+        collection_name: str,
+        n_results: int = MAX_RESULTS,
     ) -> list[tuple[str, dict[str, Any], float]]:
-        """Query the database and return relevant documents."""
-        import chromadb.errors as chromadb_errors
-
-        try:
-            collection = self.db_client.get_collection(name=collection_name)
-
-        except chromadb_errors.NotFoundError:
+        """Return ``(document, metadata, distance)`` matches from one collection."""
+        collection = self._get_collection(collection_name)
+        if collection is None:
             return []
-
-        except Exception as e:
-            raise DBAccessError() from e
 
         try:
             results = collection.query(
-                query_embeddings=self.embedding_function([query]),
+                query_embeddings=query_embedding,
                 n_results=n_results,
                 include=["documents", "metadatas", "distances"],
             )
-            return list(
-                zip(
-                    results.get("documents", [[]])[0],
-                    results.get("metadatas", [[]])[0],
-                    results.get("distances", [[]])[0],
-                    strict=False,
-                )
-            )
-
         except Exception as e:
             raise DBAccessError() from e
+
+        return list(
+            zip(
+                results.get("documents", [[]])[0],
+                results.get("metadatas", [[]])[0],
+                results.get("distances", [[]])[0],
+                strict=False,
+            )
+        )

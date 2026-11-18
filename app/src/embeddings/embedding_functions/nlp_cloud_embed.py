@@ -1,36 +1,36 @@
 import os
 
 import requests
+from requests.adapters import HTTPAdapter, Retry
 
-API_TOKEN = os.getenv("NLP_CLOUD_API_KEY")
-MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
-API_URL = f"https://api.nlpcloud.io/v1/{MODEL_NAME}/embeddings"
+DEFAULT_MODEL = "paraphrase-multilingual-mpnet-base-v2"
+TIMEOUT = 60
 
 
 class NLPCloudEmbedder:
-    """Class to get embeddings using the NLP Cloud API."""
+    """Embeds text with the NLP Cloud API, using ``NLP_CLOUD_API_KEY``.
 
-    def __init__(self, model_name=MODEL_NAME):
-        self.model_name = model_name
+    Rate-limited requests are retried with backoff.
+    """
+
+    def __init__(self, model_name: str | None = None):
+        self.model_name = model_name or DEFAULT_MODEL
+        self._session = requests.Session()
+        retries = Retry(
+            total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+        )
+        self._session.mount("https://", HTTPAdapter(max_retries=retries))
 
     def get_embeddings(self, sentences: list[str] | str) -> list[list[float]]:
-        """
-        Get embeddings for a list of sentences using the NLP Cloud API.
-
-        Args:
-            sentences (list[str]| str): List of sentences to embed.
-
-        Returns:
-            list[list[float]]: List of embeddings for each sentence.
-        """
-        headers = {
-            "Authorization": f"Token {API_TOKEN}",
-            "Content-Type": "application/json",
-        }
+        """Return one embedding per sentence."""
         if isinstance(sentences, str):
             sentences = [sentences]
-        payload = {"sentences": sentences}
 
-        response = requests.post(API_URL, json=payload, headers=headers)
+        response = self._session.post(
+            f"https://api.nlpcloud.io/v1/{self.model_name}/embeddings",
+            json={"sentences": sentences},
+            headers={"Authorization": f"Token {os.getenv('NLP_CLOUD_API_KEY')}"},
+            timeout=TIMEOUT,
+        )
         response.raise_for_status()
         return response.json()["embeddings"]
