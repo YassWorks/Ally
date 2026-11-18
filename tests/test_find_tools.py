@@ -31,3 +31,16 @@ def test_find_declaration(tmp_path):
     )
 
     assert "m.py:1:" in result
+
+
+def test_only_exact_ignored_names_are_skipped(tmp_path):
+    for folder in ("login", "logs"):
+        (tmp_path / folder).mkdir()
+        (tmp_path / folder / "auth.py").write_text("needle = 1\n", encoding="utf-8")
+    (tmp_path / ".env").write_text("needle=secret\n", encoding="utf-8")
+
+    result = find_references.invoke({"dir_path": str(tmp_path), "query": "needle"})
+
+    assert "login" in result
+    assert "logs" not in result
+    assert ".env" not in result

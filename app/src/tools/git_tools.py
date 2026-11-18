@@ -6,26 +6,19 @@ from langchain_core.tools import tool
 from app.utils.logger import logger
 
 
-@tool
+@tool(parse_docstring=True)
 def diff(
     commit1: str | None = None, commit2: str | None = None, cwd: str | None = None
 ) -> str:
-    """
-    ## PRIMARY PURPOSE:
-    Compare file changes between git commits or working directory using git diff.
+    """Summarize which files changed and by how much, using git diff --stat.
 
-    ## WHEN TO USE:
-    - Review changes before merging branches
-    - Track file modifications between versions
-    - Understand project evolution
+    With no commits it shows unstaged changes. With one commit it compares that
+    commit to the working tree, and with two it compares the commits.
 
-    ## PARAMETERS:
-        commit1 (Optional[str]): First commit hash. If None, uses working directory
-        commit2 (Optional[str]): Second commit hash. If None, compares against HEAD
-        cwd (Optional[str]): Working directory for git command
-
-    ## RETURNS:
-        str: Diff summary with file changes or "no changes" message
+    Args:
+        commit1: Commit, branch or tag to compare from.
+        commit2: Commit, branch or tag to compare to.
+        cwd: Repository directory. Defaults to the working directory.
     """
     try:
         command = ["git", "diff"]
@@ -62,23 +55,13 @@ def diff(
         return f"Execution error: {str(e)}"
 
 
-@tool
+@tool(parse_docstring=True)
 def blame(file_path: str, cwd: str | None = None) -> str:
-    """
-    ## PRIMARY PURPOSE:
-    Show line-by-line authorship and commit information for a file using git blame.
+    """Show the commit and author that last changed each line of a file.
 
-    ## WHEN TO USE:
-    - Identify who wrote specific code lines
-    - Track when changes were made
-    - Find authors for bug investigation or questions
-
-    ## PARAMETERS:
-        file_path (str): Path to file (relative to repository root)
-        cwd (Optional[str]): Working directory for git command
-
-    ## RETURNS:
-        str: Line-by-line breakdown with commit hash, author, date, and content
+    Args:
+        file_path: File to inspect, relative to cwd.
+        cwd: Repository directory. Defaults to the working directory.
     """
     try:
         command = ["git", "blame", "--line-porcelain", file_path]

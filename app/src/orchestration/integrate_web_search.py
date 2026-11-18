@@ -7,22 +7,17 @@ from app.utils.constants import RECURSION_LIMIT
 def integrate_web_search(agent: BaseAgent, web_searcher: BaseAgent) -> None:
     """Give ``agent`` a tool that hands research questions to ``web_searcher``."""
 
-    @tool
+    @tool(parse_docstring=True)
     def call_searcher(query: str) -> str:
-        """
-        ## PRIMARY PURPOSE:
-        Delegate web research queries to specialized web search agent for reliable information.
+        """Ask the web research agent to answer a question from current sources.
 
-        ## WHEN TO USE:
-        - Research technical topics, implementation details, or best practices
-        - Find current information about tools, frameworks, or approaches
-        - Gather multiple perspectives on development solutions
+        Use it for recent facts, documentation and anything you are not sure
+        about. The agent searches the web, reads the pages it finds and returns
+        a summary.
 
-        ## PARAMETERS:
-            query (str): Query description or specific search terms for web research
-
-        ## RETURNS:
-            str: Comprehensive research results from web search agent
+        Args:
+            query: Question or topic to research, with enough context to search
+                for it.
         """
         return web_searcher.invoke(
             message=query,
