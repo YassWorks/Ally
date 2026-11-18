@@ -5,14 +5,13 @@ import uuid
 from collections.abc import Callable
 
 import langgraph.errors as lg_errors
-import openai
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
 from app.config import AgentSettings
 from app.src.agents.registry import AgentSpec, default_system_prompt
 from app.src.core.create_base_agent import create_base_agent
 from app.src.core.exception_handler import AgentExceptionHandler
-from app.src.core.permissions import PermissionDeniedException
+from app.src.core.messages import content_text, describe_error, http_status
 from app.src.core.ui import AgentUI, default_ui
 from app.src.embeddings.db_client import DataBaseClient
 from app.src.embeddings.rag_errors import DBAccessError, SetupFailedError
@@ -81,18 +80,21 @@ class BaseAgent:
 
     def start_chat(
         self,
-        starting_msg: str = None,
-        initial_prompt_suffix: str = None,
-        recurring_prompt_suffix: str = None,
+        starting_msg: str | None = None,
+        initial_prompt_suffix: str | None = None,
+        recurring_prompt_suffix: str | None = None,
         recursion_limit: int = RECURSION_LIMIT,
-        thread_id: str = None,
-        config: dict = None,
+        thread_id: str | None = None,
+        config: dict | None = None,
         show_welcome: bool = True,
-        active_dir: str = None,
+        active_dir: str | None = None,
         stream: bool = True,
     ) -> bool:
-        """Start interactive chat session with the agent."""
+        """Chat with the user until they quit.
 
+        Returns:
+            ``True`` when the user leaves normally, ``False`` when the session has to stop.
+        """
         if show_welcome:
             self.ui.logo(ASCII_ART)
             self.ui.help(self.model_name)
@@ -118,8 +120,7 @@ class BaseAgent:
                     user_input = starting_msg
                 else:
                     user_input = self._get_user_input(
-                        continue_flag=continue_flag,
-                        active_dir=active_dir,
+                        continue_flag=continue_flag, active_dir=active_dir
                     )
 
                 continue_flag = False
@@ -143,129 +144,111 @@ class BaseAgent:
                 if recurring_prompt_suffix:
                     user_input += f"\n\n{recurring_prompt_suffix}"
 
-                rag_final_message = None
-                query_results = None
-                extra_rag_context = ""
-
-                with self.ui.console.status(
-                    UI_MESSAGES["messages"]["querying_knowledge_base"]
-                ):
-                    if self.rag:
-                        self.db_client = DataBaseClient.get_instance()
-                        if self.db_client is None:
-                            self.ui.warning(
-                                UI_MESSAGES["warnings"]["rag_enabled_no_client"]
-                            )
-                        else:
-                            query_results = self.db_client.get_query_results(
-                                user_input, n_results=5
-                            )
-                            if query_results:
-                                extra_rag_context += PROMPTS["rag_results"]
-                                extra_rag_context += "\n".join(
-                                    [f"- {doc}" for doc, _ in query_results]
-                                )
-
-                    if query_results:
-                        self.latest_refs = {
-                            meta["file_path"]
-                            for _, meta in query_results
-                            if meta and "file_path" in meta
-                        }
-                    else:
-                        self.latest_refs = set()
-
-                    if extra_rag_context:
-                        rag_final_message = HumanMessage(
-                            content=extra_rag_context,
-                            additional_kwargs={
-                                "RAG": True,
-                            },
-                        )
+                messages = [("human", user_input)]
+                rag_message = self._rag_context(user_input)
+                if rag_message:
+                    messages.append(rag_message)
 
                 last = None
                 for chunk in self.agent.stream(
-                    {
-                        "messages": (
-                            [("human", user_input), rag_final_message]
-                            if rag_final_message
-                            else [("human", user_input)]
-                        )
-                    },
-                    config=self.configuration,
+                    {"messages": messages}, config=self.configuration
                 ):
                     if stream:
                         self._display_chunk(chunk)
                     last = chunk
-                if not stream:
+                if not stream and last:
                     self._display_chunk(last)
 
             except KeyboardInterrupt:
                 self.ui.goodbye()
                 return True
 
-            except openai.NotFoundError as e:
-                logger.error(f"Model not found: {self.model_name}", exc_info=e)
-                self.ui.error(UI_MESSAGES["errors"]["model_not_found"])
-                if self.prev_model_name:
-                    self.ui.status_message(
-                        title=UI_MESSAGES["titles"]["reverting_model"],
-                        message=f"Reverting to previous model: {self.prev_model_name}",
-                    )
-                    self.model_name = self.prev_model_name
-                    self._handle_model_change(self.model_name)
-                    self.prev_model_name = None
-                else:
-                    if self.ui.confirm(
-                        UI_MESSAGES["confirmations"]["change_model"], default=True
-                    ):
-                        new_model = self.ui.get_input(
-                            message="Enter new model name: ",
-                        ).strip()
-                        if new_model:
-                            self.prev_model_name = self.model_name
-                            self.model_name = new_model
-                            self._handle_model_change(self.model_name)
-                    else:
-                        self.ui.goodbye()
-                        return True
-
-            except PermissionDeniedException:
-                continue  # Do nothing. Let the user enter a new prompt.
-
             except lg_errors.GraphRecursionError as e:
                 logger.warning("Graph recursion limit reached", exc_info=e)
                 self.ui.warning(UI_MESSAGES["warnings"]["recursion_limit_reached"])
-                if self.ui.confirm(
+                continue_flag = self.ui.confirm(
                     UI_MESSAGES["confirmations"]["continue_from_left_off"], default=True
-                ):
-                    continue_flag = True
-                else:
-                    return False
+                )
 
-            except openai.RateLimitError as e:
-                logger.error("OpenAI rate limit exceeded", exc_info=e)
-                self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
-                if self.ui.confirm(
-                    UI_MESSAGES["confirmations"]["change_model"], default=True
-                ):
-                    new_model = self.ui.get_input(
-                        message="Enter new model name: ",
-                    ).strip()
-                    if new_model:
-                        self.model_name = new_model
-                        self._handle_model_change(self.model_name)
-                else:
+            except Exception as e:
+                if not self._recover_from_error(e):
                     self.ui.goodbye()
                     return True
 
-            except Exception:
-                logger.exception("Unexpected error in chat loop")
-                self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
-                return False
-
             finally:
                 first_msg = False
+
+    def _rag_context(self, user_input: str) -> HumanMessage | None:
+        """Look up ``user_input`` in the knowledge base when RAG is on."""
+        self.latest_refs = set()
+        if not self.rag:
+            return None
+
+        with self.ui.console.status(UI_MESSAGES["messages"]["querying_knowledge_base"]):
+            self.db_client = DataBaseClient.get_instance()
+            if self.db_client is None:
+                self.ui.warning(UI_MESSAGES["warnings"]["rag_enabled_no_client"])
+                return None
+            query_results = self.db_client.get_query_results(user_input, n_results=5)
+
+        if not query_results:
+            return None
+
+        self.latest_refs = {
+            meta["file_path"]
+            for _, meta in query_results
+            if meta and "file_path" in meta
+        }
+        context = PROMPTS["rag_results"] + "\n".join(
+            f"- {doc}" for doc, _ in query_results
+        )
+        return HumanMessage(content=context, additional_kwargs={"RAG": True})
+
+    def _recover_from_error(self, error: Exception) -> bool:
+        """Report a failed turn. Returns ``False`` if the session should end."""
+        status = http_status(error)
+
+        if status == 404:
+            logger.error(f"Model not found: {self.model_name}", exc_info=error)
+            self.ui.error(UI_MESSAGES["errors"]["model_not_found"])
+            if self.prev_model_name:
+                previous, self.prev_model_name = self.prev_model_name, None
+                self.ui.status_message(
+                    title=UI_MESSAGES["titles"]["reverting_model"],
+                    message=f"Reverting to previous model: {previous}",
+                )
+                return self._switch_model(previous)
+            return self._offer_model_change()
+
+        if status == 429:
+            logger.error("Rate limit exceeded", exc_info=error)
+            self.ui.error(UI_MESSAGES["errors"]["rate_limit_exceeded"])
+            return self._offer_model_change()
+
+        logger.error("Chat turn failed", exc_info=error)
+        self.ui.error(
+            f"{UI_MESSAGES['errors']['turn_failed']}\n{describe_error(error)}"
+        )
+        return True
+
+    def _offer_model_change(self) -> bool:
+        if not self.ui.confirm(
+            UI_MESSAGES["confirmations"]["change_model"], default=True
+        ):
+            return False
+        new_model = self.ui.get_input(message="Enter new model name: ").strip()
+        if new_model:
+            self.prev_model_name = self.model_name
+            return self._switch_model(new_model)
+        return True
+
+    def _switch_model(self, new_model: str) -> bool:
+        try:
+            self._handle_model_change(new_model)
+        except Exception as e:
+            logger.error(f"Could not switch to model {new_model}", exc_info=e)
+            self.ui.error(describe_error(e))
+        return True
 
     def _handle_shell_command(self, command: str):
         """Handle execution of shell commands."""
@@ -538,12 +521,8 @@ class BaseAgent:
     def _extract_response_content(self, raw_response: dict) -> str:
         """Extract content from agent response."""
         messages = raw_response.get("messages", [])
-        if (
-            messages
-            and isinstance(messages[-1], AIMessage)
-            and hasattr(messages[-1], "content")
-        ):
-            return messages[-1].content.strip()
+        if messages and isinstance(messages[-1], AIMessage):
+            return content_text(messages[-1].content).strip()
         return UI_MESSAGES["errors"]["no_messages_returned"]
 
     def _remove_thinking_block(self, content: str) -> str:
@@ -575,9 +554,8 @@ class BaseAgent:
 
     def _handle_ai_message(self, message: AIMessage):
         """Handle AI message display."""
-        if message.content and message.content.strip():
-            # remove thinking blocks before displaying
-            content = self._remove_thinking_block(message.content)
+        content = self._remove_thinking_block(content_text(message.content))
+        if content.strip():
             self.ui.ai_response(content)
 
     def _handle_tool_message(self, message: ToolMessage):

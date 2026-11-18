@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import warnings
 from pathlib import Path
@@ -23,7 +24,7 @@ def main() -> None:
     from app.utils.ui_messages import UI_MESSAGES
 
     try:
-        config = load_config(PROJECT_ROOT / "config.json")
+        config = load_config(config_path())
     except ConfigError as e:
         logger.error(str(e))
         default_ui.error(str(e))
@@ -42,6 +43,12 @@ def main() -> None:
         sys.exit(1)
 
     cli.start_chat(args)
+
+
+def config_path() -> Path:
+    """Return the config file to use: ``$ALLY_CONFIG`` if set, else ``config.json``."""
+    override = os.environ.get("ALLY_CONFIG")
+    return Path(override).expanduser() if override else PROJECT_ROOT / "config.json"
 
 
 def _silence_library_logs() -> None:

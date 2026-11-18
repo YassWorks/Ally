@@ -1,7 +1,9 @@
+import os
 import sys
 import time
 from typing import Any
 
+from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import choice, prompt
 from rich import box
@@ -268,31 +270,32 @@ class AgentUI:
         cwd: str | None = None,
         model: str | None = None,
     ) -> str:
-        """Get user input with terminal-style prompt."""
+        """Read a line from the user behind a ``> folder$`` prompt.
+
+        ``Enter`` submits and ``Ctrl+N`` inserts a new line. When standard input is not a
+        terminal, lines are read from it directly. ``Ctrl+D`` or the end of the input
+        exits Ally.
+        """
         try:
             if message:
                 self.console.print(
                     f"[{self._style('muted')}]{message}[/{self._style('muted')}]"
                 )
 
-            # Extract just the folder name from cwd
-            import os
+            if not sys.stdin.isatty():
+                result = input()
+                return result.strip() or (default or "")
 
             folder_name = "~"
             if cwd:
                 folder_name = os.path.basename(cwd.rstrip(os.sep)) or "~"
 
-            # Terminal-style prompt: > foldername$
-            from prompt_toolkit.formatted_text import ANSI
-
-            # Build the prefix with ANSI color codes
             prompt_text = (
                 f"\033[38;2;16;185;129m>\033[0m "
                 f"\033[38;2;6;182;212m {folder_name}\033[0m"
                 f"\033[38;2;16;185;129m$\033[0m "
             )
 
-            # Multiline key bindings
             key_binds = KeyBindings()
 
             @key_binds.add("c-n")
@@ -308,6 +311,9 @@ class AgentUI:
 
         except KeyboardInterrupt:
             self.session_interrupted()
+            sys.exit(0)
+        except EOFError:
+            self.goodbye()
             sys.exit(0)
         except Exception as e:
             self.error(str(e))

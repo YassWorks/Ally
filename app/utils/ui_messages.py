@@ -80,6 +80,7 @@ UI_MESSAGES = {
         "failed_validate_config": "Failed to validate configuration. Verify API keys and model names.",
         "failed_setup_coding": "Failed to setup coding configuration. Check your models and API settings.",
         "unexpected_error": "An unexpected error occurred. Check logs for details.",
+        "turn_failed": "The request failed, but your session is still open. Try again, or check the logs.",
         "codegen_failed": "Code generation workflow failed to complete successfully. Check logs for details.",
         "invalid_directory": "Invalid directory name. Please provide a valid path.",
         "failed_create_directory": "Failed to create directory. Check path permissions and syntax.",
