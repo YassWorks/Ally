@@ -70,7 +70,6 @@ UI_MESSAGES = {
         "rag_not_available": "RAG is not available. Please configure an embedding provider in config.json.",
         "rag_enabled_no_client": "RAG is enabled but no database client is configured. Check your setup.",
         "rag_features_disabled": "RAG features have been disabled due to errors.",
-        "invalid_db_path": "Invalid directory path found in $ALLY_DATABASE_DIR environment variable. Reverting to default path.",
         "recursion_limit_reached": "Agent processing took longer than expected. Recursion limit reached.",
     },
     # Errors

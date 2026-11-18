@@ -14,26 +14,11 @@ from app.utils.constants import (
     BATCH_SIZE,
     CHUNK_OVERLAP,
     CHUNK_SIZE,
-    DEFAULT_PATHS,
     MAX_RESULTS,
 )
 from app.utils.logger import logger
+from app.utils.paths import data_dir
 from app.utils.ui_messages import UI_MESSAGES
-
-# configure database path
-DB_PATH = ""
-if "ALLY_DATABASE_DIR" in os.environ:
-    DB_PATH = Path(os.getenv("ALLY_DATABASE_DIR"))
-    if not validate_dir_name(str(DB_PATH)):
-        DB_PATH = ""
-        default_ui.warning(UI_MESSAGES["warnings"]["invalid_db_path"])
-
-if not DB_PATH:
-    DB_PATH = DEFAULT_PATHS["database"]
-    if os.name == "nt":
-        DB_PATH = Path(os.path.expandvars(DB_PATH))
-    else:
-        DB_PATH = Path(os.path.expanduser(DB_PATH))
 
 
 class DataBaseClient:
@@ -55,17 +40,16 @@ class DataBaseClient:
                 "ChromaDB is not installed. Please run 'pip install chromadb' to use the database features."
             ) from e
 
-        os.makedirs(DB_PATH, exist_ok=True)
+        self.db_path = data_dir("database", "ALLY_DATABASE_DIR")
 
         self.db_client = chromadb.PersistentClient(
-            path=DB_PATH, settings=Settings(anonymized_telemetry=False)
+            path=self.db_path, settings=Settings(anonymized_telemetry=False)
         )
         self.embedding_function = embedding_function
 
         self.scraper = scraper
 
-        # Store indexed collections JSON file in the same database folder
-        self.indexed_collections_path = DB_PATH / "indexed_collections.json"
+        self.indexed_collections_path = self.db_path / "indexed_collections.json"
         self._ensure_db_directory_exists()
         if not self.indexed_collections_path.exists():
             self.indexed_collections_path.write_text("{}")
@@ -82,9 +66,11 @@ class DataBaseClient:
     def _ensure_db_directory_exists(self) -> None:
         """Ensure the database directory exists."""
         try:
-            DB_PATH.mkdir(parents=True, exist_ok=True)
+            self.db_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            logger.error(f"Failed to create database directory: {DB_PATH}", exc_info=e)
+            logger.error(
+                f"Failed to create database directory: {self.db_path}", exc_info=e
+            )
             default_ui.error(UI_MESSAGES["errors"]["failed_create_db_directory"])
             raise
 
