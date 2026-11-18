@@ -1,11 +1,12 @@
-from app.utils.logger import logger
-from langchain_core.tools import tool
 import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
+
+from langchain_core.tools import tool
 from rapidfuzz import fuzz
 
+from app.utils.logger import logger
 
 IGNORED_DIRS = {
     ".git",
@@ -124,7 +125,7 @@ def find_declaration(dir_path: str, symbol: str) -> str:
 
 def _is_text_file(path: str) -> bool:
     try:
-        with open(path, "r", encoding="utf-8", errors="strict") as f:  # lazy but works
+        with open(path, encoding="utf-8", errors="strict") as f:  # lazy but works
             f.read(1024)
         return True
     except Exception:
@@ -185,7 +186,7 @@ def _search_exact(files: list[str], query: str) -> list[tuple[str, int, str]]:
         if stop_event.is_set():
             return
         try:
-            with open(fp, "r", encoding="utf-8", errors="ignore") as f:
+            with open(fp, encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
                     if stop_event.is_set():
                         break
@@ -224,7 +225,7 @@ def _search_fuzzy(files: list[str], query: str) -> list[tuple[str, int, str]]:
         if stop_event.is_set():
             return
         try:
-            with open(fp, "r", encoding="utf-8", errors="ignore") as f:
+            with open(fp, encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
                     if stop_event.is_set():
                         break
@@ -280,7 +281,7 @@ def _search_declarations(files: list[str], name: str) -> list[tuple[str, int, st
         if stop_event.is_set():
             return
         try:
-            with open(fp, "r", encoding="utf-8", errors="ignore") as f:
+            with open(fp, encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
                     if stop_event.is_set():
                         break

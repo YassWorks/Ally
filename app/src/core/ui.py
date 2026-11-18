@@ -1,14 +1,15 @@
 import sys
 import time
+from typing import Any
+
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.shortcuts import choice, prompt
+from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.text import Text
-from rich import box
-from prompt_toolkit.shortcuts import prompt, choice
-from prompt_toolkit.key_binding import KeyBindings
 from rich.prompt import Confirm
-from typing import Any
+from rich.text import Text
 
 from app.utils.constants import CONSOLE_WIDTH, THEME
 from app.utils.ui_messages import UI_MESSAGES
@@ -63,7 +64,7 @@ class AgentUI:
         markdown_content = Markdown("\n".join(help_content))
         panel = Panel(
             markdown_content,
-            title=f"[bold]Help[/bold]",
+            title="[bold]Help[/bold]",
             border_style=self._style("primary"),
             padding=(0, 1),
         )

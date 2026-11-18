@@ -26,15 +26,15 @@ class AgentFactory:
                 raise ValueError(f"Missing required config field: {field}")
 
         from app.src.agents.brainstormer.brainstormer import BrainstormerAgent
-        from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
         from app.src.agents.code_gen.code_gen import CodeGenAgent
         from app.src.agents.general.general import GeneralAgent
+        from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
 
         agent_classes = {
             "brainstormer": BrainstormerAgent,
             "web_searcher": WebSearcherAgent,
             "code_gen": CodeGenAgent,
-            "general": GeneralAgent
+            "general": GeneralAgent,
         }
 
         if agent_type not in agent_classes:
@@ -44,12 +44,12 @@ class AgentFactory:
             return agent_classes[agent_type](
                 model_name=config["model_name"],
                 api_key=config["api_key"],
-                system_prompt=config.get("system_prompt", None),
+                system_prompt=config.get("system_prompt"),
                 temperature=config.get("temperature", 0),
                 provider=config.get("provider"),
             )
         except Exception as e:
-            raise RuntimeError(f"Failed to initialize {agent_type} agent: {e}")
+            raise RuntimeError(f"Failed to initialize {agent_type} agent: {e}") from e
 
     @staticmethod
     def create_coding_agents(

@@ -1,8 +1,9 @@
-from langchain_core.tools import tool
-from app.src.tools.web_tools import fetch
-import requests
 import os
 
+import requests
+from langchain_core.tools import tool
+
+from app.src.tools.web_tools import fetch
 
 SEARCH_AVAILABLE = True
 

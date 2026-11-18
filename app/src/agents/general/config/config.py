@@ -1,9 +1,10 @@
-from app.src.core.create_base_agent import create_base_agent
-from app.src.agents.general.config.tools import ALL_TOOLS
-from app.src.tools.web_tools import fetch_tool
+import os
 from datetime import datetime
 from pathlib import Path
-import os
+
+from app.src.agents.general.config.tools import ALL_TOOLS
+from app.src.core.create_base_agent import create_base_agent
+from app.src.tools.web_tools import fetch_tool
 
 
 def get_agent(
@@ -37,9 +38,7 @@ def get_agent(
 
     if system_prompt is None or system_prompt.strip() == "":
         prompt_dir = Path(__file__).parent.parent.parent.parent.parent / "prompts"
-        with open(
-            prompt_dir / "general_system_prompt.md", "r", encoding="utf-8"
-        ) as file:
+        with open(prompt_dir / "general_system_prompt.md", encoding="utf-8") as file:
             system_prompt = (
                 file.read()
                 .strip()

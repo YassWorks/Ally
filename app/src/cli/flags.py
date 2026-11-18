@@ -1,7 +1,8 @@
 import argparse
+import sys
+
 from app.src.core.ui import AgentUI
 from app.utils.logger import logger
-import sys
 
 
 class ArgsParser(argparse.ArgumentParser):

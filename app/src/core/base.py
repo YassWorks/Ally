@@ -1,22 +1,24 @@
-from app.utils.ascii_art import ASCII_ART
-from app.utils.constants import RECURSION_LIMIT, PROMPTS
-from app.src.core.exception_handler import AgentExceptionHandler
-from app.src.core.permissions import PermissionDeniedException
-from app.src.embeddings.rag_errors import SetupFailedError, DBAccessError
-from app.utils.logger import logger
-from langchain_core.messages import AIMessage, ToolMessage, BaseMessage, HumanMessage
-from app.src.embeddings.db_client import DataBaseClient
-from langgraph.graph.state import CompiledStateGraph
-from typing import Callable
-from langgraph.graph import StateGraph
-from app.src.core.ui import AgentUI
-import langgraph.errors as lg_errors
-from app.utils.ui_messages import UI_MESSAGES
-import subprocess
-import uuid
 import os
 import re
+import subprocess
+import uuid
+from collections.abc import Callable
+
+import langgraph.errors as lg_errors
 import openai
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
+from langgraph.graph import StateGraph
+from langgraph.graph.state import CompiledStateGraph
+
+from app.src.core.exception_handler import AgentExceptionHandler
+from app.src.core.permissions import PermissionDeniedException
+from app.src.core.ui import AgentUI
+from app.src.embeddings.db_client import DataBaseClient
+from app.src.embeddings.rag_errors import DBAccessError, SetupFailedError
+from app.utils.ascii_art import ASCII_ART
+from app.utils.constants import PROMPTS, RECURSION_LIMIT
+from app.utils.logger import logger
+from app.utils.ui_messages import UI_MESSAGES
 
 
 class BaseAgent:
@@ -248,7 +250,7 @@ class BaseAgent:
                     self.ui.goodbye()
                     return True
 
-            except Exception as e:
+            except Exception:
                 logger.exception("Unexpected error in chat loop")
                 self.ui.error(UI_MESSAGES["errors"]["unexpected_error"])
                 return False
@@ -268,7 +270,9 @@ class BaseAgent:
             # check for powershell first, if it exists use it
             if shutil.which("pwsh") or shutil.which("pwsh.exe"):  # Powershell 7
                 shell_name = "pwsh.exe"
-            elif shutil.which("powershell") or shutil.which("powershell.exe"):  # Powershell 5
+            elif shutil.which("powershell") or shutil.which(
+                "powershell.exe"
+            ):  # Powershell 5
                 shell_name = "powershell.exe"
             else:
                 shell_name = "cmd.exe"
@@ -395,12 +399,11 @@ class BaseAgent:
                     self.ui.warning(UI_MESSAGES["warnings"]["rag_features_disabled"])
                     self.rag = False
 
-                except Exception as e:
+                except Exception:
                     logger.exception(f"Command failed: {cmd}")
                     self.ui.error(UI_MESSAGES["errors"]["command_failed"])
 
-                finally:
-                    return True
+                return True
 
         if user_input.lower().startswith("/"):
             self.ui.error(UI_MESSAGES["errors"]["unknown_command"])

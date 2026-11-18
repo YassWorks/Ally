@@ -1,6 +1,6 @@
-import requests
 import os
 
+import requests
 
 API_TOKEN = os.getenv("NLP_CLOUD_API_KEY")
 MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"

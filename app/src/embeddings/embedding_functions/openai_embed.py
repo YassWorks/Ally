@@ -1,14 +1,15 @@
-from openai import OpenAI
 import os
+
+from openai import OpenAI
 
 
 class OpenAIEmbedder:
     """Class to get embeddings using the OpenAI API."""
-    
+
     def __init__(self, model_name: str = "text-embedding-ada-002") -> None:
         self.model_name = model_name
         self.client = None
-    
+
     def get_embeddings(self, sentences: list[str] | str) -> list[list[float]]:
         """
         Get embeddings for a list of sentences using the Ollama API.
@@ -24,11 +25,8 @@ class OpenAIEmbedder:
 
         if isinstance(sentences, str):
             sentences = [sentences]
-        
-        response = self.client.embeddings.create(
-            model=self.model_name,
-            input=sentences
-        )
-        
-        embeddings = [data['embedding'] for data in response['data']]
+
+        response = self.client.embeddings.create(model=self.model_name, input=sentences)
+
+        embeddings = [data["embedding"] for data in response["data"]]
         return embeddings

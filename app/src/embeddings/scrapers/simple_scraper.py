@@ -1,19 +1,19 @@
-from app.src.embeddings.scrapers.abstract_scraper import Scraper
-from app.src.embeddings.rag_errors import ScrapingFailedError
+import datetime
 from pathlib import Path
+
+# pdf
+import pymupdf4llm
 
 # docx
 from docx import Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 
-# pdf
-import pymupdf4llm
-import datetime
+from app.src.embeddings.rag_errors import ScrapingFailedError
+from app.src.embeddings.scrapers.abstract_scraper import Scraper
 
 
 class SimpleScraper(Scraper):
-
     def scrape(self, file_path: str | Path) -> dict:
         """Extract text and metadata from a file using simple methods."""
 
@@ -23,19 +23,19 @@ class SimpleScraper(Scraper):
             try:
                 text = self._extract_pdf(file_path)
             except Exception as e:
-                raise ScrapingFailedError(f"Failed to scrape PDF file: {e}")
+                raise ScrapingFailedError(f"Failed to scrape PDF file: {e}") from e
 
         elif file_lower.endswith(".docx"):
             try:
                 text = self._extract_docx(file_path)
             except Exception as e:
-                raise ScrapingFailedError(f"Failed to scrape DOCX file: {e}")
+                raise ScrapingFailedError(f"Failed to scrape DOCX file: {e}") from e
 
         else:
             try:
                 text = self.read_regular_file(file_path)
             except Exception as e:
-                raise ScrapingFailedError(f"Failed to scrape file: {e}")
+                raise ScrapingFailedError(f"Failed to scrape file: {e}") from e
 
         text = text.strip()
 

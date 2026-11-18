@@ -1,14 +1,16 @@
-from app.src.core.permissions import permission_manager, PermissionDeniedException
-from app.utils.logger import logger
-from langchain_core.tools import tool
 import os
 import shutil
+
+from langchain_core.tools import tool
+
+from app.src.core.permissions import PermissionDeniedException, permission_manager
+from app.utils.logger import logger
 
 
 @tool
 def create_wd(path: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Create a new directory at the specified path, including nested structures.
 
     ## WHEN TO USE:
@@ -25,7 +27,6 @@ def create_wd(path: str) -> str:
     if not permission_manager.get_permission(tool_name="create_wd", path=path):
         raise PermissionDeniedException()
     try:
-
         os.makedirs(path, exist_ok=True)
         return f"Working directory created at {path}"
     except Exception as e:
@@ -36,7 +37,7 @@ def create_wd(path: str) -> str:
 @tool
 def create_file(file_path: str, content: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Create a new file with specified text content, creating directories as needed.
 
     ## WHEN TO USE:
@@ -56,7 +57,6 @@ def create_file(file_path: str, content: str) -> str:
     ):
         raise PermissionDeniedException()
     try:
-
         directory = os.path.dirname(file_path)
         if directory:
             os.makedirs(directory, exist_ok=True)
@@ -72,7 +72,7 @@ def create_file(file_path: str, content: str) -> str:
 @tool
 def modify_file(file_path: str, old_content: str, new_content: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Replace specific text content in existing files with new content.
 
     ## WHEN TO USE:
@@ -96,8 +96,7 @@ def modify_file(file_path: str, old_content: str, new_content: str) -> str:
     ):
         raise PermissionDeniedException()
     try:
-
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             contents = f.read()
 
         if old_content not in contents:
@@ -116,7 +115,7 @@ def modify_file(file_path: str, old_content: str, new_content: str) -> str:
 @tool
 def append_file(file_path: str, content: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Add new content to the end of an existing file, creating parent directories if needed.
 
     ## WHEN TO USE:
@@ -138,7 +137,6 @@ def append_file(file_path: str, content: str) -> str:
     ):
         raise PermissionDeniedException()
     try:
-
         directory = os.path.dirname(file_path)
         if directory:
             os.makedirs(directory, exist_ok=True)
@@ -154,7 +152,7 @@ def append_file(file_path: str, content: str) -> str:
 @tool
 def delete_file(file_path: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Permanently remove a file from the filesystem.
 
     ## WHEN TO USE:
@@ -173,7 +171,6 @@ def delete_file(file_path: str) -> str:
     ):
         raise PermissionDeniedException()
     try:
-
         os.remove(file_path)
         return f"File deleted at {file_path}"
     except Exception as e:
@@ -184,7 +181,7 @@ def delete_file(file_path: str) -> str:
 @tool
 def delete_directory(path: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Permanently remove a directory and all its contents recursively.
 
     ## WHEN TO USE:
@@ -214,7 +211,7 @@ def delete_directory(path: str) -> str:
 @tool
 def read_file(file_path: str) -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Read and return the complete text content of any file.
 
     ## WHEN TO USE:
@@ -233,8 +230,7 @@ def read_file(file_path: str) -> str:
     ):
         raise PermissionDeniedException()
     try:
-
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             contents = f.read()
         return contents
     except Exception as e:
@@ -245,11 +241,11 @@ def read_file(file_path: str) -> str:
 @tool
 def list_directory(path: str = ".") -> str:
     """
-    ## PRIMARY PURPOSE: 
+    ## PRIMARY PURPOSE:
     Display complete directory structure in professional ASCII tree format.
 
     ## WHEN TO USE:
-    - Explore unknown directory structures  
+    - Explore unknown directory structures
     - Understand file organization before making changes
     - Find specific file types or locations
     - Get overview of nested folder contents

@@ -1,6 +1,6 @@
 from app.src.agents.web_searcher.config.config import get_agent
-from app.src.core.ui import default_ui
 from app.src.core.base import BaseAgent
+from app.src.core.ui import default_ui
 
 
 class WebSearcherAgent(BaseAgent):

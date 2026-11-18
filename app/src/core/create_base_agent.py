@@ -1,17 +1,20 @@
-from app.utils.constants import DEFAULT_PATHS, LAST_N_TURNS
-from app.src.helpers.valid_dir import validate_dir_name
-from app.src.core.ui import default_ui
-from app.utils.ui_messages import UI_MESSAGES
-from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
-from langgraph.graph.message import add_messages
-from langgraph.graph import StateGraph, END, START
-from typing import TypedDict, Annotated, Callable, Literal
-from langgraph.checkpoint.sqlite import SqliteSaver
-from langchain_core.prompts import ChatPromptTemplate
-from pathlib import Path
-import sqlite3
 import os
+import sqlite3
+from collections.abc import Callable
+from pathlib import Path
+from typing import Annotated, Literal, TypedDict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.graph.state import CompiledStateGraph
+
+from app.src.core.ui import default_ui
+from app.src.helpers.valid_dir import validate_dir_name
+from app.utils.constants import DEFAULT_PATHS, LAST_N_TURNS
+from app.utils.ui_messages import UI_MESSAGES
 
 
 class State(TypedDict):
@@ -241,10 +244,7 @@ def create_base_agent(
         ]
     )
 
-    if tools:
-        llm_with_tools = llm.bind_tools(tools)
-    else:
-        llm_with_tools = llm
+    llm_with_tools = llm.bind_tools(tools) if tools else llm
     llm_chain = template | llm_with_tools
     graph = StateGraph(State)
 
@@ -333,7 +333,6 @@ def clean_context_window(messages: list[BaseMessage]):
     turn_count = 0
 
     for message in reversed(messages):
-
         if isinstance(message, HumanMessage) and not message.additional_kwargs.get(
             "RAG", False
         ):
@@ -342,16 +341,11 @@ def clean_context_window(messages: list[BaseMessage]):
             if turn_count > LAST_N_TURNS:
                 break
 
-        elif isinstance(message, AIMessage):
-            # strip all the tool_call related content for token efficiency
-            if (
-                hasattr(message, "content")
-                and flatten_content(message.content).strip() != ""
-            ):
-                new_assistant_message = AIMessage(
-                    content=message.content,
-                )
-                new_context.append(new_assistant_message)
+        elif (
+            isinstance(message, AIMessage)
+            and flatten_content(message.content).strip() != ""
+        ):
+            new_context.append(AIMessage(content=message.content))
 
     new_context.reverse()
     return new_context

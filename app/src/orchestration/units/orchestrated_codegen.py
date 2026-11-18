@@ -1,13 +1,13 @@
-from app.src.orchestration.units.base_unit import BaseUnit
+import uuid
+from pathlib import Path
+
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.orchestration.integrate_web_search import integrate_web_search
-from app.utils.logger import logger
-from app.utils.constants import PROMPTS, RECURSION_LIMIT
-from app.utils.ui_messages import UI_MESSAGES
+from app.src.orchestration.units.base_unit import BaseUnit
 from app.utils.ascii_art import ASCII_ART
-from pathlib import Path
-import uuid
-
+from app.utils.constants import PROMPTS, RECURSION_LIMIT
+from app.utils.logger import logger
+from app.utils.ui_messages import UI_MESSAGES
 
 PROMPTS_DIR = Path(__file__).resolve().parents[3]
 
@@ -68,7 +68,7 @@ class CodeGenUnit(BaseUnit):
             self.ui.session_interrupted()
             return True
 
-        except Exception as e:
+        except Exception:
             logger.exception("Workflow execution failed")
             self.ui.error(UI_MESSAGES["errors"]["workflow_execution_failed"])
             return False
@@ -279,7 +279,7 @@ class CodeGenUnit(BaseUnit):
 
         ces_file_path = PROMPTS_DIR / "prompts" / "context_engineering_steps.md"
 
-        with open(str(ces_file_path), "r", encoding="utf-8") as file:
+        with open(str(ces_file_path), encoding="utf-8") as file:
             context_engineering_steps = file.read()
 
         return (
@@ -295,7 +295,7 @@ class CodeGenUnit(BaseUnit):
 
         codegen_file_path = PROMPTS_DIR / "prompts" / "codegen_start.md"
 
-        with open(str(codegen_file_path), "r", encoding="utf-8") as file:
+        with open(str(codegen_file_path), encoding="utf-8") as file:
             codegen_start = file.read()
 
         return (
@@ -322,4 +322,4 @@ class CodeGenUnit(BaseUnit):
             logger.exception("Failed to integrate web search capabilities")
             error_msg = UI_MESSAGES["errors"]["failed_integrate_web_search"]
             self.ui.error(error_msg)
-            raise RuntimeError(error_msg)
+            raise RuntimeError(error_msg) from e

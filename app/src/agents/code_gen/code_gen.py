@@ -1,6 +1,6 @@
 from app.src.agents.code_gen.config.config import get_agent
-from app.src.core.ui import default_ui
 from app.src.core.base import BaseAgent
+from app.src.core.ui import default_ui
 
 
 class CodeGenAgent(BaseAgent):

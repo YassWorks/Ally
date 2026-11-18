@@ -1,8 +1,9 @@
-from app.src.core.create_base_agent import create_base_agent
-from app.src.agents.code_gen.config.tools import ALL_TOOLS
+import os
 from datetime import datetime
 from pathlib import Path
-import os
+
+from app.src.agents.code_gen.config.tools import ALL_TOOLS
+from app.src.core.create_base_agent import create_base_agent
 
 
 def get_agent(
@@ -33,9 +34,7 @@ def get_agent(
 
     if system_prompt is None or system_prompt.strip() == "":
         prompt_dir = Path(__file__).parent.parent.parent.parent.parent / "prompts"
-        with open(
-            prompt_dir / "code_gen_system_prompt.md", "r", encoding="utf-8"
-        ) as file:
+        with open(prompt_dir / "code_gen_system_prompt.md", encoding="utf-8") as file:
             system_prompt = (
                 file.read()
                 .strip()

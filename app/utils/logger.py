@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+
 from app.utils.constants import DEFAULT_PATHS
 
 
@@ -13,7 +14,7 @@ class AllyLogger:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(AllyLogger, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._instance._initialize_logger()
         return cls._instance
 
