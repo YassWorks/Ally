@@ -85,14 +85,15 @@ class CodeGenUnit(BaseUnit):
         brainstorming_thread_id = str(uuid.uuid4())
         code_generation_thread_id = str(uuid.uuid4())
 
-        self._run_brainstorming_phase(
+        if not self._run_brainstorming_phase(
             working_dir=working_dir,
             user_input=user_input,
             recursion_limit=recursion_limit,
             config=config,
             stream=stream,
             thread_id=brainstorming_thread_id,
-        )
+        ):
+            return False
 
         if not self._handle_additional_context(
             working_dir=working_dir,
@@ -102,13 +103,14 @@ class CodeGenUnit(BaseUnit):
         ):
             return False
 
-        self._run_code_generation_phase(
+        if not self._run_code_generation_phase(
             working_dir=working_dir,
             user_input=user_input,
             recursion_limit=recursion_limit,
             stream=stream,
             thread_id=code_generation_thread_id,
-        )
+        ):
+            return False
 
         return self._run_interactive_session(
             recursion_limit=recursion_limit, thread_id=code_generation_thread_id
@@ -128,7 +130,7 @@ class CodeGenUnit(BaseUnit):
         brainstormer_prompt = self._create_brainstormer_prompt(user_input, working_dir)
         configuration = config or self._create_agent_config(thread_id, recursion_limit)
 
-        AgentExceptionHandler.handle_agent_exceptions(
+        result = AgentExceptionHandler.handle_agent_exceptions(
             operation=lambda: self.agents["brainstormer"].invoke(
                 message=brainstormer_prompt,
                 config=configuration,
@@ -149,6 +151,7 @@ class CodeGenUnit(BaseUnit):
                 active_dir=working_dir,
             ),
         )
+        return result is not None
 
     def _run_code_generation_phase(
         self,
@@ -169,7 +172,7 @@ class CodeGenUnit(BaseUnit):
         codegen_prompt = self._create_codegen_prompt(user_input, working_dir)
         configuration = self._create_agent_config(thread_id, recursion_limit)
 
-        AgentExceptionHandler.handle_agent_exceptions(
+        result = AgentExceptionHandler.handle_agent_exceptions(
             operation=lambda: self.agents["code_gen"].invoke(
                 message=codegen_prompt,
                 config=configuration,
@@ -190,6 +193,7 @@ class CodeGenUnit(BaseUnit):
                 active_dir=working_dir,
             ),
         )
+        return result is not None
 
     def _handle_additional_context(
         self,
