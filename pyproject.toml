@@ -23,6 +23,7 @@ dependencies = [
     "beautifulsoup4==4.15.0",
     "charset-normalizer==3.5.2",
     "chromadb==1.5.9",
+    "ddgs==9.16.1",
     "langchain-anthropic==1.7.9",
     "langchain-cerebras==0.8.2",
     "langchain-core==1.7.4",
