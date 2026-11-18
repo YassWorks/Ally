@@ -40,21 +40,15 @@ class AgentUI:
             secs = seconds % 60
             return f"{mins}m {secs:.0f}s"
 
-    # ─────────────────────────────────────────────────────────────
-    # Branding
-    # ─────────────────────────────────────────────────────────────
-
     def logo(self, ascii_art: str):
         """Display ASCII logo with simple styling for terminal compatibility."""
         lines = ascii_art.split("\n")
-        # Use theme colors that fallback gracefully on limited color terminals
         styles = [
             f"bold {self._style('primary')}",
             f"bold {self._style('secondary')}",
         ]
 
         for i, line in enumerate(lines):
-            # Alternate between two theme colors for visual interest
             style = styles[i % 2] if i > 0 else f"bold {self._style('primary')}"
             self.console.print(Text(line, style=style))
 
@@ -91,10 +85,6 @@ class AgentUI:
         self.console.print(welcome_text)
         self.console.print()
 
-    # ─────────────────────────────────────────────────────────────
-    # Tool Execution Display
-    # ─────────────────────────────────────────────────────────────
-
     def tool_call(self, tool_name: str, args: dict[str, Any]):
         """Display tool being executed with minimal chrome."""
         self._tool_start_time = time.time()
@@ -108,7 +98,6 @@ class AgentUI:
         if args:
             for k, v in args.items():
                 value_str = str(v)
-                # Truncate long values
                 if len(value_str) > 80:
                     value_str = value_str[:77] + "..."
                 elif "\n" in value_str:
@@ -126,7 +115,6 @@ class AgentUI:
             elapsed = f" [{self._style('dim')}]{self._format_duration(duration)}[/{self._style('dim')}]"
             self._tool_start_time = None
 
-        # Truncate long output
         if len(content) > 800:
             content = content[:800] + "\n..."
 
@@ -135,19 +123,13 @@ class AgentUI:
             f"  [{self._style('success')}]Done[/{self._style('success')}]{elapsed}"
         )
 
-        # Only show output if there's meaningful content
         if content.strip() and content.strip() not in ["None", "null", ""]:
-            # Show output in a subtle code block style
-            for line in content.strip().split("\n")[:10]:  # Max 10 lines
+            for line in content.strip().split("\n")[:10]:
                 self.console.print(
                     f"[{self._style('muted')}]{line}[/{self._style('muted')}]"
                 )
             if content.strip().count("\n") > 10:
                 self.console.print(f"[{self._style('dim')}]...[/{self._style('dim')}]")
-
-    # ─────────────────────────────────────────────────────────────
-    # AI Response
-    # ─────────────────────────────────────────────────────────────
 
     def ai_response(self, content: str):
         """Display AI response with minimal framing."""
@@ -174,10 +156,6 @@ class AgentUI:
     def response_stream(self) -> "ResponseStream":
         """Return a live view for a reply that is still being generated."""
         return ResponseStream(self)
-
-    # ─────────────────────────────────────────────────────────────
-    # Status & Messages
-    # ─────────────────────────────────────────────────────────────
 
     def status_message(self, title: str, message: str, style: str = "primary"):
         """Display a simple inline status message."""
@@ -268,10 +246,6 @@ class AgentUI:
             f"[{self._style('dim')}][{current}/{total}][/{self._style('dim')}]"
         )
 
-    # ─────────────────────────────────────────────────────────────
-    # User Input
-    # ─────────────────────────────────────────────────────────────
-
     def get_input(
         self,
         message: str = None,
@@ -359,10 +333,6 @@ class AgentUI:
             sys.exit(0)
         except Exception:
             return None
-
-    # ─────────────────────────────────────────────────────────────
-    # Utility
-    # ─────────────────────────────────────────────────────────────
 
     def divider(self, title: str = None):
         """Print a subtle divider line."""

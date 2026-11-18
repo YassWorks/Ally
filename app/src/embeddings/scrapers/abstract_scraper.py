@@ -9,23 +9,11 @@ from app.src.embeddings.rag_errors import ScrapingFailedError
 class Scraper(ABC):
     @abstractmethod
     def scrape(self, path: str | Path) -> dict:
-        """Scrape content from the given file path.
-
-        Args:
-            path (str | Path): The path to scrape.
+        """Return the text and metadata of the file at ``path``.
 
         Returns:
-            dict: The scraped content and metadata.
-
-            **format**:
-            {
-                "content": str,
-                "metadata": {
-                    "file_path": str,
-                    "mod_date": str,
-                    "hash": str,
-                },
-            }
+            A dict shaped like ``{"content": str, "metadata": {"file_path": str,
+            "mod_date": str, "hash": str}}``.
         """
         pass
 
@@ -36,7 +24,7 @@ class Scraper(ABC):
 
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):  # Read in 4KB chunks
+            for chunk in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(chunk)
         return sha256_hash.hexdigest()
 

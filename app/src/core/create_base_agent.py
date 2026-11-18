@@ -17,6 +17,7 @@ from langgraph.graph.message import add_messages
 from langgraph.graph.state import CompiledStateGraph
 
 from app.src.core.messages import content_text
+from app.src.core.permissions import PermissionDeniedException
 from app.src.core.ui import default_ui
 from app.utils.constants import LAST_N_TURNS
 from app.utils.paths import data_dir
@@ -65,7 +66,6 @@ class SequentialToolNode:
         if not messages:
             return {"messages": []}
 
-        # Find the last AI message with tool calls
         last_ai_message = None
         for msg in reversed(messages):
             if isinstance(msg, AIMessage) and msg.tool_calls:
@@ -79,17 +79,14 @@ class SequentialToolNode:
         total_tools = len(tool_calls)
         result_messages = []
 
-        # Show pending tools notification if more than 1
         if total_tools > 1:
             default_ui.pending_tools(total_tools)
 
-        # Process each tool call one at a time
         for idx, tool_call in enumerate(tool_calls, start=1):
             tool_name = tool_call["name"]
             tool_args = tool_call["args"]
             tool_call_id = tool_call["id"]
 
-            # Show progress if multiple tools
             if total_tools > 1:
                 default_ui.processing_tool(idx, total_tools, tool_name, tool_args)
 
@@ -107,7 +104,6 @@ class SequentialToolNode:
                 continue
 
             try:
-                # Execute the tool (this will trigger the permission check inside the tool)
                 result = tool.invoke(tool_args)
                 result_messages.append(
                     ToolMessage(
@@ -118,8 +114,8 @@ class SequentialToolNode:
                 )
             except Exception as e:
                 error_content = f"Error: {e}"
-                # Check if it's a permission denied exception
-                if "PermissionDeniedException" in type(e).__name__:
+                denied = isinstance(e, PermissionDeniedException)
+                if denied:
                     error_content = UI_MESSAGES["tool"]["permission_denied"].format(
                         tool_name
                     )
@@ -132,11 +128,7 @@ class SequentialToolNode:
                     )
                 )
 
-                # Re-raise if not handling errors and it's not a permission issue
-                if (
-                    not self.handle_tool_errors
-                    and "PermissionDeniedException" not in type(e).__name__
-                ):
+                if not self.handle_tool_errors and not denied:
                     raise
 
         return {"messages": result_messages}
@@ -273,10 +265,7 @@ def create_base_agent(
 
 
 def build_llm_context(messages: list[BaseMessage]) -> list[BaseMessage]:
-    """
-    Build the context for the LLM by including all messages after the last human message.
-    And cleaning off anything before it.
-    """
+    """Keep the current turn whole and trim the history that comes before it."""
     new_context = []
     last_human_idx = len(messages) - 1
 

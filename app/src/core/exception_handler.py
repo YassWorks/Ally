@@ -4,7 +4,6 @@ from typing import Any
 import langgraph.errors as lg_errors
 
 from app.src.core.messages import describe_error, http_status
-from app.src.core.permissions import PermissionDeniedException
 from app.src.core.ui import AgentUI
 from app.utils.logger import logger
 
@@ -22,24 +21,10 @@ class AgentExceptionHandler:
         continue_on_limit: bool = False,
         retries: int = 0,
         retry_operation: Callable | None = None,
-        reject_operation: Callable | None = None,
     ) -> Any:
         while True:
             try:
                 return operation()
-
-            except PermissionDeniedException as e:
-                if propagate:
-                    raise
-
-                logger.warning("Permission denied for operation", exc_info=e)
-
-                if reject_operation:
-                    operation = reject_operation
-                    continue
-
-                ui.error("Permission denied")
-                return None
 
             except lg_errors.GraphRecursionError as e:
                 if propagate:

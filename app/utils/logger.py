@@ -20,15 +20,11 @@ class AllyLogger:
         """Initialize the logger with file and console handlers."""
         log_path = data_dir("logs") / f"ally_{datetime.now().strftime('%Y%m%d')}.log"
 
-        # Create logger
         self._logger = logging.getLogger("ally")
         self._logger.setLevel(logging.DEBUG)
-        # Prevent logging from propagating to root logger (which outputs to console)
         self._logger.propagate = False
 
-        # Avoid duplicate handlers if logger already configured
         if not self._logger.handlers:
-            # File handler - logs everything
             file_handler = logging.FileHandler(log_path, encoding="utf-8")
             file_handler.setLevel(logging.DEBUG)
             file_formatter = logging.Formatter(
@@ -64,5 +60,4 @@ class AllyLogger:
         self._logger.exception(message, extra=kwargs)
 
 
-# Create singleton instance
 logger = AllyLogger()

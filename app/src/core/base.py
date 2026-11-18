@@ -490,9 +490,6 @@ class BaseAgent:
             propagate=propagate_exceptions,
             continue_on_limit=False,
             retry_operation=lambda: execute_agent(PROMPTS["continue"]),
-            reject_operation=lambda: execute_agent(
-                self._get_user_input(active_dir=active_dir)
-            ),
         )
 
         if raw_response is None:
