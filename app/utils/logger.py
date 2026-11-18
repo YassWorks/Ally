@@ -35,17 +35,17 @@ class AllyLogger:
 
             self._logger.addHandler(file_handler)
 
-    def debug(self, message: str, **kwargs):
-        """Log debug message."""
-        self._logger.debug(message, extra=kwargs)
+    def debug(self, message: str, exc_info=None, **kwargs):
+        """Log debug message with optional exception info."""
+        self._logger.debug(message, exc_info=exc_info, extra=kwargs)
 
-    def info(self, message: str, **kwargs):
-        """Log info message."""
-        self._logger.info(message, extra=kwargs)
+    def info(self, message: str, exc_info=None, **kwargs):
+        """Log info message with optional exception info."""
+        self._logger.info(message, exc_info=exc_info, extra=kwargs)
 
-    def warning(self, message: str, **kwargs):
-        """Log warning message."""
-        self._logger.warning(message, extra=kwargs)
+    def warning(self, message: str, exc_info=None, **kwargs):
+        """Log warning message with optional exception info."""
+        self._logger.warning(message, exc_info=exc_info, extra=kwargs)
 
     def error(self, message: str, exc_info=None, **kwargs):
         """Log error message with optional exception info."""
