@@ -1,76 +1,23 @@
-# Version control
 .git
-.gitignore
-
-# Python
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
+.github
 .venv
-.python-version
-*.egg-info
-
-# Development files
-.env*
-
-# Documentation
-README.md
-LICENSE.md
-LICENSE
-
-# Build tools and dependencies
-pyproject.toml
-uv.lock
-
-# Logs
-logs/
-*.log
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS generated files
-.DS_Store
-.DS_Store?
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Development directories
-canvas/
-assets/
-bin/
-
-# Configuration files
-.env.example
-
-# Setup scripts
-setup.cmd
-setup.sh
-
-# Python specific
+**/__pycache__
+**/*.py[cod]
 .pytest_cache
-.mypy_cache
-.tox
-.cache
-
-# Temporary files
-.tmp
-.temp
-*test*
-
-# Docker files
-Dockerfile
-docker-compose.yml
+.ruff_cache
+.env
+.env.*
+assets
+docs
+tests
+bin
+canvas
 compose.yml
+setup.sh
+setup.ps1
+Dockerfile
 .dockerignore
-
-# Workflow files
-.github/
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md

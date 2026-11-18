@@ -1,53 +1,20 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "=== Setting up Ally ==="
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
-# script directory
-INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# =========================== Step 1: Install requirements =================================
-
-printf '\nInstalling dependencies...\n'
-command -v uv >/dev/null 2>&1 || {
-    echo "Error: uv not found. Please install it from https://github.com/astral-sh/uv"
+if ! command -v uv >/dev/null 2>&1; then
+    echo "uv is required: https://docs.astral.sh/uv/getting-started/installation/" >&2
     exit 1
-}
-
-cd "$INSTALL_DIR"
-
-if [ ! -f "pyproject.toml" ]; then
-    uv init -p 3.13 2>&1
-    uv venv 2>&1
 fi
 
-uv pip install --no-cache --index-strategy unsafe-best-match -r requirements.txt
-
-# =========================== Step 2: Create bin/ally launcher =============================
-
-printf '\nCreating launcher script...\n'
-
-# wrapper script
-cat > ally <<EOF
-#!/bin/bash
-source "$INSTALL_DIR/.venv/bin/activate"
-python3 "$INSTALL_DIR/main.py" "\$@"
-EOF
-
-chmod +x ally
-
-# =========================== Step 3: Add bin to PATH ======================================
-
-printf '\nInstalling ally to /usr/local/bin...\n'
-
-# check if we have permission to write to /usr/local/bin, use sudo if needed
-TARGET_PATH="/usr/local/bin/ally"
-
-if [ -w "/usr/local/bin" ]; then
-    ln -sf "$INSTALL_DIR/ally" "$TARGET_PATH"
-else
-    echo "Sudo permissions required to install to /usr/local/bin"
-    sudo ln -sf "$INSTALL_DIR/ally" "$TARGET_PATH"
+target="."
+if [[ "${1:-}" == "--hf" ]]; then
+    target=".[hf]"
 fi
 
-echo "=== Setup complete! You can now run 'ally' in a new terminal window ==="
+echo "Installing Ally..."
+uv tool install --force --editable --compile-bytecode "$target"
+uv tool update-shell >/dev/null 2>&1 || true
+
+echo "Done. Open a new terminal and run: ally"

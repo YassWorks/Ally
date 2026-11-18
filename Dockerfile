@@ -1,30 +1,23 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /bin/uv
+
+ENV PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/ally \
+    PATH="/opt/ally/bin:$PATH"
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git nano \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-##### Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --extra hf --no-install-project
 
-##### Install system dependencies
-##### nano is included to edit the config.json file easily if needed.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
-    && apt-get install -y nano \
-    && rm -rf /var/lib/apt/lists/*
-
-##### Install Python dependencies
-COPY requirements.txt .
-RUN uv pip install --system --no-cache --index-strategy unsafe-best-match -r requirements.txt
-
-##### Copy project
 COPY . .
-
-##### Adding Ally to PATH
-RUN printf '#!/bin/sh\nexec python /app/main.py "$@"\n' > /usr/local/bin/ally \
-    && chmod +x /usr/local/bin/ally
+RUN uv sync --frozen --no-dev --extra hf
 
 CMD ["/bin/bash"]
