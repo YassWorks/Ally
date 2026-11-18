@@ -338,18 +338,18 @@ class AgentUI:
             )
             return default
 
-    def select_option(self, message: str, options: list[str]) -> int:
-        """Display selection menu."""
-        values = [(i, opt) for i, opt in enumerate(options)]
+    def select_option(self, message: str, options: list[str]) -> int | None:
+        """Show a menu and return the chosen index, or ``None`` if it cannot be shown."""
+        if not sys.stdin.isatty():
+            return None
         try:
             self.console.print()
-            result = choice(message=message, options=values)
-            return result
+            return choice(message=message, options=list(enumerate(options)))
         except KeyboardInterrupt:
             self.session_interrupted()
             sys.exit(0)
         except Exception:
-            return 0
+            return None
 
     # ─────────────────────────────────────────────────────────────
     # Utility

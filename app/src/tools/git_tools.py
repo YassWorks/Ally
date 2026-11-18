@@ -7,7 +7,9 @@ from app.utils.logger import logger
 
 
 @tool
-def diff(commit1: str | None, commit2: str | None, cwd: str | None) -> str:
+def diff(
+    commit1: str | None = None, commit2: str | None = None, cwd: str | None = None
+) -> str:
     """
     ## PRIMARY PURPOSE:
     Compare file changes between git commits or working directory using git diff.
