@@ -13,33 +13,24 @@ WINDOWS_RESERVED_NAMES = {
 
 
 def validate_dir_name(path: str) -> bool:
-    """
-    Validate a directory path for the current OS.
-    Returns True if the path is safe to use.
-    """
+    """Return whether ``path`` is a usable directory path on the current OS."""
     try:
         p = Path(path)
     except Exception:
         return False
 
     for part in p.parts:
-        if part in (p.anchor, os.sep, os.altsep) or not part:
+        if part in (p.anchor, os.sep, os.altsep, os.curdir, os.pardir) or not part:
             continue
 
-        # Windows-specific checks
         if os.name == "nt":
             if part.upper().split(".")[0] in WINDOWS_RESERVED_NAMES:
                 return False
-
             if any(c in WINDOWS_INVALID_CHARS for c in part):
                 return False
-
-            if part.endswith(" ") or part.endswith("."):
+            if part.endswith((" ", ".")):
                 return False
-
-        # POSIX-specific checks
-        else:
-            if "\0" in part:
-                return False
+        elif "\0" in part:
+            return False
 
     return True

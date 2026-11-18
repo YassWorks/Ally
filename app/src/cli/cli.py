@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 from collections.abc import Callable
+from contextlib import chdir
 from dataclasses import replace
 
 from app.config import AllyConfig
@@ -100,14 +101,15 @@ class CLI:
             self._integrate_rag(agent=self.general_agent, available=self.rag_available)
             integrate_web_search(self.general_agent, self.default_web_searcher_agent)
 
-            self.general_agent.start_chat(
-                starting_msg=args.p,
-                recurring_prompt_suffix=wd_note,
-                show_welcome=False,
-                active_dir=active_dir,
-                stream=self.stream,
-                thread_id=args.i,
-            )
+            with chdir(active_dir):
+                self.general_agent.start_chat(
+                    starting_msg=args.p,
+                    recurring_prompt_suffix=wd_note,
+                    show_welcome=False,
+                    active_dir=active_dir,
+                    stream=self.stream,
+                    thread_id=args.i,
+                )
 
         except KeyboardInterrupt:
             self.ui.goodbye()
@@ -118,13 +120,19 @@ class CLI:
     def _resolve_working_dir(self, path: str | None) -> str | None:
         if not path:
             return None
-        if path == ".":
-            return os.getcwd()
         if not validate_dir_name(path):
             logger.error(f"Invalid directory name: {path}")
             self.ui.error(UI_MESSAGES["errors"]["invalid_directory"])
             sys.exit(1)
-        return os.path.abspath(path)
+
+        path = os.path.abspath(path)
+        try:
+            os.makedirs(path, exist_ok=True)
+        except OSError:
+            logger.exception(f"Failed to create directory: {path}")
+            self.ui.error(UI_MESSAGES["errors"]["failed_create_directory"])
+            sys.exit(1)
+        return path
 
     def _integrate_rag(self, agent: BaseAgent, available: bool):
         """Register the RAG chat commands on ``agent``."""
@@ -180,9 +188,11 @@ class CLI:
             if active_dir is None:
                 active_dir = self._setup_directory()
 
-            if not self._run_codegen_unit(
-                initial_prompt=initial_prompt, working_dir=active_dir
-            ):
+            with chdir(active_dir):
+                succeeded = self._run_codegen_unit(
+                    initial_prompt=initial_prompt, working_dir=active_dir
+                )
+            if not succeeded:
                 self.ui.error(UI_MESSAGES["errors"]["codegen_failed"])
 
         except KeyboardInterrupt:
@@ -203,10 +213,12 @@ class CLI:
         if self.ui.confirm(UI_MESSAGES["change_directory"], default=False):
             while True:
                 try:
-                    working_dir = self.ui.get_input(
-                        message=UI_MESSAGES["directory_prompt"],
-                        default=active_dir,
-                        cwd=active_dir,
+                    working_dir = os.path.abspath(
+                        self.ui.get_input(
+                            message=UI_MESSAGES["directory_prompt"],
+                            default=active_dir,
+                            cwd=active_dir,
+                        ).strip()
                     )
                     os.makedirs(working_dir, exist_ok=True)
                     active_dir = working_dir
