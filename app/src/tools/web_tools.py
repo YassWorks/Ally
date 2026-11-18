@@ -27,7 +27,7 @@ def fetch(url: str) -> str:
     try:
         resp = session.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
-        soup = BeautifulSoup(resp.content, "lxml")  # faster parser than html.parser
+        soup = BeautifulSoup(resp.content, "lxml")
 
         for tag in soup(
             [
@@ -56,25 +56,16 @@ def fetch(url: str) -> str:
         return f"[ERROR] Failed to parse {url}: {e}"
 
 
-@tool
-def fetch_tool(url: str) -> str:  # Wrapper to expose fetch as a LangChain tool
-    """
-    ## PRIMARY PURPOSE:
-    Extract clean text content from web pages with automatic script/style removal.
-    **ONLY USE when you have a specific URL and want to automatically access it.**
+@tool(parse_docstring=True)
+def fetch_tool(url: str) -> str:
+    """Download a web page and return its readable text.
 
-    ## WHEN TO USE:
-    - **MUST have a specific, known URL that you want to automatically fetch content from**
-    - Analyze content from URLs already discovered through search or provided by user
-    - Extract documentation, tutorials, or technical information from known sources
-    - Scrape articles, blog posts, or research content when URL is already available
-    - Gather detailed information from specific web sources (not for searching)
+    Use it only when you already have the URL; it does not search. Scripts,
+    styles, headers and footers are removed and the text is cut at 10,000
+    characters.
 
-    ## PARAMETERS:
-        url (str): **Specific web page URL** to scrape and extract text content from
-
-    ## RETURNS:
-        str: Cleaned text content (max 10,000 chars) or error message if scraping fails
+    Args:
+        url: Full address of the page, including http:// or https://.
     """
     return fetch(url)
 
@@ -123,23 +114,15 @@ def google_search(query: str, n: int = 5) -> list[dict[str, str]]:
     return results
 
 
-@tool
+@tool(parse_docstring=True)
 def search_and_scrape(query: str) -> str:
-    """
-    ## PRIMARY PURPOSE:
-    Perform Google search and extract full text content from top 5 results.
+    """Search Google and return the text of the top 5 results.
 
-    ## WHEN TO USE:
-    - Research technical topics, best practices, or implementation approaches
-    - Find current information about programming languages, frameworks, tools
-    - Gather multiple perspectives and comprehensive information
-    - Collect up-to-date tutorials, documentation, or guides
+    Each page is cut at 10,000 characters. If the results miss the point,
+    search again with different terms.
 
-    ## PARAMETERS:
-        query (str): Search query string to find relevant web pages
-
-    ## RETURNS:
-        str: Formatted results with titles and full text content from top search results
+    Args:
+        query: Search terms.
     """
     try:
         search_results = google_search(query, 5)

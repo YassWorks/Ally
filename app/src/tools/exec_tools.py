@@ -50,24 +50,16 @@ def _format_result(result: subprocess.CompletedProcess, empty_message: str) -> s
     return output.strip() or empty_message
 
 
-@tool
+@tool(parse_docstring=True)
 def execute_code(code: str, cwd: str | None = None) -> str:
-    """
-    ## PRIMARY PURPOSE:
-    Execute Python code scripts in isolated temporary files.
+    """Run a Python script in a new interpreter and return its output.
 
-    ## WHEN TO USE:
-    - Scripting and automation tasks
-    - Validate logic before implementing in files
-    - Run data analysis, processing, or computational tasks
-    - Test code snippets or plot/visualize data
+    Use it to check logic, process data or automate a task. Returns stdout,
+    stderr and the exit code when it is not zero.
 
-    ## PARAMETERS:
-        code (str): Valid Python code to execute (must be safe and non-malicious)
-        cwd (Optional[str]): Working directory for code execution
-
-    ## RETURNS:
-        str: Code output, error messages, or security violation warnings
+    Args:
+        code: Python source to run.
+        cwd: Directory to run in. Defaults to the working directory.
     """
     if pattern := _blocked_pattern(code):
         return f"BLOCKED: Extremely destructive operation: {pattern}"
@@ -100,28 +92,18 @@ def execute_code(code: str, cwd: str | None = None) -> str:
         os.unlink(script_path)
 
 
-@tool
+@tool(parse_docstring=True)
 def execute_command(command: str, cwd: str | None = None) -> str:
-    """
-    ## PRIMARY PURPOSE:
-    Execute shell commands with comprehensive system access and security filtering.
+    """Run a shell command and return its output.
 
-    ## WHEN TO USE:
-    - Run system utilities (ls, cat, grep, find)
-    - File operations and text processing
-    - Package management (apt, pip, npm)
-    - Development tools (git, make, compilers)
-    - Network operations (curl, wget, ssh)
+    Use it for builds, tests, package managers and other command line tools.
+    Commands that could wreck the system, such as formatting a disk or shutting
+    it down, are refused. Returns stdout, stderr and the exit code when it is
+    not zero.
 
-    ## PARAMETERS:
-        command (str): Shell command to execute (automatically filtered for dangerous operations)
-        cwd (Optional[str]): Working directory for command execution
-
-    ## RETURNS:
-        str: Command output, error messages, or security violation warnings
-
-    ## SECURITY:
-        Blocks extremely dangerous operations (disk formatting, system shutdown, fork bombs)
+    Args:
+        command: Command line to run.
+        cwd: Directory to run in. Defaults to the working directory.
     """
     if not command.strip():
         return "Empty command"

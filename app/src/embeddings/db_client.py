@@ -9,7 +9,7 @@ from app.src.core.ui import default_ui
 from app.src.embeddings.rag_errors import DBAccessError, ScrapingFailedError
 from app.src.embeddings.scrapers.abstract_scraper import Scraper
 from app.src.helpers.valid_dir import validate_dir_name
-from app.src.tools.find_tools import IGNORED_DIRS
+from app.src.tools.find_tools import IGNORED_DIRS, IGNORED_FILES
 from app.utils.constants import BATCH_SIZE, CHUNK_OVERLAP, CHUNK_SIZE, MAX_RESULTS
 from app.utils.logger import logger
 from app.utils.paths import data_dir
@@ -166,6 +166,7 @@ class DataBaseClient:
                 p
                 for p in root.rglob("*")
                 if p.is_file()
+                and p.name not in IGNORED_FILES
                 and not IGNORED_DIRS.intersection(p.relative_to(root).parts[:-1])
             )
         for file_path in files:

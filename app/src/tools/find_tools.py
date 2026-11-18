@@ -1,6 +1,7 @@
 import os
 import re
 import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 
 from langchain_core.tools import tool
@@ -12,6 +13,7 @@ IGNORED_DIRS = {
     ".git",
     "node_modules",
     ".venv",
+    "venv",
     "__pycache__",
     ".idea",
     ".vscode",
@@ -21,6 +23,7 @@ IGNORED_DIRS = {
     ".nuxt",
     ".nyc_output",
     ".pytest_cache",
+    ".ruff_cache",
     ".tox",
     ".mypy_cache",
     ".cache",
@@ -28,32 +31,43 @@ IGNORED_DIRS = {
     ".temp",
     "logs",
     "log",
-    ".DS_Store",
-    ".env",
-    ".env.local",
 }
-MAX_FILE_SIZE_BYTES = 10_000_000  # 10 mb
+IGNORED_FILES = {".DS_Store", ".env", ".env.local"}
+MAX_FILE_SIZE_BYTES = 10_000_000
 MAX_RESULTS = 30
+FUZZY_THRESHOLD = 75
+DECLARATION_PATTERNS = [
+    r"\bdef\s+{name}\b",
+    r"\bclass\s+{name}\b",
+    r"\b{name}\s*=\s*",
+    r"\bfrom\s+[^\n]+\bimport\b[^\n]*\b{name}\b",
+    r"\bimport\s+[^\n]*\b{name}\b",
+    r"\bfunction\s+{name}\b",
+    r"\b(?:const|let|var)\s+{name}\b",
+    r"\bexport\s+(?:function|class|const|let|var|type|interface|enum)\s+{name}\b",
+    r"\btype\s+{name}\b",
+    r"\binterface\s+{name}\b",
+    r"\benum\s+{name}\b",
+    r"\bstruct\s+{name}\b",
+    r"\bfn\s+{name}\b",
+]
+
+Match = tuple[int, int]
+Hit = tuple[str, int, str]
 
 
-@tool
+@tool(parse_docstring=True)
 def find_references(dir_path: str, query: str) -> str:
+    """Search the files under a directory for lines that contain a keyword.
+
+    The search ignores case. When nothing matches exactly, lines with close
+    matches are returned instead. Returns up to 30 lines formatted as
+    path:line: snippet.
+
+    Args:
+        dir_path: Directory to search recursively.
+        query: Keyword or phrase to look for.
     """
-    ## PRIMARY PURPOSE:
-    Quickly locate file references to an exact keyword or a close match within a directory tree.
-
-    ## WHEN TO USE:
-    - You need exact occurrences of an identifier, phrase, config key, or string
-    - If no exact hits are found, automatically surface close matches
-
-    ## PARAMETERS:
-        dir_path (str): Root directory to search
-        query (str): Exact keyword or phrase to find
-
-    ## RETURNS:
-        str: path:line: snippet
-    """
-
     try:
         if not os.path.isdir(dir_path):
             return f"Not a directory: {dir_path}"
@@ -62,42 +76,27 @@ def find_references(dir_path: str, query: str) -> str:
         if not files:
             return "No readable text files found"
 
-        results = _search_exact(files, query)
-
-        if not results:
-            results = _search_fuzzy(files, query)
-
-        if not results:
+        hits = _scan(files, _exact_matcher(query)) or _scan(
+            files, _fuzzy_matcher(query)
+        )
+        if not hits:
             return f"No matches for: {query}"
-
-        out_lines = []
-        for fp, ln, snip in results:
-            out_lines.append(f"{fp}:{ln}: {snip}")
-
-        return "\n".join(out_lines)
-
+        return _format(hits)
     except Exception as e:
-        logger.error(
-            f"Error searching for references: {query} in {dir_path}", exc_info=e
-        )
-        return f"Search error: {str(e)}"
+        logger.error(f"Error searching for {query} in {dir_path}", exc_info=e)
+        return f"Search error: {e}"
 
 
-@tool
+@tool(parse_docstring=True)
 def find_declaration(dir_path: str, symbol: str) -> str:
-    """
-    ## PRIMARY PURPOSE:
-    Locate probable declarations/definitions of a symbol in a directory tree.
+    """Find where a function, class, variable or type is declared.
 
-    ## WHEN TO USE:
-    - You need where a function, class, variable, or type is defined
+    Recognizes common declaration forms in Python, JavaScript, TypeScript, Go,
+    Rust and C. Returns up to 30 lines formatted as path:line: snippet.
 
-    ## PARAMETERS:
-        dir_path (str): Root directory to search
-        symbol (str): Identifier to find declarations for
-
-    ## RETURNS:
-        str: path:line: snippet
+    Args:
+        dir_path: Directory to search recursively.
+        symbol: Name of the symbol.
     """
     try:
         if not os.path.isdir(dir_path):
@@ -107,202 +106,117 @@ def find_declaration(dir_path: str, symbol: str) -> str:
         if not files:
             return "No readable text files found"
 
-        decls = _search_declarations(files, symbol)
-        if not decls:
+        hits = _scan(files, _declaration_matcher(symbol))
+        if not hits:
             return f"No declarations for: {symbol}"
-
-        out_lines = []
-        for fp, ln, snip in decls:
-            out_lines.append(f"{fp}:{ln}: {snip}")
-
-        return "\n".join(out_lines)
+        return _format(hits)
     except Exception as e:
-        logger.error(
-            f"Error searching for declaration: {symbol} in {dir_path}", exc_info=e
-        )
-        return f"Search error: {str(e)}"
+        logger.error(f"Error searching for {symbol} in {dir_path}", exc_info=e)
+        return f"Search error: {e}"
+
+
+def _collect_files(root: str) -> list[str]:
+    files = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in IGNORED_DIRS]
+        for name in filenames:
+            if name in IGNORED_FILES:
+                continue
+            path = os.path.join(dirpath, name)
+            try:
+                if os.path.getsize(path) > MAX_FILE_SIZE_BYTES:
+                    continue
+            except OSError:
+                continue
+            if _is_text_file(path):
+                files.append(path)
+    return files
 
 
 def _is_text_file(path: str) -> bool:
     try:
-        with open(path, encoding="utf-8", errors="strict") as f:  # lazy but works
+        with open(path, encoding="utf-8", errors="strict") as f:
             f.read(1024)
         return True
     except Exception:
         return False
 
 
-def _trim_snippet(
-    line: str, match_start: int | None, match_len: int, width: int = 100
-) -> str:
-    line = line.rstrip("\n\r")
-    if match_start is None:
-        snippet = line.strip()
-        return snippet[:width]
-    half = max(0, (width - match_len) // 2)
-    start = max(0, match_start - half)
-    end = min(len(line), match_start + match_len + half)
-    snippet = line[start:end].strip()
-    snippet = re.sub(r"\s+", " ", snippet)
-    return snippet
+def _exact_matcher(query: str) -> Callable[[str], Match | None]:
+    needle = query.lower()
+
+    def match(line: str) -> Match | None:
+        start = line.lower().find(needle)
+        return (start, len(needle)) if start != -1 else None
+
+    return match
 
 
-def _collect_files(root: str) -> list[str]:
-    files: list[str] = []
+def _fuzzy_matcher(query: str) -> Callable[[str], Match | None]:
+    needle = query.lower()
+    token = re.compile(r"[A-Za-z0-9_./-]{2,}")
 
-    for dirpath, dirnames, filenames in os.walk(root):
-        # prune ignored dirs immediately
-        dirnames[:] = [
-            d
-            for d in dirnames
-            if not any(
-                re.search(rf"^{re.escape(pattern)}", d) for pattern in IGNORED_DIRS
-            )
-        ]
+    def match(line: str) -> Match | None:
+        for found in token.finditer(line):
+            if fuzz.partial_ratio(needle, found.group(0).lower()) >= FUZZY_THRESHOLD:
+                return found.start(), len(found.group(0))
+        return None
 
-        for entry in filenames:
-            fp = os.path.join(dirpath, entry)
-            try:
-                stat = os.stat(fp)
-                if stat.st_size > MAX_FILE_SIZE_BYTES:
-                    continue
-            except OSError:
-                continue
-
-            if _is_text_file(fp):
-                files.append(fp)
-
-    return files
+    return match
 
 
-def _search_exact(files: list[str], query: str) -> list[tuple[str, int, str]]:
-    ql = query.lower()
-    results: list[tuple[str, int, str]] = []
-    res_lock = threading.Lock()
-    stop_event = threading.Event()
-    file_order = {fp: idx for idx, fp in enumerate(files)}
+def _declaration_matcher(name: str) -> Callable[[str], Match | None]:
+    escaped = re.escape(name)
+    regex = re.compile(
+        "|".join(p.format(name=escaped) for p in DECLARATION_PATTERNS), re.IGNORECASE
+    )
 
-    def scan_file(fp: str) -> None:
-        if stop_event.is_set():
-            return
+    def match(line: str) -> Match | None:
+        found = regex.search(line)
+        return (found.start(), len(found.group(0))) if found else None
+
+    return match
+
+
+def _scan(files: list[str], match: Callable[[str], Match | None]) -> list[Hit]:
+    hits: list[Hit] = []
+    lock = threading.Lock()
+    full = threading.Event()
+
+    def scan_file(path: str) -> None:
         try:
-            with open(fp, encoding="utf-8", errors="ignore") as f:
-                for i, line in enumerate(f, start=1):
-                    if stop_event.is_set():
-                        break
-                    ll = line.lower()
-                    pos = ll.find(ql)
-                    if pos != -1:
-                        snippet = _trim_snippet(line, pos, len(query))
-                        with res_lock:
-                            if not stop_event.is_set():
-                                results.append((fp, i, snippet))
-                                if len(results) >= MAX_RESULTS:
-                                    stop_event.set()
-                                    break
-        except Exception:
-            # skip unreadable file
-            return
-
-    with ThreadPoolExecutor() as ex:
-        for fp in files:
-            ex.submit(scan_file, fp)
-
-    # deterministic-ish ordering by original file order then line number
-    results.sort(key=lambda t: (file_order.get(t[0], 0), t[1]))
-    return results[:MAX_RESULTS]
-
-
-def _search_fuzzy(files: list[str], query: str) -> list[tuple[str, int, str]]:
-    query_l = query.lower()
-    token_re = re.compile(r"[A-Za-z0-9_./-]{2,}")
-    results: list[tuple[str, int, str]] = []
-    res_lock = threading.Lock()
-    stop_event = threading.Event()
-    file_order = {fp: idx for idx, fp in enumerate(files)}
-
-    def scan_file(fp: str) -> None:
-        if stop_event.is_set():
-            return
-        try:
-            with open(fp, encoding="utf-8", errors="ignore") as f:
-                for i, line in enumerate(f, start=1):
-                    if stop_event.is_set():
-                        break
-                    ll = line.lower()
-                    for token in token_re.findall(line):
-                        if stop_event.is_set():
-                            break
-                        token_l = token.lower()
-                        if fuzz.partial_ratio(query_l, token_l) >= 75:
-                            snippet = _trim_snippet(line, ll.find(token_l), len(token))
-                            with res_lock:
-                                if not stop_event.is_set():
-                                    results.append((fp, i, snippet))
-                                    if len(results) >= MAX_RESULTS:
-                                        stop_event.set()
-                                        break
+            with open(path, encoding="utf-8", errors="ignore") as f:
+                for number, line in enumerate(f, start=1):
+                    if full.is_set():
+                        return
+                    found = match(line)
+                    if found is None:
+                        continue
+                    with lock:
+                        if len(hits) >= MAX_RESULTS:
+                            full.set()
+                            return
+                        hits.append((path, number, _snippet(line, *found)))
         except OSError:
             return
 
-    with ThreadPoolExecutor() as ex:
-        for fp in files:
-            ex.submit(scan_file, fp)
+    with ThreadPoolExecutor() as pool:
+        list(pool.map(scan_file, files))
 
-    results.sort(key=lambda t: (file_order.get(t[0], 0), t[1]))
-    return results[:MAX_RESULTS]
+    order = {path: index for index, path in enumerate(files)}
+    hits.sort(key=lambda hit: (order[hit[0]], hit[1]))
+    return hits
 
 
-def _search_declarations(files: list[str], name: str) -> list[tuple[str, int, str]]:
-    nq = re.escape(name)
-    patterns = [
-        rf"\bdef\s+{nq}\b",  # Python function
-        rf"\bclass\s+{nq}\b",  # Python/JS/TS class
-        rf"\b{nq}\s*=\s*",  # variable/const assignment
-        rf"\bfrom\s+[^\n]+\bimport\b[^\n]*\b{nq}\b",  # from x import name
-        rf"\bimport\s+[^\n]*\b{nq}\b",  # import name
-        rf"\bfunction\s+{nq}\b",  # JS function
-        rf"\b(?:const|let|var)\s+{nq}\b",  # JS variable
-        rf"\bexport\s+(?:function|class|const|let|var|type|interface|enum)\s+{nq}\b",  # TS export decls
-        rf"\btype\s+{nq}\b",  # TS/Flow type
-        rf"\binterface\s+{nq}\b",  # TS interface
-        rf"\benum\s+{nq}\b",  # TS/others enum
-        rf"\bstruct\s+{nq}\b",  # C/Go/Rust struct
-        rf"\bfn\s+{nq}\b",  # Rust function
-    ]
-    regex = re.compile("|".join(patterns), re.IGNORECASE)
+def _snippet(line: str, start: int, length: int, width: int = 100) -> str:
+    line = line.rstrip("\r\n")
+    half = max(0, (width - length) // 2)
+    snippet = line[max(0, start - half) : start + length + half].strip()
+    return re.sub(r"\s+", " ", snippet)
 
-    results: list[tuple[str, int, str]] = []
-    res_lock = threading.Lock()
-    stop_event = threading.Event()
-    file_order = {fp: idx for idx, fp in enumerate(files)}
 
-    def scan_file(fp: str) -> None:
-        if stop_event.is_set():
-            return
-        try:
-            with open(fp, encoding="utf-8", errors="ignore") as f:
-                for i, line in enumerate(f, start=1):
-                    if stop_event.is_set():
-                        break
-                    m = regex.search(line)
-                    if m:
-                        snippet = _trim_snippet(line, m.start(), len(m.group(0)))
-                        with res_lock:
-                            if not stop_event.is_set():
-                                results.append((fp, i, snippet))
-                                if len(results) >= MAX_RESULTS:
-                                    stop_event.set()
-                                    break
-        except Exception:
-            return
-
-    with ThreadPoolExecutor() as ex:
-        for fp in files:
-            ex.submit(scan_file, fp)
-
-    results.sort(key=lambda t: (file_order.get(t[0], 0), t[1]))
-    return results[:MAX_RESULTS]
+def _format(hits: list[Hit]) -> str:
+    return "\n".join(f"{path}:{number}: {snippet}" for path, number, snippet in hits)
 
 
 FIND_TOOLS = [
