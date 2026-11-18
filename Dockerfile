@@ -5,6 +5,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /bin/uv
 ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
+    UV_NO_CACHE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/ally \
     PATH="/opt/ally/bin:$PATH"
 
