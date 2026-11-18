@@ -159,7 +159,7 @@ docker start -ai ally
 
 ### **2. Local**
 
-### Prerequesites:
+### Prerequisites
 
 -   [Python](https://www.python.org/)
 -   [UV](https://github.com/astral-sh/uv)
@@ -265,15 +265,20 @@ SEARCH_ENGINE_ID=...
 2. Copy the contents above (or from `.env.example`) into `.env`.
 3. Fill in your API keys and IDs.
 
-### 4. Run setup executable
+### 4. Install
 
-Depending on your OS choose either `setup.cmd` (Windows) or `setup.sh` (Linux/Mac)
+Run the setup script for your OS from the repository folder:
 
-**_Note:_** Ally creates its own virtual environment to keep dependencies isolated and automatically adds itself to your PATH.
+```bash
+./setup.sh          # Linux and macOS
+.\setup.ps1         # Windows (PowerShell)
+```
 
-Now you’re ready to run Ally from anywhere in the terminal using `ally`.
+It installs Ally as a [uv tool](https://docs.astral.sh/uv/concepts/tools/) in its own environment and puts the `ally` command on your PATH. The install is editable, so `config.json`, `.env` and `git pull` updates in this folder apply right away.
 
-Use `ally -h` for more help.
+To use local Hugging Face embeddings (`"embedding_provider": "hf"`), install the optional extra with `./setup.sh --hf` or `.\setup.ps1 -HF`. It pulls in PyTorch, so it is a large download.
+
+Open a new terminal and run `ally`. Use `ally -h` for the available flags.
 
 ## Technical notes
 
