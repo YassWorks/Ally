@@ -92,3 +92,11 @@ def test_load_config_reads_embedding_settings(tmp_path):
         "ollama",
         "all-minilm",
     )
+
+
+def test_retired_github_models_provider_is_explained():
+    with pytest.raises(ConfigError) as error:
+        resolve_config({"provider": "github", "model": "openai/gpt-4.1"}, {})
+
+    assert "GitHub Models was retired" in str(error.value)
+    assert 'Pick another provider for "general"' in str(error.value)

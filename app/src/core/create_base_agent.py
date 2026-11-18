@@ -149,7 +149,6 @@ def get_checkpointer() -> SqliteSaver:
 OPENAI_COMPATIBLE_URLS = {
     "openai": None,
     "openrouter": "https://openrouter.ai/api/v1",
-    "github": "https://models.github.ai/inference",
 }
 
 
@@ -168,7 +167,7 @@ def create_chat_model(
     options = {} if temperature is None else {"temperature": temperature}
 
     match provider:
-        case "openai" | "openrouter" | "github":
+        case "openai" | "openrouter":
             from langchain_openai import ChatOpenAI
 
             return ChatOpenAI(

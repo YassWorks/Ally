@@ -13,9 +13,9 @@ PROVIDER_KEY_ENV: dict[str, str | None] = {
     "groq": "GROQ_API_KEY",
     "cerebras": "CEREBRAS_API_KEY",
     "openrouter": "OPENROUTER_API_KEY",
-    "github": "GITHUB_AI_API_KEY",
     "ollama": None,
 }
+RETIRED_PROVIDERS = {"github": "GitHub Models was retired by GitHub in July 2026."}
 
 
 class ConfigError(Exception):
@@ -92,6 +92,11 @@ def resolve_config(raw: Mapping, env: Mapping[str, str]) -> AllyConfig:
         if not provider:
             problems.append(
                 f'No provider set for "{name}". Set "provider" in config.json.'
+            )
+            continue
+        if provider in RETIRED_PROVIDERS:
+            problems.append(
+                f'{RETIRED_PROVIDERS[provider]} Pick another provider for "{name}".'
             )
             continue
         if provider not in PROVIDER_KEY_ENV:
