@@ -1,4 +1,5 @@
 import importlib.util
+import os
 
 from app.src.core.ui import default_ui
 from app.src.embeddings.rag_errors import SetupFailedError
@@ -33,10 +34,12 @@ class HFEmbedder:
         self._model = None
 
     def _load(self) -> None:
+        os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
         import transformers.utils.logging as hf_logging
         from transformers import AutoModel, AutoTokenizer
 
         hf_logging.set_verbosity_error()
+        hf_logging.disable_progress_bar()
         cache_dir = data_dir("embedding_models", "ALLY_EMBEDDING_MODELS_DIR")
         with default_ui.console.status(f"Loading embedding model {self.model_name}..."):
             self._tokenizer = AutoTokenizer.from_pretrained(
