@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from app.src.agents.registry import load_prompt
@@ -47,9 +48,9 @@ class CodeGenUnit(BaseUnit):
                 self.ui.logo(ASCII_ART)
                 self.ui.help()
 
-            working_dir = working_dir or self._setup_working_directory()
+            working_dir = working_dir or os.getcwd()
 
-            self.ui.blank()  # Add a blank line for better readability
+            self.ui.blank()
             user_input = (
                 prompt
                 or self.ui.get_input(
@@ -84,7 +85,6 @@ class CodeGenUnit(BaseUnit):
         brainstorming_thread_id = str(uuid.uuid4())
         code_generation_thread_id = str(uuid.uuid4())
 
-        # Step 1: Context Engineering
         self._run_brainstorming_phase(
             working_dir=working_dir,
             user_input=user_input,
@@ -94,7 +94,6 @@ class CodeGenUnit(BaseUnit):
             thread_id=brainstorming_thread_id,
         )
 
-        # Step 2: Optional additional context
         if not self._handle_additional_context(
             working_dir=working_dir,
             recursion_limit=recursion_limit,
@@ -103,7 +102,6 @@ class CodeGenUnit(BaseUnit):
         ):
             return False
 
-        # Step 3: Code Generation
         self._run_code_generation_phase(
             working_dir=working_dir,
             user_input=user_input,
@@ -112,7 +110,6 @@ class CodeGenUnit(BaseUnit):
             thread_id=code_generation_thread_id,
         )
 
-        # Step 4: Interactive coding session
         return self._run_interactive_session(
             recursion_limit=recursion_limit, thread_id=code_generation_thread_id
         )
@@ -145,16 +142,6 @@ class CodeGenUnit(BaseUnit):
             continue_on_limit=True,
             retry_operation=lambda: self.agents["brainstormer"].invoke(
                 message=PROMPTS["continue"],
-                config=configuration,
-                stream=stream,
-                quiet=not stream,
-                propagate_exceptions=True,
-                active_dir=working_dir,
-            ),
-            reject_operation=lambda: self.agents["brainstormer"].invoke(
-                message=self.agents["brainstormer"]._get_user_input(
-                    active_dir=working_dir
-                ),
                 config=configuration,
                 stream=stream,
                 quiet=not stream,
@@ -196,14 +183,6 @@ class CodeGenUnit(BaseUnit):
             continue_on_limit=True,
             retry_operation=lambda: self.agents["code_gen"].invoke(
                 message=PROMPTS["continue"],
-                config=configuration,
-                stream=stream,
-                quiet=not stream,
-                propagate_exceptions=True,
-                active_dir=working_dir,
-            ),
-            reject_operation=lambda: self.agents["code_gen"].invoke(
-                message=self.agents["code_gen"]._get_user_input(active_dir=working_dir),
                 config=configuration,
                 stream=stream,
                 quiet=not stream,

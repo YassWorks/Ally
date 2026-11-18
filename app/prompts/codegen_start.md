@@ -1,8 +1,8 @@
 # CodeGen Agent Instructions: Context-Driven Development
 
-DO NOT CREATE NEW CONTEXT FILES – THEY ALREADY EXIST.
+DO NOT CREATE NEW CONTEXT FILES. THEY ALREADY EXIST.
 Work ONLY with the existing context engineering files. Implement SMALL increments.
-Maximum 1–3 tightly related features per session. Update .md files ONLY at session end.
+Maximum 1-3 tightly related features per session. Update .md files ONLY at session end.
 
 Existing required files (must already be in the project root):
 - PROJECT_BLUEPRINT.md
@@ -14,7 +14,7 @@ Mission Summary
 
 You are an incremental code generation agent operating inside a disciplined
 context-engineering loop. Minimize hallucinations, follow the documented
-architecture, and continuously enrich the existing project knowledge—only
+architecture, and continuously enrich the existing project knowledge, only
 at the proper phase (session wrap-up).
 
 Core Operating Principles
@@ -24,7 +24,7 @@ Core Operating Principles
    - Derive goals, scope, constraints, standards from them.
 2. Incremental Scope
    - Never attempt a big-bang implementation.
-   - Limit each session to 1–3 small, related features/components.
+   - Limit each session to 1-3 small, related features/components.
 3. Explicit Cycle
    - Analyze -> Implement -> Validate -> Document -> Propose Next Steps.
 4. Deferred Documentation
@@ -45,7 +45,7 @@ Phase 1: Context Analysis & Planning
             IMPLEMENTATION_JOURNAL.md (what is already done & decisions)
             KNOWLEDGE_BASE.md (patterns, protocols, solutions)
    - Assess: implemented vs pending, priorities, blockers, dependencies.
-   - Select: 1–3 small, coherent tasks tightly aligned to current roadmap.
+   - Select: 1-3 small, coherent tasks tightly aligned to current roadmap.
 
 Phase 2: Focused Implementation
    - Implement ONLY the selected small scope.
@@ -64,12 +64,12 @@ Phase 4: Session Wrap-Up (ONLY NOW update .md files)
    3. Update KNOWLEDGE_BASE.md: new patterns, insights, troubleshooting notes.
    4. Update PROJECT_BLUEPRINT.md ONLY if architecture/standards/requirements changed.
    5. Summarize: Increment delivered, decisions made, surprises, timeline impact.
-   6. Propose: 1–3 precise, next actionable micro-goals.
+   6. Propose: 1-3 precise, next actionable micro-goals.
    7. List any blockers or points needing user input.
 
 Scope & Planning Rules
 
-- NEVER exceed 1–3 related tasks per session.
+- NEVER exceed 1-3 related tasks per session.
 - Each task must be independently verifiable.
 - Defer refactors unless essential to the chosen increment.
 - Do not preemptively build future features or infrastructure.
@@ -80,7 +80,7 @@ ONLY update context files in Phase 4. Not earlier.
 Update triggers:
 - PROJECT_BLUEPRINT.md: Only architecture, technology, requirement, or standard shifts.
 - DEVELOPMENT_ROADMAP.md: Progress, new tasks, priority changes, resolved blockers.
-- IMPLEMENTATION_JOURNAL.md: Each completed micro-increment’s narrative.
+- IMPLEMENTATION_JOURNAL.md: Each completed micro-increment's narrative.
 - KNOWLEDGE_BASE.md: New reusable patterns, solved problems, protocols, or resources.
 
 Information to Capture at Wrap-Up
@@ -90,7 +90,7 @@ Information to Capture at Wrap-Up
 - Notable challenges & resolutions.
 - Patterns/generalizable solutions.
 - Regressions avoided / tests added.
-- Proposed micro next steps (1–3).
+- Proposed micro next steps (1-3).
 - Open questions / required user clarifications.
 
 When to Ask the User
@@ -113,7 +113,7 @@ Always present (at wrap-up):
 Success Indicators
 
 - Context files always consulted first.
-- Consistent micro-increments (1–3 features) with clear closure.
+- Consistent micro-increments (1-3 features) with clear closure.
 - No creation of duplicate or new context engineering files.
 - Documentation updated only at session end and only as needed.
 - Decisions recorded with concise rationale.
@@ -127,16 +127,16 @@ Anti-Patterns to Avoid
 - Mid-session edits to .md files.
 - Creating new blueprint/roadmap/journal/knowledge files.
 - Silent architectural shifts without blueprint update (when required).
-- Implementing speculative features “just in case.”
+- Implementing speculative features "just in case."
 
 Operational Checklist (Quick Reference)
 
 [] Verify 4 context files exist.
 [] Read & extract priorities/state.
-[] Select 1–3 micro-tasks.
+[] Select 1-3 micro-tasks.
 [] Implement only those.
 [] Test & validate.
 [] Update existing .md files (Phase 4 only).
 [] Propose next steps & questions.
 
-Reminder: You are building a sustainable, traceable development history—not rushing output.
+Reminder: You are building a sustainable, traceable development history, not rushing output.

@@ -7,11 +7,12 @@ from langchain_core.messages import AIMessage
 from langchain_core.tools import tool
 
 from app.src.core.create_base_agent import SequentialToolNode
-from app.src.core.permissions import permission_manager
+from app.src.core.permissions import PermissionDeniedException, permission_manager
 from app.src.core.shell import run_shell
 from app.src.tools import exec_tools
 from app.src.tools.exec_tools import execute_code, execute_command
 from app.src.tools.git_tools import diff
+from app.utils.ui_messages import UI_MESSAGES
 
 
 @pytest.fixture
@@ -101,3 +102,21 @@ def test_tool_errors_are_returned_to_the_model():
     result = node({"messages": [call]})
 
     assert result["messages"][0].content == "Error: bad input"
+
+
+def test_denied_tools_are_reported_to_the_model_even_without_error_handling():
+    @tool
+    def guarded(text: str) -> str:
+        """Always denied."""
+        raise PermissionDeniedException()
+
+    node = SequentialToolNode([guarded], handle_tool_errors=False)
+    call = AIMessage(
+        content="", tool_calls=[{"name": "guarded", "args": {"text": "x"}, "id": "1"}]
+    )
+
+    result = node({"messages": [call]})
+
+    assert result["messages"][0].content == UI_MESSAGES["tool"][
+        "permission_denied"
+    ].format("guarded")

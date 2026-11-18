@@ -4,8 +4,6 @@ from typing import Any
 from app.src.core.base import BaseAgent
 from app.src.core.ui import default_ui
 from app.utils.constants import RECURSION_LIMIT
-from app.utils.logger import logger
-from app.utils.ui_messages import UI_MESSAGES
 
 
 class BaseUnit(ABC):
@@ -28,39 +26,8 @@ class BaseUnit(ABC):
 
     @abstractmethod
     def run(self, **kwargs) -> bool:
-        """Execute the unit's main workflow.
-
-        Returns:
-            bool: True if execution completed successfully, False otherwise
-        """
+        """Run the workflow and return whether it completed."""
         pass
-
-    def _setup_working_directory(self, default_dir: str = None) -> str:
-        """Setup and validate working directory with user interaction.
-
-        Args:
-            default_dir: Default directory to use
-
-        Returns:
-            str: Validated working directory path
-        """
-        import os
-
-        working_dir = default_dir or os.getcwd()
-
-        while True:
-            try:
-                working_dir = self.ui.get_input(
-                    message=UI_MESSAGES["directory_prompt"],
-                    default=working_dir,
-                    cwd=working_dir,
-                )
-                os.makedirs(working_dir, exist_ok=True)
-                return working_dir
-            except Exception as e:
-                logger.error(f"Failed to create directory: {working_dir}", exc_info=e)
-                self.ui.error(UI_MESSAGES["errors"]["failed_create_directory"])
-                working_dir = None
 
     def _create_agent_config(
         self, thread_id: str, recursion_limit: int = RECURSION_LIMIT

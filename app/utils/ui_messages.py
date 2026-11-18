@@ -1,32 +1,22 @@
 UI_MESSAGES = {
-    # Prompts
     "directory_prompt": "Enter project directory",
     "model_change_prompt": "Enter new {} model name",
-    "continue_prompt": "Continue?",
     "change_directory": "Change working directory?",
     "project_prompt": "What would you like to build?",
     "add_context": "Add more context before code generation?",
-    "continue_generation": "Continue to code generation anyway?",
     "change_models": "Change any of the current models?",
-    # Titles
     "titles": {
         "current_directory": "Current Directory",
         "directory_updated": "Directory Updated",
         "current_models": "Current Models",
-        "context_complete": "Context Engineering Complete",
-        "generation_complete": "Project Generation Complete",
         "brainstormer_ready": "Brainstormer Ready",
         "codegen_ready": "CodeGen Ready",
         "generation_starting": "Starting Code Generation",
         "goodbye": "Goodbye",
         "history_cleared": "History Cleared",
-        "interrupted": "Interrupted",
-        "extended_session": "Extended Session",
         "warning": "Warning",
         "error": "Error",
         "help": "Help",
-        "tool_executing": "Tool Executing",
-        "assistant": "Assistant",
         "continuing_session": "Continuing Session",
         "current_session_id": "Current Session ID",
         "latest_references": "Latest References",
@@ -41,16 +31,13 @@ UI_MESSAGES = {
         "reverting_model": "Reverting Model",
         "changed_session_id": "Changed Session ID",
     },
-    # Messages
     "messages": {
         "goodbye": "Thanks for using Ally!",
         "history_cleared": "Conversation history cleared",
         "session_interrupted": "Session interrupted by user",
         "recursion_warning": "Agent has been processing for a while.\nContinue or refine your prompt?",
-        "initializing_agents": "Initializing agents...",
         "welcome": "Welcome to Ally - Your private AI assistant",
         "welcome_help_hint": "Type /help for commands and usage",
-        "working_on_task": "Working on the task...",
         "generation_starting_detail": "The CodeGen Agent is now generating code based on the context provided.",
         "brainstormer_ready_detail": "Type '/exit' or press Ctrl+C to continue to code generation",
         "codegen_ready_detail": "Starting interactive coding session with the coding agent...",
@@ -58,27 +45,19 @@ UI_MESSAGES = {
         "no_references": "No references available.",
         "rag_enabled": "Retrieval-Augmented Generation is now active.",
         "rag_disabled": "Retrieval-Augmented Generation is now inactive.",
-        "collections_header": "Collections available:",
         "collection_deleted": "Collection '{}' has been deleted.",
         "all_collections_deleted": "All collections have been deleted.",
-        "generating_response": "Generating response...",
         "querying_knowledge_base": "Querying knowledge base...",
     },
-    # Warnings
     "warnings": {
-        "failed_confirm": "Failed to confirm action. Continuing with default value ({})",
         "rag_not_available": "RAG is not available. Please configure an embedding provider in config.json.",
         "rag_enabled_no_client": "RAG is enabled but no database client is configured. Check your setup.",
         "rag_features_disabled": "RAG features have been disabled due to errors.",
         "recursion_limit_reached": "Agent processing took longer than expected. Recursion limit reached.",
     },
-    # Errors
     "errors": {
         "failed_initialize_agents": "Failed to initialize default agents. Check your API keys and configuration."
         + "\nIf you're using Ollama, ensure the Ollama app is running.",
-        "config_error": "Configuration error occurred. Please check your config.json file.",
-        "failed_validate_config": "Failed to validate configuration. Verify API keys and model names.",
-        "failed_setup_coding": "Failed to setup coding configuration. Check your models and API settings.",
         "unexpected_error": "An unexpected error occurred. Check logs for details.",
         "turn_failed": "The request failed, but your session is still open. Try again, or check the logs.",
         "codegen_failed": "Code generation workflow failed to complete successfully. Check logs for details.",
@@ -94,9 +73,7 @@ UI_MESSAGES = {
         "directory_not_exist": "The specified directory does not exist. Please check the path.",
         "failed_scrape": "Failed to scrape file. Skipping. Check logs for details.",
         "collection_not_exist": "The specified collection does not exist in the database.",
-        "failed_create_db_directory": "Failed to create database directory. Check file system permissions.",
         "failed_save_indexed": "Failed to save indexed collections metadata. Check logs for details.",
-        "failed_install_packages": "Failed to install required packages. Please install them manually or check your internet connection.",
         "db_access_error": "Database access error occurred. Check logs for details.",
         "setup_failed": "Setup failed. Check logs for details.",
         "command_failed": "Command execution failed. Check logs for details.",
@@ -108,7 +85,6 @@ UI_MESSAGES = {
         "model_not_found": "Model not found or not supported. Verify the model name is correct.",
         "collection_name_too_short": "Collection name must be at least 3 characters long.",
     },
-    # Confirmations
     "confirmations": {
         "continue_from_left_off": "Continue from where the agent left off?",
         "continue_anyway": "Something went wrong during the brainstorming process. Do you wish to continue anyway?",
@@ -116,20 +92,17 @@ UI_MESSAGES = {
         "reset_database": "Are you sure you want to reset the database? This action cannot be undone.",
         "change_model": "Do you want to enter in the name of a different model?",
     },
-    # Usage Messages
     "usage": {
         "embed": "Usage: /embed 'directory_path' 'collection_name'",
         "index": "Usage: /index 'collection_name'",
         "unindex": "Usage: /unindex 'collection_name'",
         "delete": "Usage: /delete 'collection_name'",
     },
-    # Success Messages
     "success": {
         "collection_indexed": "Collection '{}' is now indexed.",
         "collection_unindexed": "Collection '{}' is now unindexed.",
         "documents_embedded": "Documents from '{}' have been embedded into collection '{}'.",
     },
-    # Help Content
     "help": {
         "content": [
             "Use `Ctrl+n` to enter a new line and Enter to submit your message.",
@@ -165,15 +138,8 @@ UI_MESSAGES = {
         ],
         "model_suffix": "Model: **{}**",
     },
-    # Tool Messages
     "tool": {
         "title": "## {}",
-        "arguments_header": "\n**Arguments:**",
-        "output_header": "**Output:**",
-        "truncated": "\n... *(truncated)*",
-        "tool_complete": "Tool Complete: {}",
-        "pending_tools": "{} tool(s) pending approval",
-        "processing_tool": "Processing tool {} of {}",
         "permission_denied": "Permission denied for tool '{}'",
     },
 }

@@ -76,10 +76,7 @@ def handle_unindex_request(*args):
 
 
 def handle_list_command(*args):
-    """
-    Handle the /list command which lists collections in the database and
-    whether they are indexed or not.
-    """
+    """List the collections and whether each one is indexed."""
     db_client = DataBaseClient.get_instance()
 
     if db_client is None:
@@ -90,7 +87,7 @@ def handle_list_command(*args):
 
 
 def handle_delete_command(*args):
-    """Handles the deletion of a collection from the database by its name."""
+    """Delete the collection named in ``args``."""
     db_client = DataBaseClient.get_instance()
 
     if len(args) < 1:
@@ -107,7 +104,7 @@ def handle_delete_command(*args):
 
 
 def handle_purge_command():
-    """Handles the purging of all collections from the database."""
+    """Delete every collection after asking for confirmation."""
     db_client = DataBaseClient.get_instance()
 
     if db_client is None:
