@@ -1,3 +1,4 @@
+from langchain_core.exceptions import ModelNotFoundError, ModelRateLimitError
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from app.src.core.create_base_agent import build_llm_context, clean_context_window
@@ -102,3 +103,20 @@ def test_context_keeps_exactly_the_last_n_turns():
     assert len(questions) == LAST_N_TURNS
     assert questions[-1] == f"q{LAST_N_TURNS + 4}"
     assert isinstance(context[0], HumanMessage)
+
+
+def test_http_status_understands_standard_and_chained_errors():
+    class ClientError(Exception):
+        code = 404
+
+    try:
+        try:
+            raise ClientError("models/typo is not found")
+        except ClientError as cause:
+            raise RuntimeError("Error calling model") from cause
+    except RuntimeError as error:
+        chained = error
+
+    assert http_status(ModelNotFoundError("missing")) == 404
+    assert http_status(ModelRateLimitError("slow down")) == 429
+    assert http_status(chained) == 404
