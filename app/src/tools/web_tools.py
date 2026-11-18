@@ -1,3 +1,5 @@
+import os
+
 import requests
 from bs4 import BeautifulSoup
 from langchain_core.tools import tool
@@ -74,3 +76,80 @@ def fetch_tool(url: str) -> str:  # Wrapper to expose fetch as a LangChain tool
         str: Cleaned text content (max 10,000 chars) or error message if scraping fails
     """
     return fetch(url)
+
+
+SEARCH_ENDPOINT = "https://customsearch.googleapis.com/customsearch/v1"
+SEARCH_TIMEOUT = 10
+
+
+def google_search(query: str, n: int = 5) -> list[dict[str, str]]:
+    """Return up to ``n`` Google results for ``query`` as ``{"title", "link"}`` dicts.
+
+    Raises:
+        ValueError: If ``GOOGLE_SEARCH_API_KEY`` or ``SEARCH_ENGINE_ID`` is not set.
+        requests.HTTPError: If the search request fails.
+    """
+    api_key = os.getenv("GOOGLE_SEARCH_API_KEY")
+    engine_id = os.getenv("SEARCH_ENGINE_ID")
+    if not api_key or not engine_id:
+        raise ValueError(
+            "Set GOOGLE_SEARCH_API_KEY and SEARCH_ENGINE_ID in .env to enable web search."
+        )
+
+    results, start = [], 1
+    while len(results) < n:
+        batch = min(10, n - len(results))
+        params = {
+            "key": api_key,
+            "cx": engine_id,
+            "q": query,
+            "num": batch,
+            "start": start,
+        }
+        resp = requests.get(SEARCH_ENDPOINT, params=params, timeout=SEARCH_TIMEOUT)
+        resp.raise_for_status()
+        data = resp.json()
+
+        for item in data.get("items", []):
+            results.append({"title": item["title"], "link": item["link"]})
+            if len(results) == n:
+                break
+
+        start += batch
+        if "nextPage" not in data.get("queries", {}):
+            break
+
+    return results
+
+
+@tool
+def search_and_scrape(query: str) -> str:
+    """
+    ## PRIMARY PURPOSE:
+    Perform Google search and extract full text content from top 5 results.
+
+    ## WHEN TO USE:
+    - Research technical topics, best practices, or implementation approaches
+    - Find current information about programming languages, frameworks, tools
+    - Gather multiple perspectives and comprehensive information
+    - Collect up-to-date tutorials, documentation, or guides
+
+    ## PARAMETERS:
+        query (str): Search query string to find relevant web pages
+
+    ## RETURNS:
+        str: Formatted results with titles and full text content from top search results
+    """
+    try:
+        search_results = google_search(query, 5)
+        for r in search_results:
+            r["full_text"] = fetch(r["link"])
+
+        formatted_results = "This answer is **possibly incomplete**. Consider refining search terms as needed.\n\n"
+        for r in search_results:
+            formatted_results += f"# Title: \n{r['title']}\n\n"
+            formatted_results += f"# Content: \n{r['full_text']}\n\n"
+
+        return formatted_results
+    except Exception as e:
+        return f"[ERROR] Failed to perform web search: {e}"

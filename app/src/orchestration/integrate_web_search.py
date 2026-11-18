@@ -1,20 +1,11 @@
 from langchain_core.tools import tool
 
-from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
 from app.src.core.base import BaseAgent
 from app.utils.constants import RECURSION_LIMIT
 
 
-def integrate_web_search(agent: BaseAgent, web_searcher: WebSearcherAgent) -> None:
-    """Enhance an agent with web search capabilities.
-
-    Adds a search tool to the agent that delegates web research queries
-    to the web searcher agent.
-
-    Args:
-        agent: Agent to enhance with search capabilities
-        web_searcher: Web searcher agent to handle search queries
-    """
+def integrate_web_search(agent: BaseAgent, web_searcher: BaseAgent) -> None:
+    """Give ``agent`` a tool that hands research questions to ``web_searcher``."""
 
     @tool
     def call_searcher(query: str) -> str:
@@ -39,14 +30,4 @@ def integrate_web_search(agent: BaseAgent, web_searcher: WebSearcherAgent) -> No
             quiet=True,
         )
 
-    enhanced_graph, enhanced_agent = agent.get_agent(
-        model_name=agent.model_name,
-        api_key=agent.api_key,
-        extra_tools=[call_searcher],
-        temperature=agent.temperature,
-        include_graph=True,
-        provider=agent.provider,
-    )
-
-    agent.agent = enhanced_agent
-    agent.graph = enhanced_graph
+    agent.add_tools([call_searcher])

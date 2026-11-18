@@ -7,12 +7,13 @@ from collections.abc import Callable
 import langgraph.errors as lg_errors
 import openai
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
-from langgraph.graph import StateGraph
-from langgraph.graph.state import CompiledStateGraph
 
+from app.config import AgentSettings
+from app.src.agents.registry import AgentSpec, default_system_prompt
+from app.src.core.create_base_agent import create_base_agent
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.permissions import PermissionDeniedException
-from app.src.core.ui import AgentUI
+from app.src.core.ui import AgentUI, default_ui
 from app.src.embeddings.db_client import DataBaseClient
 from app.src.embeddings.rag_errors import DBAccessError, SetupFailedError
 from app.utils.ascii_art import ASCII_ART
@@ -22,45 +23,53 @@ from app.utils.ui_messages import UI_MESSAGES
 
 
 class BaseAgent:
-    """Base class for all agent implementations.
+    """An agent built from an :class:`AgentSpec`, with an interactive chat loop.
 
-    Provides common functionality including chat interface, model management,
-    and message handling for agent interactions.
+    Args:
+        spec: Prompt and tools that define the kind of agent.
+        settings: Provider, model and sampling settings.
+        ui: Terminal UI used for all output.
     """
 
     def __init__(
-        self,
-        model_name: str,
-        api_key: str,
-        system_prompt: str,
-        agent: CompiledStateGraph,
-        ui: AgentUI,
-        get_agent: Callable,
-        temperature: float = 0,
-        graph: StateGraph = None,
-        provider: str = None,
+        self, spec: AgentSpec, settings: AgentSettings, ui: AgentUI = default_ui
     ):
-        self.model_name = model_name
-        self.api_key = api_key
-        self.system_prompt = system_prompt
-        self.agent = agent
+        self.spec = spec
+        self.provider = settings.provider
+        self.model_name = settings.model
+        self.api_key = settings.api_key
+        self.temperature = settings.temperature
+        self.system_prompt = settings.system_prompt
         self.ui = ui
-        self.get_agent = get_agent
-        self.temperature = temperature
-        self.graph = graph
-        self.provider = provider
+        self.extra_tools: list = []
 
-        # a dictionary to hold custom command names and handlers
         self._custom_commands: dict[str, Callable] = {}
-
-        # a flag to determine if RAG features should be integrated
         self.rag = False
-
         self.latest_refs: set[str] = set()
         self.db_client = None
-
-        # backup model name after failed `/model change` command
         self.prev_model_name = None
+
+        self._build()
+
+    @property
+    def tools(self) -> list:
+        """Every tool the agent can call."""
+        return [*self.spec.tools, *self.extra_tools]
+
+    def _build(self) -> None:
+        self.agent = create_base_agent(
+            model_name=self.model_name,
+            api_key=self.api_key,
+            tools=self.tools,
+            system_prompt=self.system_prompt or default_system_prompt(self.spec),
+            temperature=self.temperature,
+            provider=self.provider,
+        )
+
+    def add_tools(self, tools: list) -> None:
+        """Give the agent more tools and rebuild it."""
+        self.extra_tools.extend(tools)
+        self._build()
 
     def _toggle_rag(self, enable: bool = True):
         """Enable or disable RAG features."""
@@ -412,21 +421,18 @@ class BaseAgent:
         return False
 
     def _handle_model_change(self, new_model: str):
-        """Handle changing the model."""
-        graph, agent = self.get_agent(
-            model_name=new_model,
-            api_key=self.api_key,
-            system_prompt=self.system_prompt,
-            temperature=self.temperature,
-            include_graph=True,
-            provider=self.provider,
-        )
-        self.graph = graph
-        self.agent = agent
+        """Switch to ``new_model``, keeping the prompt and tools. Reverts if it fails."""
+        previous = self.model_name
+        self.model_name = new_model
+        try:
+            self._build()
+        except Exception:
+            self.model_name = previous
+            raise
 
     def _handle_model_command(self, user_input: str):
-        """Handle model-related commands."""
-        command_parts = user_input.lower().split(" ")
+        """Show the current model, or change it with ``/model change <name>``."""
+        command_parts = user_input.split()
 
         if len(command_parts) == 1:
             self.ui.status_message(
@@ -435,7 +441,7 @@ class BaseAgent:
             )
             return
 
-        if command_parts[1] == "change":
+        if command_parts[1].lower() == "change":
             if len(command_parts) < 3:
                 self.ui.error(UI_MESSAGES["errors"]["specify_model"])
                 return

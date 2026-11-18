@@ -1,4 +1,5 @@
 from app.config import AgentSettings
+from app.src.agents.registry import AGENT_SPECS
 from app.src.core.base import BaseAgent
 
 CODING_AGENTS = ("brainstormer", "web_searcher", "code_gen")
@@ -15,29 +16,11 @@ class AgentFactory:
             ValueError: If ``agent_type`` is unknown.
             RuntimeError: If the agent's model cannot be initialized.
         """
-        from app.src.agents.brainstormer.brainstormer import BrainstormerAgent
-        from app.src.agents.code_gen.code_gen import CodeGenAgent
-        from app.src.agents.general.general import GeneralAgent
-        from app.src.agents.web_searcher.web_searcher import WebSearcherAgent
-
-        agent_classes = {
-            "brainstormer": BrainstormerAgent,
-            "web_searcher": WebSearcherAgent,
-            "code_gen": CodeGenAgent,
-            "general": GeneralAgent,
-        }
-
-        if agent_type not in agent_classes:
+        if agent_type not in AGENT_SPECS:
             raise ValueError(f"Unknown agent type: {agent_type}")
 
         try:
-            return agent_classes[agent_type](
-                model_name=settings.model,
-                api_key=settings.api_key,
-                system_prompt=settings.system_prompt,
-                temperature=settings.temperature,
-                provider=settings.provider,
-            )
+            return BaseAgent(AGENT_SPECS[agent_type], settings)
         except Exception as e:
             raise RuntimeError(f"Failed to initialize {agent_type} agent: {e}") from e
 

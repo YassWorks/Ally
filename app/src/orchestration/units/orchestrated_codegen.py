@@ -1,6 +1,6 @@
 import uuid
-from pathlib import Path
 
+from app.src.agents.registry import load_prompt
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.orchestration.integrate_web_search import integrate_web_search
 from app.src.orchestration.units.base_unit import BaseUnit
@@ -8,8 +8,6 @@ from app.utils.ascii_art import ASCII_ART
 from app.utils.constants import PROMPTS, RECURSION_LIMIT
 from app.utils.logger import logger
 from app.utils.ui_messages import UI_MESSAGES
-
-PROMPTS_DIR = Path(__file__).resolve().parents[3]
 
 
 class CodeGenUnit(BaseUnit):
@@ -277,10 +275,7 @@ class CodeGenUnit(BaseUnit):
     def _create_brainstormer_prompt(self, user_input: str, working_dir: str) -> str:
         """Create the brainstormer prompt with context engineering steps."""
 
-        ces_file_path = PROMPTS_DIR / "prompts" / "context_engineering_steps.md"
-
-        with open(str(ces_file_path), encoding="utf-8") as file:
-            context_engineering_steps = file.read()
+        context_engineering_steps = load_prompt("context_engineering_steps.md")
 
         return (
             f"\n\nIMPORTANT: Place your entire work inside {working_dir}\n\n"
@@ -293,10 +288,7 @@ class CodeGenUnit(BaseUnit):
     def _create_codegen_prompt(self, user_input: str, working_dir: str) -> str:
         """Create the code generation prompt."""
 
-        codegen_file_path = PROMPTS_DIR / "prompts" / "codegen_start.md"
-
-        with open(str(codegen_file_path), encoding="utf-8") as file:
-            codegen_start = file.read()
+        codegen_start = load_prompt("codegen_start.md")
 
         return (
             f"\n\nIMPORTANT: Place your entire work inside {working_dir}\n\n"
