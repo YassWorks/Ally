@@ -1,118 +1,104 @@
 import datetime
 from pathlib import Path
 
-# pdf
-import pymupdf4llm
-
-# docx
-from docx import Document
-from docx.table import Table
-from docx.text.paragraph import Paragraph
-
 from app.src.embeddings.rag_errors import ScrapingFailedError
 from app.src.embeddings.scrapers.abstract_scraper import Scraper
 
 
 class SimpleScraper(Scraper):
+    """Read text, PDF and DOCX files locally, loading each parser on first use."""
+
     def scrape(self, file_path: str | Path) -> dict:
-        """Extract text and metadata from a file using simple methods."""
+        """Extract the text and metadata of ``file_path``.
 
-        file_lower = str(file_path).lower()
-
-        if file_lower.endswith(".pdf"):
-            try:
-                text = self._extract_pdf(file_path)
-            except Exception as e:
-                raise ScrapingFailedError(f"Failed to scrape PDF file: {e}") from e
-
-        elif file_lower.endswith(".docx"):
-            try:
-                text = self._extract_docx(file_path)
-            except Exception as e:
-                raise ScrapingFailedError(f"Failed to scrape DOCX file: {e}") from e
-
+        Raises:
+            ScrapingFailedError: If the file cannot be read.
+        """
+        path = Path(file_path)
+        suffix = path.suffix.lower()
+        if suffix == ".pdf":
+            kind, extract = "PDF file", _extract_pdf
+        elif suffix == ".docx":
+            kind, extract = "DOCX file", _extract_docx
         else:
-            try:
-                text = self.read_regular_file(file_path)
-            except Exception as e:
-                raise ScrapingFailedError(f"Failed to scrape file: {e}") from e
+            kind, extract = "file", self.read_regular_file
 
-        text = text.strip()
+        try:
+            text = extract(path)
+        except Exception as e:
+            raise ScrapingFailedError(f"Failed to scrape {kind}: {e}") from e
 
         return {
-            "content": text,
+            "content": text.strip(),
             "metadata": {
-                "file_path": Path(file_path).as_posix(),
+                "file_path": path.as_posix(),
                 "mod_date": datetime.datetime.fromtimestamp(
-                    Path(file_path).stat().st_mtime
+                    path.stat().st_mtime
                 ).isoformat(),
-                "hash": self.get_hash(file_path),
+                "hash": self.get_hash(path),
             },
         }
 
-    @staticmethod
-    def _extract_pdf(file_path: str | Path) -> str:
-        md = pymupdf4llm.to_markdown(file_path)
-        return md.strip()
 
-    @staticmethod
-    def _extract_docx(file_path: str | Path) -> str:
-        """Extract all text content from a DOCX file including headers, footers, and tables (as markdown)."""
-        doc = Document(str(file_path))
-        output = []
+def _extract_pdf(path: Path) -> str:
+    import pymupdf4llm
 
-        # Headers
-        for section in doc.sections:
-            for hdr_ftr in [
-                section.header,
-                section.first_page_header,
-                section.even_page_header,
-            ]:
-                if not hdr_ftr.is_linked_to_previous:
-                    for item in hdr_ftr.iter_inner_content():
-                        if isinstance(item, Paragraph):
-                            if item.text.strip():
-                                output.append(item.text)
-                        elif isinstance(item, Table):
-                            output.append(SimpleScraper._table_to_markdown(item))
+    return pymupdf4llm.to_markdown(str(path))
 
-        # Main body
-        for item in doc.iter_inner_content():
-            if isinstance(item, Paragraph):
-                if item.text.strip():
-                    output.append(item.text)
-            elif isinstance(item, Table):
-                output.append(SimpleScraper._table_to_markdown(item))
 
-        # Footers
-        for section in doc.sections:
-            for hdr_ftr in [
-                section.footer,
-                section.first_page_footer,
-                section.even_page_footer,
-            ]:
-                if not hdr_ftr.is_linked_to_previous:
-                    for item in hdr_ftr.iter_inner_content():
-                        if isinstance(item, Paragraph):
-                            if item.text.strip():
-                                output.append(item.text)
-                        elif isinstance(item, Table):
-                            output.append(SimpleScraper._table_to_markdown(item))
+def _extract_docx(path: Path) -> str:
+    from docx import Document
 
-        return "\n\n".join(output)
+    doc = Document(str(path))
+    headers = [
+        part
+        for section in doc.sections
+        for part in (
+            section.header,
+            section.first_page_header,
+            section.even_page_header,
+        )
+    ]
+    footers = [
+        part
+        for section in doc.sections
+        for part in (
+            section.footer,
+            section.first_page_footer,
+            section.even_page_footer,
+        )
+    ]
 
-    @staticmethod
-    def _table_to_markdown(table: Table) -> str:
-        """Convert a table to markdown format."""
-        if not table.rows:
-            return ""
+    output = []
+    for part in headers:
+        if not part.is_linked_to_previous:
+            output.extend(_block_texts(part))
+    output.extend(_block_texts(doc))
+    for part in footers:
+        if not part.is_linked_to_previous:
+            output.extend(_block_texts(part))
+    return "\n\n".join(output)
 
-        lines = []
-        for row_idx, row in enumerate(table.rows):
-            cells = [cell.text.strip().replace("\n", " ") for cell in row.cells]
-            lines.append("| " + " | ".join(cells) + " |")
 
-            if row_idx == 0:
-                lines.append("| " + " | ".join(["---"] * len(cells)) + " |")
+def _block_texts(container) -> list[str]:
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
 
-        return "\n".join(lines)
+    texts = []
+    for item in container.iter_inner_content():
+        if isinstance(item, Paragraph):
+            if item.text.strip():
+                texts.append(item.text)
+        elif isinstance(item, Table):
+            texts.append(_table_to_markdown(item))
+    return texts
+
+
+def _table_to_markdown(table) -> str:
+    lines = []
+    for index, row in enumerate(table.rows):
+        cells = [cell.text.strip().replace("\n", " ") for cell in row.cells]
+        lines.append("| " + " | ".join(cells) + " |")
+        if index == 0:
+            lines.append("| " + " | ".join(["---"] * len(cells)) + " |")
+    return "\n".join(lines)
