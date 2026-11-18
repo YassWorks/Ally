@@ -16,6 +16,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.graph.state import CompiledStateGraph
 
+from app.src.core.messages import content_text
 from app.src.core.ui import default_ui
 from app.utils.constants import LAST_N_TURNS
 from app.utils.paths import data_dir
@@ -292,45 +293,32 @@ def build_llm_context(messages: list[BaseMessage]) -> list[BaseMessage]:
     return new_context
 
 
-def clean_context_window(messages: list[BaseMessage]):
+def clean_context_window(messages: list[BaseMessage]) -> list[BaseMessage]:
+    """Condense earlier turns to the last ``LAST_N_TURNS`` user messages and their replies.
+
+    Tool calls, tool results and retrieved RAG context from earlier turns are dropped, and
+    replies are reduced to their text, so old turns stay small and never contain tool
+    calls without matching results.
     """
-    Clean the context window by keeping only the last N turns.
-    And truncating the tools arguments for brevity.
-    """
-    new_context = []
+    new_context: list[BaseMessage] = []
+    replies: list[AIMessage] = []
     turn_count = 0
 
     for message in reversed(messages):
         if isinstance(message, HumanMessage) and not message.additional_kwargs.get(
             "RAG", False
         ):
-            new_context.append(message)
-            turn_count += 1
-            if turn_count > LAST_N_TURNS:
+            if turn_count == LAST_N_TURNS:
                 break
+            new_context.extend(replies)
+            new_context.append(message)
+            replies = []
+            turn_count += 1
 
-        elif (
-            isinstance(message, AIMessage)
-            and flatten_content(message.content).strip() != ""
-        ):
-            new_context.append(AIMessage(content=message.content))
+        elif isinstance(message, AIMessage):
+            text = content_text(message.content)
+            if text.strip():
+                replies.append(AIMessage(content=text))
 
     new_context.reverse()
     return new_context
-
-
-def flatten_content(content: list[str | dict]) -> str:
-    """
-    Flatten the content by joining strings or formatting dictionaries.
-    """
-    try:
-        if isinstance(content, list):
-            if isinstance(content[0], dict):
-                content = "\n".join(
-                    [f"{k}: {v}" for item in content for k, v in item.items()]
-                )
-            if isinstance(content[0], str):
-                content = "\n".join(content)
-        return content
-    except Exception:
-        return str(content)

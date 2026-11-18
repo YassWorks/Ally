@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from typing import Any
 
 import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
@@ -14,6 +15,7 @@ class FakeChatModel(GenericFakeChatModel):
 
     received: list = Field(default_factory=list)
     bound_tools: list = Field(default_factory=list)
+    provider: Any = None
 
     def bind_tools(self, tools, **kwargs):
         self.bound_tools[:] = [tool.name for tool in tools]
@@ -21,6 +23,8 @@ class FakeChatModel(GenericFakeChatModel):
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
         self.received.append(messages)
+        if self.provider is not None and self.provider.failures:
+            raise self.provider.failures.pop(0)
         return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
 
 
@@ -29,12 +33,13 @@ class FakeProvider:
 
     def __init__(self):
         self.replies: list[AIMessage | str] = []
+        self.failures: list[Exception] = []
         self.models: list[FakeChatModel] = []
         self.calls: list[tuple] = []
 
     def __call__(self, provider, model_name, api_key, temperature=None):
         self.calls.append((provider, model_name, api_key, temperature))
-        model = FakeChatModel(messages=self._replies())
+        model = FakeChatModel(messages=self._replies(), provider=self)
         self.models.append(model)
         return model
 

@@ -2,8 +2,8 @@ from collections.abc import Callable
 from typing import Any
 
 import langgraph.errors as lg_errors
-import openai
 
+from app.src.core.messages import describe_error, http_status
 from app.src.core.permissions import PermissionDeniedException
 from app.src.core.ui import AgentUI
 from app.utils.logger import logger
@@ -73,18 +73,15 @@ class AgentExceptionHandler:
                 ui.error("Max recursion limit reached. Operation cannot continue.")
                 return None
 
-            except openai.RateLimitError as e:
+            except Exception as e:
                 if propagate:
                     raise
 
-                logger.error("OpenAI rate limit exceeded", exc_info=e)
-                ui.error("Rate limit exceeded. Please try again later")
-                return None
-
-            except Exception:
-                if propagate:
-                    raise
+                if http_status(e) == 429:
+                    logger.error("Rate limit exceeded", exc_info=e)
+                    ui.error("Rate limit exceeded. Please try again later")
+                    return None
 
                 logger.exception("Unexpected error in agent operation")
-                ui.error("An unexpected error occurred")
+                ui.error(f"An unexpected error occurred\n{describe_error(e)}")
                 return None
