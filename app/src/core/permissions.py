@@ -19,16 +19,21 @@ class PermissionManager:
         options = self._get_options(tool_name=tool_name)
         idx = self.ui.select_option(message="", options=options)
 
+        if idx is None:
+            self.ui.warning(
+                "Could not ask for permission here, so the tool was not run. "
+                "Start Ally with --allow-all-tools to run tools without asking."
+            )
+            return False
         if idx == 0:
             return True
-        elif idx == 1:
-            return False
-        elif idx == 2:
+        if idx == 2:
             self.always_allowed_tools.add(tool_name)
             return True
-        elif idx == 3:
+        if idx == 3:
             self.always_allow = True
             return True
+        return False
 
     def _get_options(self, tool_name: str) -> list[str]:
         return [

@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from bs4 import BeautifulSoup
@@ -142,8 +143,10 @@ def search_and_scrape(query: str) -> str:
     """
     try:
         search_results = google_search(query, 5)
-        for r in search_results:
-            r["full_text"] = fetch(r["link"])
+        with ThreadPoolExecutor(max_workers=max(len(search_results), 1)) as pool:
+            pages = pool.map(fetch, [r["link"] for r in search_results])
+            for r, text in zip(search_results, pages, strict=True):
+                r["full_text"] = text
 
         formatted_results = "This answer is **possibly incomplete**. Consider refining search terms as needed.\n\n"
         for r in search_results:

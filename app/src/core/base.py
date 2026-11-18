@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 import uuid
 from collections.abc import Callable
 
@@ -12,6 +11,7 @@ from app.src.agents.registry import AgentSpec, default_system_prompt
 from app.src.core.create_base_agent import create_base_agent
 from app.src.core.exception_handler import AgentExceptionHandler
 from app.src.core.messages import content_text, describe_error, http_status
+from app.src.core.shell import run_shell
 from app.src.core.ui import AgentUI, default_ui
 from app.src.embeddings.db_client import DataBaseClient
 from app.src.embeddings.rag_errors import DBAccessError, SetupFailedError
@@ -250,66 +250,31 @@ class BaseAgent:
             self.ui.error(describe_error(e))
         return True
 
-    def _handle_shell_command(self, command: str):
-        """Handle execution of shell commands."""
-        import shutil
+    def _handle_shell_command(self, command: str) -> None:
+        """Run ``command`` in the user's shell and print its output."""
+        if not command:
+            return
 
         logger.debug(f"Executing shell command: {command}")
-
-        shell_name = None
-
-        if os.name == "nt":
-            # check for powershell first, if it exists use it
-            if shutil.which("pwsh") or shutil.which("pwsh.exe"):  # Powershell 7
-                shell_name = "pwsh.exe"
-            elif shutil.which("powershell") or shutil.which(
-                "powershell.exe"
-            ):  # Powershell 5
-                shell_name = "powershell.exe"
-            else:
-                shell_name = "cmd.exe"
-        else:
-            # for UNIX-like it's straightforward, use the default shell or sh
-            shell_name = os.environ.get("SHELL", "/bin/sh")
-
-        # all standard shells use -c to execute commands
-        # except for cmd.exe which uses /c without opening a new terminal
-        flag = "/c" if shell_name == "cmd.exe" else "-c"
-        full_command = f'{shell_name} {flag} "{command}"'
-
         try:
-            result = self._execute_shell_command(full_command)
-            logger.info(f"Command executed successfully: {command}")
-            if str(result.stdout).strip():
-                print(str(result.stdout).strip())
-            else:
-                self.ui.print("No output returned from the command.", color="dim")
-        except subprocess.CalledProcessError as e:
-            logger.error(
-                f"Shell command failed with exit code {e.returncode}: {command}",
-                exc_info=e,
-            )
-            error_msg = e.stderr.strip() if e.stderr else str(e)
-            self.ui.error(f"An error occurred: {error_msg}")
+            result = run_shell(command)
         except Exception as e:
-            logger.exception(f"Unexpected error executing shell command: {command}")
-            self.ui.error(f"An unexpected error occurred: {str(e)}")
+            logger.exception(f"Could not run shell command: {command}")
+            self.ui.error(f"Could not run the command. {describe_error(e)}")
+            return
 
-        return True
+        output = result.stdout.rstrip()
+        errors = result.stderr.rstrip()
+        if output:
+            print(output)
 
-    def _execute_shell_command(self, command: str) -> subprocess.CompletedProcess:
-        """Execute a shell command and display the output."""
-        logger.debug(f"Full command to execute: {command}")
-
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=True,
-            shell=True,  # full freedom
-            cwd=os.getcwd(),
-        )
-        return result
+        if result.returncode != 0:
+            logger.error(f"Shell command exited with {result.returncode}: {command}")
+            self.ui.error(errors or f"Command exited with code {result.returncode}.")
+        elif errors:
+            print(errors)
+        elif not output:
+            self.ui.print("No output returned from the command.", color="dim")
 
     def _get_user_input(
         self, continue_flag: bool = False, active_dir: str = None

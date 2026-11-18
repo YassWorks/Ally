@@ -256,7 +256,7 @@ def create_base_agent(
         context = build_llm_context(state["messages"])
         return {"messages": [llm_chain.invoke({"messages": context})]}
 
-    tool_node = SequentialToolNode(tools=tools, handle_tool_errors=False)
+    tool_node = SequentialToolNode(tools=tools, handle_tool_errors=True)
 
     graph.add_node("llm", llm_node)
 
