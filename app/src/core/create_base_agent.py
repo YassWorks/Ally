@@ -229,9 +229,8 @@ def create_base_agent(
     tools: list,
     system_prompt: str,
     temperature: float | None = None,
-    include_graph: bool = False,
     provider: str = "openai",
-) -> CompiledStateGraph | tuple[StateGraph, CompiledStateGraph]:
+) -> CompiledStateGraph:
     """Build an agent graph that loops between the model and its tools.
 
     Args:
@@ -240,11 +239,7 @@ def create_base_agent(
         tools: Tools the model may call.
         system_prompt: System prompt sent with every request.
         temperature: Sampling temperature, or ``None`` for the provider's default.
-        include_graph: Also return the uncompiled graph.
         provider: Inference provider name, such as ``"openai"`` or ``"ollama"``.
-
-    Returns:
-        The compiled graph, or ``(graph, compiled_graph)`` when ``include_graph`` is set.
     """
     llm = create_chat_model(provider, model_name, api_key, temperature)
 
@@ -273,12 +268,7 @@ def create_base_agent(
         graph.add_edge(START, "llm")
         graph.add_edge("llm", END)
 
-    built_graph = graph.compile(checkpointer=get_checkpointer())
-
-    if include_graph:
-        return graph, built_graph
-    else:
-        return built_graph
+    return graph.compile(checkpointer=get_checkpointer())
 
 
 def build_llm_context(messages: list[BaseMessage]) -> list[BaseMessage]:
